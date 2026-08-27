@@ -1,0 +1,42 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# .NET / WPF Windows port
+.vs/
+**/bin/
+**/obj/
+**/TestResults/
+*.suo
+*.user
+
+# App bundle build output
+build/
+
+# OMC / agent local state
+.omc/
+
+# macOS
+.DS_Store
+*.xcuserstate
+
+# Signing material — never commit private keys / certs
+*.p12
+*.pem
+*.key
+*.cer
+*.certSigningRequest
+
+# Personal dev notes (kept locally, not published).
+# docs/reference/ is the exception: published agent/contributor reference docs.
+# (Must ignore docs/* rather than docs/ — git cannot re-include inside an excluded directory.)
+docs/*
+!docs/reference/
+
+# Agent worktrees / local state
+.claude/
+.worktrees/
+
+# Local-only review-gate opt-out (not published)
+.no-review-gate
