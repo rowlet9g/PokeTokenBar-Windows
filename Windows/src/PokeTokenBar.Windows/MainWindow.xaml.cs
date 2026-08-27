@@ -1,6 +1,10 @@
+using System.IO;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using PokeTokenBar.Core;
 using PokeTokenBar.Platform.Windows;
+using MediaColor = System.Windows.Media.Color;
 
 namespace PokeTokenBar.Windows;
 
@@ -60,9 +64,19 @@ public partial class MainWindow : Window
 
     public void ApplyCompanionState()
     {
+        if (_companionStore.HasActivePokemon)
+        {
+            ApplyPokemonState();
+            return;
+        }
+
+        EggVisual.Visibility = Visibility.Visible;
+        PokemonImage.Visibility = Visibility.Collapsed;
         var progress = _companionStore.EggProgress;
         var percent = (int)Math.Round(progress * 100);
-        EggProgressBar.Value = progress;
+        CompanionProgressBar.Value = progress;
+        CompanionProgressBar.Foreground = new SolidColorBrush(MediaColor.FromRgb(255, 90, 60));
+        CompanionTitleText.Foreground = new SolidColorBrush(MediaColor.FromRgb(255, 128, 107));
         CompanionTitleText.Text = $"새 알 · {percent}%";
 
         if (!_companionStore.InstallBaselineSet)
@@ -81,6 +95,47 @@ public partial class MainWindow : Window
         CompanionProgressText.Text = _companionStore.EggStarted
             ? $"{TokenFormatter.Compact(_companionStore.EggTokensToHatch)} 토큰 후 부화"
             : "다음 사용량부터 알이 자라기 시작합니다";
+    }
+
+    public void SetPokemonSprite(byte[]? bytes)
+    {
+        if (bytes is null)
+        {
+            PokemonImage.Source = null;
+            return;
+        }
+
+        using var stream = new MemoryStream(bytes, writable: false);
+        var bitmap = new BitmapImage();
+        bitmap.BeginInit();
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.StreamSource = stream;
+        bitmap.EndInit();
+        bitmap.Freeze();
+        PokemonImage.Source = bitmap;
+    }
+
+    private void ApplyPokemonState()
+    {
+        EggVisual.Visibility = Visibility.Collapsed;
+        PokemonImage.Visibility = Visibility.Visible;
+        var progress = _companionStore.GrowthProgress;
+        var percent = (int)Math.Round(progress * 100);
+        CompanionProgressBar.Value = progress;
+        var shiny = _companionStore.IsCurrentPokemonShiny;
+        var accent = shiny
+            ? MediaColor.FromRgb(250, 204, 21)
+            : MediaColor.FromRgb(125, 211, 252);
+        CompanionProgressBar.Foreground = new SolidColorBrush(accent);
+        CompanionTitleText.Foreground = new SolidColorBrush(accent);
+        CompanionTitleText.Text = $"{(shiny ? "★ " : string.Empty)}{_companionStore.CurrentPokemonName} · {percent}%";
+
+        var destination = _companionStore.CurrentStage < _companionStore.TotalForms
+            ? "진화"
+            : "졸업";
+        CompanionProgressText.Text =
+            $"{_companionStore.CurrentStage}/{_companionStore.TotalForms}단계 · "
+            + $"{TokenFormatter.Compact(_companionStore.TokensToNextStage)} 토큰 후 {destination}";
     }
 
     public void ShowNearNotificationArea()

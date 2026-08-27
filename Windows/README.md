@@ -31,6 +31,18 @@ implementation remains in `../Sources` and acts as the behavioral reference.
   backup handling.
 - Native WPF vector egg and incubation progress, avoiding the monochrome emoji
   rendering used by the first shell milestone.
+- PokéAPI-backed hatching across supported Gen 1–5 species. Base species are
+  weighted by official capture rate, while Ditto remains outside the normal
+  hatch pool to match the Swift behavior.
+- Real evolution trees, Korean-first species names, 25 natures, a 1-in-64
+  shiny roll, overflow-safe growth, branching evolution, and graduation into
+  the persisted Pokédex data.
+- Runtime PNG sprites from the official PokeAPI sprites repository. Species,
+  evolution, base-index, and sprite responses are cached under the Windows
+  cache directory; no Pokémon artwork is bundled in the executable.
+- Strict evolution-chain URL validation and an offline-friendly cache. A stale
+  base index remains usable when GraphQL is unavailable, with a bounded REST
+  fallback when no index exists yet.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.
@@ -39,9 +51,10 @@ The Codex parser is streaming and keeps a cache keyed by path, modification
 time, and size. It reads only the metadata prefix of older candidate parent
 sessions until a fork dependency actually needs the full file.
 
-The current companion milestone stops at an egg that is ready to hatch. The
-PokéAPI species roll, sprite cache, evolution path, and Pokédex are the next
-porting layer.
+The current popup covers the complete core loop: egg, hatch, growth, evolution,
+graduation, and a fresh egg. The next porting layer is the collection/Pokédex
+view, event animations and notifications, inventory/shop, settings, and the
+remaining usage providers.
 
 ## Build
 

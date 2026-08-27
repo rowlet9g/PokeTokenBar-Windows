@@ -10,7 +10,13 @@ public sealed class CompanionState
 
     public long EggUsage { get; set; }
 
+    public int? PendingHatchId { get; set; }
+
     public Dictionary<string, long>? ClaimedTodayTokensByProvider { get; set; }
 
     public string LastDate { get; set; } = string.Empty;
+
+    public PokemonMonState? ActivePokemon { get; set; }
+
+    public List<PokemonDexEntry> Dex { get; set; } = [];
 }

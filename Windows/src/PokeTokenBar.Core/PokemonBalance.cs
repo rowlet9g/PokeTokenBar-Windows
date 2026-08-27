@@ -22,6 +22,26 @@ public static class PokemonBalance
         _ => throw new ArgumentOutOfRangeException(nameof(rarity)),
     };
 
+    public static PokemonRarity RarityFrom(
+        int captureRate,
+        bool isLegendary,
+        bool isMythical)
+    {
+        if (isLegendary || isMythical)
+        {
+            return PokemonRarity.Legendary;
+        }
+
+        if (captureRate <= 45)
+        {
+            return PokemonRarity.Rare;
+        }
+
+        return captureRate <= 120
+            ? PokemonRarity.Uncommon
+            : PokemonRarity.Common;
+    }
+
     public static long PhaseThreshold(
         PokemonRarity rarity,
         int totalForms,

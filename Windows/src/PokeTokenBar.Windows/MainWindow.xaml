@@ -63,26 +63,34 @@
             <StackPanel Grid.Row="1"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center">
-                <Grid Width="86"
+                <Grid Width="96"
                       Height="96"
                       HorizontalAlignment="Center">
-                    <Path Fill="#FF1B1F27"
+                    <Grid x:Name="EggVisual">
+                        <Path Fill="#FF1B1F27"
                           Stroke="#FFFF5A3C"
                           StrokeThickness="4"
-                          Data="M 43,3 C 23,3 8,36 8,63 C 8,84 22,93 43,93 C 64,93 78,84 78,63 C 78,36 63,3 43,3 Z">
-                        <Path.Effect>
-                            <DropShadowEffect BlurRadius="10"
-                                              Color="#FFFF4F38"
-                                              Opacity="0.7"
-                                              ShadowDepth="0" />
-                        </Path.Effect>
-                    </Path>
-                    <Path Stroke="#FFFF5A3C"
+                          Data="M 48,3 C 28,3 13,36 13,63 C 13,84 27,93 48,93 C 69,93 83,84 83,63 C 83,36 68,3 48,3 Z">
+                            <Path.Effect>
+                                <DropShadowEffect BlurRadius="10"
+                                                  Color="#FFFF4F38"
+                                                  Opacity="0.7"
+                                                  ShadowDepth="0" />
+                            </Path.Effect>
+                        </Path>
+                        <Path Stroke="#FFFF5A3C"
                           StrokeThickness="5"
                           StrokeStartLineCap="Round"
                           StrokeEndLineCap="Round"
                           StrokeLineJoin="Round"
-                          Data="M 21,57 L 33,47 L 43,58 L 53,45 L 66,56" />
+                          Data="M 26,57 L 38,47 L 48,58 L 58,45 L 71,56" />
+                    </Grid>
+                    <Image x:Name="PokemonImage"
+                           Width="96"
+                           Height="96"
+                           Stretch="Uniform"
+                           Visibility="Collapsed"
+                           RenderOptions.BitmapScalingMode="NearestNeighbor" />
                 </Grid>
                 <TextBlock x:Name="CompanionTitleText"
                            Margin="0,5,0,0"
@@ -91,7 +99,7 @@
                            FontSize="12"
                            FontWeight="SemiBold"
                            Text="새 알 · 0%" />
-                <ProgressBar x:Name="EggProgressBar"
+                <ProgressBar x:Name="CompanionProgressBar"
                              Width="180"
                              Height="6"
                              Margin="0,6,0,0"

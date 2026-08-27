@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.IO;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
@@ -18,8 +19,11 @@ public partial class App : System.Windows.Application
     private Icon? _appIcon;
     private UsageStore? _usageStore;
     private CompanionStore? _companionStore;
+    private PokemonSpriteStore? _spriteStore;
+    private HttpClient? _httpClient;
     private DispatcherTimer? _usageTimer;
     private readonly CancellationTokenSource _refreshCancellation = new();
+    private int _spriteGeneration;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -40,8 +44,20 @@ public partial class App : System.Windows.Application
             new CodexUsageProvider(WindowsCodexPaths.CreateDefaultRoots()),
         ]);
         _usageStore.Changed += UsageStore_OnChanged;
+        _httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(15),
+        };
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("PokeTokenBar-Windows/0.1");
+        var pokemonProvider = new PokeApiClient(
+            _httpClient,
+            Path.Combine(paths.CacheDirectory, "PokeAPI"));
+        _spriteStore = new PokemonSpriteStore(
+            _httpClient,
+            Path.Combine(paths.CacheDirectory, "Sprites"));
         _companionStore = new CompanionStore(
-            Path.Combine(paths.DataDirectory, "companion-state.json"));
+            Path.Combine(paths.DataDirectory, "companion-state.json"),
+            pokemonProvider);
         _companionStore.Changed += CompanionStore_OnChanged;
 
         _appIcon = LoadAppIcon();
@@ -89,6 +105,8 @@ public partial class App : System.Windows.Application
         }
 
         _trayIcon?.Dispose();
+        _usageStore?.Dispose();
+        _httpClient?.Dispose();
         _appIcon?.Dispose();
         _singleInstance?.Dispose();
         _refreshCancellation.Dispose();
@@ -138,6 +156,11 @@ public partial class App : System.Windows.Application
         try
         {
             await _usageStore.RefreshAsync(_refreshCancellation.Token);
+            ApplyUsageState();
+            if (_companionStore is not null)
+            {
+                await _companionStore.EnsureHatchedAsync(_refreshCancellation.Token);
+            }
         }
         catch (OperationCanceledException) when (_refreshCancellation.IsCancellationRequested)
         {
@@ -193,9 +216,68 @@ public partial class App : System.Windows.Application
         }
 
         _popover?.ApplyCompanionState();
+        QueueSpriteRefresh();
         var compact = TokenFormatter.Compact(_usageStore.TodayTotalTokens);
-        var eggPercent = (int)Math.Round(_companionStore.EggProgress * 100);
-        _trayIcon?.UpdateTooltip($"PokeTokenBar · {compact} today · Egg {eggPercent}%");
+        if (_companionStore.HasActivePokemon)
+        {
+            var name = _companionStore.CurrentPokemonName ?? "Pokémon";
+            var growthPercent = (int)Math.Round(_companionStore.GrowthProgress * 100);
+            _trayIcon?.UpdateTooltip($"PokeTokenBar · {compact} today · {name} {growthPercent}%");
+        }
+        else
+        {
+            var eggPercent = (int)Math.Round(_companionStore.EggProgress * 100);
+            _trayIcon?.UpdateTooltip($"PokeTokenBar · {compact} today · Egg {eggPercent}%");
+        }
+    }
+
+    private void QueueSpriteRefresh()
+    {
+        if (_popover is null || _companionStore is null || _spriteStore is null)
+        {
+            return;
+        }
+
+        var generation = Interlocked.Increment(ref _spriteGeneration);
+        if (_companionStore.CurrentSpeciesId is not { } speciesId)
+        {
+            _popover.SetPokemonSprite(null);
+            return;
+        }
+
+        var shiny = _companionStore.IsCurrentPokemonShiny;
+        _ = LoadPokemonSpriteAsync(speciesId, shiny, generation);
+    }
+
+    private async Task LoadPokemonSpriteAsync(int speciesId, bool shiny, int generation)
+    {
+        if (_spriteStore is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var bytes = await _spriteStore.GetSpriteAsync(
+                speciesId,
+                shiny,
+                _refreshCancellation.Token);
+            if (generation != Volatile.Read(ref _spriteGeneration)
+                || _refreshCancellation.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await Dispatcher.InvokeAsync(() => _popover?.SetPokemonSprite(bytes));
+        }
+        catch (OperationCanceledException) when (_refreshCancellation.IsCancellationRequested)
+        {
+            // Normal application shutdown.
+        }
+        catch
+        {
+            // The name and growth state remain useful while the sprite host is offline.
+        }
     }
 
     private static Icon LoadAppIcon()
