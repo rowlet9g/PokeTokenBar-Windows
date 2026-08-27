@@ -1,6 +1,8 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Threading;
+using PokeTokenBar.Core;
 using PokeTokenBar.Platform.Windows;
 
 namespace PokeTokenBar.Windows;
@@ -13,6 +15,9 @@ public partial class App : System.Windows.Application
     private TrayIconController? _trayIcon;
     private MainWindow? _popover;
     private Icon? _appIcon;
+    private UsageStore? _usageStore;
+    private DispatcherTimer? _usageTimer;
+    private readonly CancellationTokenSource _refreshCancellation = new();
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -28,20 +33,55 @@ public partial class App : System.Windows.Application
         var paths = WindowsAppPaths.CreateDefault();
         paths.EnsureDirectories();
 
+        _usageStore = new UsageStore(
+        [
+            new CodexUsageProvider(WindowsCodexPaths.CreateDefaultRoots()),
+        ]);
+        _usageStore.Changed += UsageStore_OnChanged;
+
         _appIcon = LoadAppIcon();
-        _popover = new MainWindow(paths);
+        _popover = new MainWindow(paths, _usageStore);
+        _popover.RefreshRequested += Popover_OnRefreshRequested;
         MainWindow = _popover;
 
         _trayIcon = new TrayIconController(_appIcon);
         _trayIcon.ToggleRequested += (_, _) => TogglePopover();
         _trayIcon.ExitRequested += (_, _) => ExitApplication();
+
+        _usageTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMinutes(2),
+        };
+        _usageTimer.Tick += UsageTimer_OnTick;
+        _usageTimer.Start();
+
+        ApplyUsageState();
+        Dispatcher.BeginInvoke(new Action(async () => await RefreshUsageAsync()));
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _usageTimer?.Stop();
+        if (_usageTimer is not null)
+        {
+            _usageTimer.Tick -= UsageTimer_OnTick;
+        }
+
+        _refreshCancellation.Cancel();
+        if (_popover is not null)
+        {
+            _popover.RefreshRequested -= Popover_OnRefreshRequested;
+        }
+
+        if (_usageStore is not null)
+        {
+            _usageStore.Changed -= UsageStore_OnChanged;
+        }
+
         _trayIcon?.Dispose();
         _appIcon?.Dispose();
         _singleInstance?.Dispose();
+        _refreshCancellation.Dispose();
         base.OnExit(e);
     }
 
@@ -66,6 +106,57 @@ public partial class App : System.Windows.Application
     {
         _popover?.Close();
         Shutdown();
+    }
+
+    private async void Popover_OnRefreshRequested(object? sender, EventArgs e)
+    {
+        await RefreshUsageAsync();
+    }
+
+    private async void UsageTimer_OnTick(object? sender, EventArgs e)
+    {
+        await RefreshUsageAsync();
+    }
+
+    private async Task RefreshUsageAsync()
+    {
+        if (_usageStore is null || _refreshCancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
+        try
+        {
+            await _usageStore.RefreshAsync(_refreshCancellation.Token);
+        }
+        catch (OperationCanceledException) when (_refreshCancellation.IsCancellationRequested)
+        {
+            // Normal application shutdown.
+        }
+    }
+
+    private void UsageStore_OnChanged(object? sender, EventArgs e)
+    {
+        if (Dispatcher.CheckAccess())
+        {
+            ApplyUsageState();
+        }
+        else
+        {
+            Dispatcher.BeginInvoke(new Action(ApplyUsageState));
+        }
+    }
+
+    private void ApplyUsageState()
+    {
+        if (_usageStore is null)
+        {
+            return;
+        }
+
+        _popover?.ApplyUsageState();
+        var compact = TokenFormatter.Compact(_usageStore.TodayTotalTokens);
+        _trayIcon?.UpdateTooltip($"PokeTokenBar · Codex today {compact}");
     }
 
     private static Icon LoadAppIcon()

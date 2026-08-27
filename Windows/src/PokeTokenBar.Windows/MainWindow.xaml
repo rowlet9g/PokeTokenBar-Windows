@@ -26,15 +26,28 @@
             </Grid.RowDefinitions>
 
             <DockPanel Grid.Row="0">
-                <Button DockPanel.Dock="Right"
-                        Width="30"
-                        Height="30"
-                        Click="HideButton_OnClick"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Foreground="#FFAEB7C7"
-                        FontSize="18"
-                        Content="&#x2715;" />
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal">
+                    <Button x:Name="RefreshButton"
+                            Width="30"
+                            Height="30"
+                            Margin="0,0,4,0"
+                            Click="RefreshButton_OnClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FFAEB7C7"
+                            FontSize="18"
+                            ToolTip="Refresh Codex usage"
+                            Content="&#x21BB;" />
+                    <Button Width="30"
+                            Height="30"
+                            Click="HideButton_OnClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FFAEB7C7"
+                            FontSize="18"
+                            Content="&#x2715;" />
+                </StackPanel>
                 <StackPanel>
                     <TextBlock Foreground="White"
                                FontSize="22"
@@ -43,7 +56,7 @@
                     <TextBlock Margin="0,4,0,0"
                                Foreground="#FF7DD3FC"
                                FontSize="12"
-                               Text="Windows port · first milestone" />
+                               Text="Windows port · Codex usage" />
                 </StackPanel>
             </DockPanel>
 
@@ -61,10 +74,48 @@
                            FontSize="34"
                            FontWeight="Bold"
                            Text="0" />
-                <TextBlock Margin="0,6,0,0"
+                <TextBlock x:Name="ExactTokenValueText"
+                           Margin="0,4,0,0"
+                           HorizontalAlignment="Center"
+                           Foreground="#FF7DD3FC"
+                           FontFamily="Consolas"
+                           FontSize="12"
+                           Text="0" />
+                <TextBlock x:Name="StatusText"
+                           Margin="0,8,0,0"
                            HorizontalAlignment="Center"
                            Foreground="#FFAEB7C7"
                            Text="Codex 로그 연결 준비 중" />
+                <StackPanel Margin="0,18,0,0"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
+                    <StackPanel Margin="0,0,24,0">
+                        <TextBlock HorizontalAlignment="Center"
+                                   Foreground="#FF7D8797"
+                                   FontSize="11"
+                                   Text="THIS WEEK" />
+                        <TextBlock x:Name="WeekValueText"
+                                   Margin="0,3,0,0"
+                                   HorizontalAlignment="Center"
+                                   Foreground="White"
+                                   FontFamily="Consolas"
+                                   FontSize="16"
+                                   Text="0" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock HorizontalAlignment="Center"
+                                   Foreground="#FF7D8797"
+                                   FontSize="11"
+                                   Text="THIS MONTH" />
+                        <TextBlock x:Name="MonthValueText"
+                                   Margin="0,3,0,0"
+                                   HorizontalAlignment="Center"
+                                   Foreground="White"
+                                   FontFamily="Consolas"
+                                   FontSize="16"
+                                   Text="0" />
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
 
             <StackPanel Grid.Row="2">

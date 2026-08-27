@@ -31,6 +31,14 @@ public sealed class TrayIconController : IDisposable
 
     public event EventHandler? ExitRequested;
 
+    public void UpdateTooltip(string text)
+    {
+        const int notifyIconTextLimit = 63;
+        _notifyIcon.Text = text.Length <= notifyIconTextLimit
+            ? text
+            : text[..notifyIconTextLimit];
+    }
+
     public void Dispose()
     {
         if (_disposed)
