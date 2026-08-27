@@ -75,6 +75,26 @@ public sealed class UsageStore : IDisposable
         Snapshots.Aggregate(0L, (total, snapshot) =>
             UsageMath.SaturatingAdd(total, snapshot.MonthTotal?.TotalTokens ?? 0));
 
+    public IReadOnlyDictionary<string, long> TodayTokensByProvider =>
+        DailyTokensByProvider(DateOnly.FromDateTime(DateTime.Now));
+
+    public IReadOnlyDictionary<string, long> DailyTokensByProvider(DateOnly localDay)
+    {
+        var dayKey = localDay.ToString(
+            "yyyy-MM-dd",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var result = new Dictionary<string, long>(StringComparer.Ordinal);
+        foreach (var snapshot in Snapshots)
+        {
+            if (snapshot.Today is { } today && today.Date == dayKey)
+            {
+                result[snapshot.ProviderId] = today.TotalTokens;
+            }
+        }
+
+        return result;
+    }
+
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -154,7 +174,11 @@ public sealed class UsageStore : IDisposable
                         errors.Add($"{outcome.ProviderId}: {outcome.ErrorDescription}");
                         if (previous.TryGetValue(outcome.ProviderId, out var preserved))
                         {
-                            next.Add(preserved);
+                            var todayKey = DateOnly.FromDateTime(now.LocalDateTime)
+                                .ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            next.Add(preserved.Today?.Date == todayKey
+                                ? preserved
+                                : preserved with { Today = null });
                         }
 
                         continue;

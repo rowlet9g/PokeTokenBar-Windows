@@ -24,6 +24,13 @@ implementation remains in `../Sources` and acts as the behavioral reference.
   retained in the provider snapshot for later forecast and companion features.
 - Manual refresh plus a two-minute background refresh; today's compact total
   is also exposed in the notification-area tooltip.
+- Swift-compatible fresh-egg incubation: the first observed usage is stored as
+  an install baseline, then only new per-provider token deltas advance the egg.
+- Atomic companion-state persistence in the Windows data directory, including
+  provider regressions, partial snapshots, date rollover, and corrupt-file
+  backup handling.
+- Native WPF vector egg and incubation progress, avoiding the monochrome emoji
+  rendering used by the first shell milestone.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.
@@ -31,6 +38,10 @@ smoke tests.
 The Codex parser is streaming and keeps a cache keyed by path, modification
 time, and size. It reads only the metadata prefix of older candidate parent
 sessions until a fork dependency actually needs the full file.
+
+The current companion milestone stops at an egg that is ready to hatch. The
+PokéAPI species roll, sprite cache, evolution path, and Pokédex are the next
+porting layer.
 
 ## Build
 

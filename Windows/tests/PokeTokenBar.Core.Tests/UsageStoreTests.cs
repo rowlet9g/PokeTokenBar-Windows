@@ -18,6 +18,9 @@ public sealed class UsageStoreTests
         Assert.Equal(75_000, store.WeekTotalTokens);
         Assert.Equal(300_000, store.MonthTotalTokens);
         Assert.Equal(2, store.Snapshots.Count);
+        Assert.Equal(12_345, store.TodayTokensByProvider["codex"]);
+        Assert.Equal(7_655, store.TodayTokensByProvider["claude"]);
+        Assert.Empty(store.DailyTokensByProvider(DateOnly.FromDateTime(now.LocalDateTime).AddDays(-1)));
         Assert.NotNull(store.LastUpdated);
         Assert.Null(store.LastErrorDescription);
         Assert.False(store.IsRefreshing);
@@ -78,7 +81,14 @@ public sealed class UsageStoreTests
         new(
             id,
             id,
-            new DailyUsage("2026-08-27", 0, today, 0, 0, today, 0),
+            new DailyUsage(
+                DateOnly.FromDateTime(now.LocalDateTime).ToString("yyyy-MM-dd"),
+                0,
+                today,
+                0,
+                0,
+                today,
+                0),
             null,
             new PeriodUsage("2026-08-24", week, 0),
             new PeriodUsage("2026-08", month, 0),

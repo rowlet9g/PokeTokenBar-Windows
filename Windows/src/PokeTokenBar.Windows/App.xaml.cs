@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
@@ -16,6 +17,7 @@ public partial class App : System.Windows.Application
     private MainWindow? _popover;
     private Icon? _appIcon;
     private UsageStore? _usageStore;
+    private CompanionStore? _companionStore;
     private DispatcherTimer? _usageTimer;
     private readonly CancellationTokenSource _refreshCancellation = new();
 
@@ -38,9 +40,12 @@ public partial class App : System.Windows.Application
             new CodexUsageProvider(WindowsCodexPaths.CreateDefaultRoots()),
         ]);
         _usageStore.Changed += UsageStore_OnChanged;
+        _companionStore = new CompanionStore(
+            Path.Combine(paths.DataDirectory, "companion-state.json"));
+        _companionStore.Changed += CompanionStore_OnChanged;
 
         _appIcon = LoadAppIcon();
-        _popover = new MainWindow(paths, _usageStore);
+        _popover = new MainWindow(paths, _usageStore, _companionStore);
         _popover.RefreshRequested += Popover_OnRefreshRequested;
         MainWindow = _popover;
 
@@ -76,6 +81,11 @@ public partial class App : System.Windows.Application
         if (_usageStore is not null)
         {
             _usageStore.Changed -= UsageStore_OnChanged;
+        }
+
+        if (_companionStore is not null)
+        {
+            _companionStore.Changed -= CompanionStore_OnChanged;
         }
 
         _trayIcon?.Dispose();
@@ -147,6 +157,18 @@ public partial class App : System.Windows.Application
         }
     }
 
+    private void CompanionStore_OnChanged(object? sender, EventArgs e)
+    {
+        if (Dispatcher.CheckAccess())
+        {
+            ApplyCompanionState();
+        }
+        else
+        {
+            Dispatcher.BeginInvoke(new Action(ApplyCompanionState));
+        }
+    }
+
     private void ApplyUsageState()
     {
         if (_usageStore is null)
@@ -154,9 +176,26 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        var todayByProvider = _usageStore.TodayTokensByProvider;
+        _companionStore?.Update(
+            todayByProvider,
+            DateOnly.FromDateTime(DateTime.Now),
+            hasUsageData: _usageStore.Snapshots.Count > 0);
         _popover?.ApplyUsageState();
+        ApplyCompanionState();
+    }
+
+    private void ApplyCompanionState()
+    {
+        if (_usageStore is null || _companionStore is null)
+        {
+            return;
+        }
+
+        _popover?.ApplyCompanionState();
         var compact = TokenFormatter.Compact(_usageStore.TodayTotalTokens);
-        _trayIcon?.UpdateTooltip($"PokeTokenBar · Codex today {compact}");
+        var eggPercent = (int)Math.Round(_companionStore.EggProgress * 100);
+        _trayIcon?.UpdateTooltip($"PokeTokenBar · {compact} today · Egg {eggPercent}%");
     }
 
     private static Icon LoadAppIcon()

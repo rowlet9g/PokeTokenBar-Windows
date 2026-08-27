@@ -7,13 +7,19 @@ namespace PokeTokenBar.Windows;
 public partial class MainWindow : Window
 {
     private readonly UsageStore _usageStore;
+    private readonly CompanionStore _companionStore;
 
-    public MainWindow(WindowsAppPaths paths, UsageStore usageStore)
+    public MainWindow(
+        WindowsAppPaths paths,
+        UsageStore usageStore,
+        CompanionStore companionStore)
     {
         _usageStore = usageStore;
+        _companionStore = companionStore;
         InitializeComponent();
         StoragePathText.Text = paths.DataDirectory;
         ApplyUsageState();
+        ApplyCompanionState();
     }
 
     public event EventHandler? RefreshRequested;
@@ -50,6 +56,31 @@ public partial class MainWindow : Window
         StatusText.Text = _usageStore.LastUpdated is { } updated
             ? $"Codex · {updated.LocalDateTime:HH:mm:ss} 갱신"
             : "Codex";
+    }
+
+    public void ApplyCompanionState()
+    {
+        var progress = _companionStore.EggProgress;
+        var percent = (int)Math.Round(progress * 100);
+        EggProgressBar.Value = progress;
+        CompanionTitleText.Text = $"새 알 · {percent}%";
+
+        if (!_companionStore.InstallBaselineSet)
+        {
+            CompanionProgressText.Text = "첫 사용량 동기화 후 부화를 시작합니다";
+            return;
+        }
+
+        if (_companionStore.ReadyToHatch)
+        {
+            CompanionTitleText.Text = "새 알 · 부화 준비 완료";
+            CompanionProgressText.Text = "다음 단계에서 포켓몬을 만나게 됩니다";
+            return;
+        }
+
+        CompanionProgressText.Text = _companionStore.EggStarted
+            ? $"{TokenFormatter.Compact(_companionStore.EggTokensToHatch)} 토큰 후 부화"
+            : "다음 사용량부터 알이 자라기 시작합니다";
     }
 
     public void ShowNearNotificationArea()
