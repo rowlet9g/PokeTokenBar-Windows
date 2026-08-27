@@ -1,10 +1,15 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PokeTokenBar.Core;
 using PokeTokenBar.Platform.Windows;
+using Image = System.Windows.Controls.Image;
+using MediaBrushes = System.Windows.Media.Brushes;
 using MediaColor = System.Windows.Media.Color;
+using MediaColorConverter = System.Windows.Media.ColorConverter;
+using WpfHorizontalAlignment = System.Windows.HorizontalAlignment;
 
 namespace PokeTokenBar.Windows;
 
@@ -12,14 +17,22 @@ public partial class MainWindow : Window
 {
     private readonly UsageStore _usageStore;
     private readonly CompanionStore _companionStore;
+    private readonly PokemonSpriteStore _spriteStore;
+    private readonly CancellationToken _applicationToken;
+    private int _pokedexGeneration;
+    private string? _pokedexSignature;
 
     public MainWindow(
         WindowsAppPaths paths,
         UsageStore usageStore,
-        CompanionStore companionStore)
+        CompanionStore companionStore,
+        PokemonSpriteStore spriteStore,
+        CancellationToken applicationToken)
     {
         _usageStore = usageStore;
         _companionStore = companionStore;
+        _spriteStore = spriteStore;
+        _applicationToken = applicationToken;
         InitializeComponent();
         StoragePathText.Text = paths.DataDirectory;
         ApplyUsageState();
@@ -64,6 +77,8 @@ public partial class MainWindow : Window
 
     public void ApplyCompanionState()
     {
+        ApplyEvolutionLine();
+        ApplyPokedexState();
         if (_companionStore.HasActivePokemon)
         {
             ApplyPokemonState();
@@ -105,6 +120,182 @@ public partial class MainWindow : Window
             return;
         }
 
+        PokemonImage.Source = CreateBitmap(bytes);
+    }
+
+    private void ApplyEvolutionLine()
+    {
+        var stages = _companionStore.CurrentLineStages;
+        EvolutionLinePanel.Children.Clear();
+        EvolutionLinePanel.Visibility = stages.Count == 0
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+
+        for (var index = 0; index < stages.Count; index++)
+        {
+            if (index > 0)
+            {
+                EvolutionLinePanel.Children.Add(new TextBlock
+                {
+                    Margin = new Thickness(4, 0, 4, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = Brush("#FF596273"),
+                    FontSize = 10,
+                    Text = "›",
+                });
+            }
+
+            var stage = stages[index];
+            var isCurrent = stage.Status == PokemonLineStageStatus.Current;
+            EvolutionLinePanel.Children.Add(new Border
+            {
+                Padding = new Thickness(7, 3, 7, 3),
+                Background = Brush(isCurrent ? "#FF263E4B" : "#FF252A34"),
+                BorderBrush = Brush(isCurrent ? "#FF7DD3FC" : "#FF343A46"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(8),
+                Child = new TextBlock
+                {
+                    Foreground = Brush(stage.Status == PokemonLineStageStatus.HiddenFuture
+                        ? "#FF7D8797"
+                        : isCurrent ? "#FF7DD3FC" : "#FFAEB7C7"),
+                    FontSize = 9,
+                    FontWeight = isCurrent ? FontWeights.SemiBold : FontWeights.Normal,
+                    Text = stage.Name,
+                },
+            });
+        }
+    }
+
+    private void ApplyPokedexState()
+    {
+        var species = _companionStore.DexSpecies;
+        var collectionCount = _companionStore.CollectionEntries.Count;
+        PokedexCountText.Text = $"{species.Count}종 · {collectionCount}마리";
+        EmptyPokedexView.Visibility = species.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        var signature = string.Join(
+            '|',
+            species.Select(item => $"{item.SpeciesId}:{item.Name}:{item.IsShiny}:{item.IsRaising}"));
+        if (string.Equals(signature, _pokedexSignature, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _pokedexSignature = signature;
+        var generation = Interlocked.Increment(ref _pokedexGeneration);
+        PokedexItemsPanel.Children.Clear();
+        var imageTargets = new Dictionary<int, Image>();
+        foreach (var item in species)
+        {
+            var image = new Image
+            {
+                Width = 62,
+                Height = 62,
+                HorizontalAlignment = WpfHorizontalAlignment.Center,
+                Stretch = Stretch.Uniform,
+            };
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.NearestNeighbor);
+            imageTargets[item.SpeciesId] = image;
+            PokedexItemsPanel.Children.Add(CreatePokedexCard(item, image));
+        }
+
+        _ = LoadPokedexSpritesAsync(species, imageTargets, generation);
+    }
+
+    private static Border CreatePokedexCard(PokemonDexSpecies item, Image image)
+    {
+        var panel = new StackPanel();
+        panel.Children.Add(image);
+        panel.Children.Add(new TextBlock
+        {
+            Margin = new Thickness(0, 1, 0, 0),
+            HorizontalAlignment = WpfHorizontalAlignment.Center,
+            Foreground = MediaBrushes.White,
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            MaxWidth = 88,
+            Text = $"{(item.IsShiny ? "★ " : string.Empty)}{item.Name}",
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Margin = new Thickness(0, 2, 0, 0),
+            HorizontalAlignment = WpfHorizontalAlignment.Center,
+            Foreground = item.IsRaising ? Brush("#FF7DD3FC") : Brush("#FF7D8797"),
+            FontSize = 9,
+            Text = item.IsRaising
+                ? $"#{item.SpeciesId:000} · 육성 중"
+                : $"#{item.SpeciesId:000} · {RarityName(item.Rarity)}",
+        });
+
+        return new Border
+        {
+            Width = 104,
+            Height = 108,
+            Margin = new Thickness(3),
+            Padding = new Thickness(5),
+            Background = Brush(item.IsRaising ? "#FF202A33" : "#FF20242C"),
+            BorderBrush = Brush(item.IsRaising ? "#FF3C8DAA" : "#FF343A46"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Child = panel,
+        };
+    }
+
+    private async Task LoadPokedexSpritesAsync(
+        IReadOnlyList<PokemonDexSpecies> species,
+        IReadOnlyDictionary<int, Image> imageTargets,
+        int generation)
+    {
+        try
+        {
+            foreach (var item in species)
+            {
+                byte[]? bytes;
+                try
+                {
+                    bytes = await _spriteStore.GetSpriteAsync(
+                        item.SpeciesId,
+                        item.IsShiny,
+                        _applicationToken);
+                }
+                catch (OperationCanceledException) when (_applicationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (bytes is null
+                    || generation != Volatile.Read(ref _pokedexGeneration)
+                    || _applicationToken.IsCancellationRequested)
+                {
+                    continue;
+                }
+
+                if (imageTargets.TryGetValue(item.SpeciesId, out var image))
+                {
+                    image.Source = CreateBitmap(bytes);
+                }
+            }
+        }
+        catch (OperationCanceledException) when (_applicationToken.IsCancellationRequested)
+        {
+            // Normal application shutdown.
+        }
+        catch
+        {
+            // Cached text records remain useful when the sprite host is unavailable.
+        }
+    }
+
+    private static BitmapImage CreateBitmap(byte[] bytes)
+    {
         using var stream = new MemoryStream(bytes, writable: false);
         var bitmap = new BitmapImage();
         bitmap.BeginInit();
@@ -112,8 +303,20 @@ public partial class MainWindow : Window
         bitmap.StreamSource = stream;
         bitmap.EndInit();
         bitmap.Freeze();
-        PokemonImage.Source = bitmap;
+        return bitmap;
     }
+
+    private static SolidColorBrush Brush(string value) =>
+        new((MediaColor)MediaColorConverter.ConvertFromString(value));
+
+    private static string RarityName(PokemonRarity rarity) => rarity switch
+    {
+        PokemonRarity.Common => "일반",
+        PokemonRarity.Uncommon => "특별",
+        PokemonRarity.Rare => "희귀",
+        PokemonRarity.Legendary => "전설",
+        _ => rarity.ToString(),
+    };
 
     private void ApplyPokemonState()
     {
@@ -161,5 +364,25 @@ public partial class MainWindow : Window
     private void RefreshButton_OnClick(object sender, RoutedEventArgs e)
     {
         RefreshRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void HomeTabButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ShowTab(showPokedex: false);
+    }
+
+    private void PokedexTabButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ShowTab(showPokedex: true);
+    }
+
+    private void ShowTab(bool showPokedex)
+    {
+        HomeView.Visibility = showPokedex ? Visibility.Collapsed : Visibility.Visible;
+        PokedexView.Visibility = showPokedex ? Visibility.Visible : Visibility.Collapsed;
+        HomeTabButton.Background = Brush(showPokedex ? "#00171A21" : "#FF2B3440");
+        HomeTabButton.Foreground = Brush(showPokedex ? "#FF7D8797" : "#FFFFFFFF");
+        PokedexTabButton.Background = Brush(showPokedex ? "#FF2B3440" : "#00171A21");
+        PokedexTabButton.Foreground = Brush(showPokedex ? "#FFFFFFFF" : "#FF7D8797");
     }
 }

@@ -165,3 +165,34 @@ public sealed class PokemonDexEntry
 
     public Dictionary<int, string> Names { get; set; } = [];
 }
+
+public enum PokemonLineStageStatus
+{
+    Realized,
+    Current,
+    HiddenFuture,
+}
+
+public sealed record PokemonLineStage(
+    int? SpeciesId,
+    string Name,
+    PokemonLineStageStatus Status,
+    bool IsShiny);
+
+public sealed record PokemonCollectionEntry(
+    string Id,
+    int FinalSpeciesId,
+    string FinalName,
+    IReadOnlyList<int> ChainOrder,
+    PokemonRarity Rarity,
+    DateTimeOffset CaughtAt,
+    bool IsShiny,
+    PokemonNature Nature,
+    bool IsRaising);
+
+public sealed record PokemonDexSpecies(
+    int SpeciesId,
+    string Name,
+    PokemonRarity Rarity,
+    bool IsShiny,
+    bool IsRaising);

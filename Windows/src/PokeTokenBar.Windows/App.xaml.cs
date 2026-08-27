@@ -61,7 +61,12 @@ public partial class App : System.Windows.Application
         _companionStore.Changed += CompanionStore_OnChanged;
 
         _appIcon = LoadAppIcon();
-        _popover = new MainWindow(paths, _usageStore, _companionStore);
+        _popover = new MainWindow(
+            paths,
+            _usageStore,
+            _companionStore,
+            _spriteStore,
+            _refreshCancellation.Token);
         _popover.RefreshRequested += Popover_OnRefreshRequested;
         MainWindow = _popover;
 

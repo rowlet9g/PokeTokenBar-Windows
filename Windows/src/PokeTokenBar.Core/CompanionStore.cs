@@ -260,6 +260,142 @@ public sealed class CompanionStore
         }
     }
 
+    public IReadOnlyList<PokemonLineStage> CurrentLineStages
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                if (_state.ActivePokemon is not { } active)
+                {
+                    return [];
+                }
+
+                return active.PlannedPathIds
+                    .Select((speciesId, index) => index switch
+                    {
+                        _ when index < active.StageIndex => new PokemonLineStage(
+                            speciesId,
+                            NameFor(active.Names, speciesId),
+                            PokemonLineStageStatus.Realized,
+                            active.IsShiny),
+                        _ when index == active.StageIndex => new PokemonLineStage(
+                            speciesId,
+                            NameFor(active.Names, speciesId),
+                            PokemonLineStageStatus.Current,
+                            active.IsShiny),
+                        _ => new PokemonLineStage(
+                            null,
+                            "???",
+                            PokemonLineStageStatus.HiddenFuture,
+                            active.IsShiny),
+                    })
+                    .ToArray();
+            }
+        }
+    }
+
+    public IReadOnlyList<PokemonCollectionEntry> CollectionEntries
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                var entries = new List<PokemonCollectionEntry>();
+                if (_state.ActivePokemon is { } active)
+                {
+                    entries.Add(new PokemonCollectionEntry(
+                        $"active-{active.BaseId}-{active.CurrentId}",
+                        active.CurrentId,
+                        active.CurrentName,
+                        active.PathIds.ToArray(),
+                        active.Rarity,
+                        DateTimeOffset.MaxValue,
+                        active.IsShiny,
+                        active.Nature,
+                        true));
+                }
+
+                entries.AddRange(_state.Dex
+                    .OrderByDescending(entry => entry.CaughtAt)
+                    .Select(entry => new PokemonCollectionEntry(
+                        entry.Id,
+                        entry.FinalId,
+                        NameFor(entry.Names, entry.FinalId),
+                        entry.ChainOrder.ToArray(),
+                        entry.Rarity,
+                        entry.CaughtAt,
+                        entry.IsShiny,
+                        entry.Nature,
+                        false)));
+                return entries;
+            }
+        }
+    }
+
+    public IReadOnlyList<PokemonDexSpecies> DexSpecies
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                var species = new Dictionary<int, PokemonDexSpecies>();
+                foreach (var entry in _state.Dex.OrderBy(item => item.CaughtAt))
+                {
+                    foreach (var speciesId in entry.ChainOrder)
+                    {
+                        if (!PokemonAssets.HasSprite(speciesId))
+                        {
+                            continue;
+                        }
+
+                        if (species.TryGetValue(speciesId, out var existing))
+                        {
+                            species[speciesId] = existing with
+                            {
+                                IsShiny = existing.IsShiny || entry.IsShiny,
+                                IsRaising = false,
+                            };
+                        }
+                        else
+                        {
+                            species[speciesId] = new PokemonDexSpecies(
+                                speciesId,
+                                NameFor(entry.Names, speciesId),
+                                entry.Rarity,
+                                entry.IsShiny,
+                                false);
+                        }
+                    }
+                }
+
+                if (_state.ActivePokemon is { } active)
+                {
+                    foreach (var speciesId in active.PathIds.Take(active.StageIndex + 1))
+                    {
+                        if (species.TryGetValue(speciesId, out var existing))
+                        {
+                            species[speciesId] = existing with
+                            {
+                                IsShiny = existing.IsShiny || active.IsShiny,
+                            };
+                            continue;
+                        }
+
+                        species[speciesId] = new PokemonDexSpecies(
+                            speciesId,
+                            NameFor(active.Names, speciesId),
+                            active.Rarity,
+                            active.IsShiny,
+                            true);
+                    }
+                }
+
+                return species.Values.OrderBy(item => item.SpeciesId).ToArray();
+            }
+        }
+    }
+
     public string LastDate
     {
         get
@@ -793,6 +929,26 @@ public sealed class CompanionStore
             .Where(entry => PokemonAssets.HasSprite(entry.BaseId)
                 && PokemonAssets.HasSprite(entry.FinalId))
             .ToList();
+        foreach (var entry in state.Dex)
+        {
+            entry.Id = string.IsNullOrWhiteSpace(entry.Id)
+                ? Guid.NewGuid().ToString("N")
+                : entry.Id;
+            entry.ChainOrder ??= [];
+            entry.ChainOrder = entry.ChainOrder.Where(PokemonAssets.HasSprite).ToList();
+            if (entry.ChainOrder.Count == 0)
+            {
+                entry.ChainOrder = entry.BaseId == entry.FinalId
+                    ? [entry.BaseId]
+                    : [entry.BaseId, entry.FinalId];
+            }
+
+            entry.Names ??= [];
+            entry.Names = entry.Names
+                .Where(pair => PokemonAssets.HasSprite(pair.Key)
+                    && !string.IsNullOrWhiteSpace(pair.Value))
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
         if (state.ActivePokemon is { } active)
         {
             SanitizeActivePokemon(state, active);
@@ -844,4 +1000,7 @@ public sealed class CompanionStore
 
     private static string DateKey(DateOnly date) =>
         date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    private static string NameFor(IReadOnlyDictionary<int, string> names, int speciesId) =>
+        names.TryGetValue(speciesId, out var name) ? name : $"#{speciesId}";
 }

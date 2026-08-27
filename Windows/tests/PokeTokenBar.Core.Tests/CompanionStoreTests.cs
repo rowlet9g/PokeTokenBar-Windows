@@ -197,6 +197,44 @@ public sealed class CompanionStoreTests
     }
 
     [Fact]
+    public async Task Active_line_hides_future_species_and_dex_exposes_only_realized_forms()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var store = new CompanionStore(
+            StatePath(temporary),
+            FakePokemonProvider.BulbasaurLine(),
+            new ConstantRandomSource(1));
+        Update(store, new Dictionary<string, long> { ["codex"] = 0 });
+        Update(store, new Dictionary<string, long>
+        {
+            ["codex"] = PokemonBalance.EggHatchThreshold,
+        });
+
+        await store.EnsureHatchedAsync();
+
+        Assert.Collection(
+            store.CurrentLineStages,
+            stage =>
+            {
+                Assert.Equal(1, stage.SpeciesId);
+                Assert.Equal("이상해씨", stage.Name);
+                Assert.Equal(PokemonLineStageStatus.Current, stage.Status);
+            },
+            stage =>
+            {
+                Assert.Null(stage.SpeciesId);
+                Assert.Equal("???", stage.Name);
+                Assert.Equal(PokemonLineStageStatus.HiddenFuture, stage.Status);
+            },
+            stage => Assert.Equal(PokemonLineStageStatus.HiddenFuture, stage.Status));
+        var dexSpecies = Assert.Single(store.DexSpecies);
+        Assert.Equal(1, dexSpecies.SpeciesId);
+        Assert.True(dexSpecies.IsRaising);
+        var activeEntry = Assert.Single(store.CollectionEntries);
+        Assert.True(activeEntry.IsRaising);
+    }
+
+    [Fact]
     public async Task Hatch_overflow_is_carried_into_growth_and_can_evolve_immediately()
     {
         using var temporary = TemporaryDirectory.Create();
@@ -268,6 +306,69 @@ public sealed class CompanionStoreTests
         Assert.False(store.HasActivePokemon);
         Assert.Equal(1, store.DexCount);
         Assert.Equal(0, store.EggUsage);
+        Assert.Equal(new[] { 1, 2, 3 }, store.DexSpecies.Select(item => item.SpeciesId));
+        Assert.All(store.DexSpecies, item => Assert.False(item.IsRaising));
+        var graduated = Assert.Single(store.CollectionEntries);
+        Assert.False(graduated.IsRaising);
+        Assert.Equal("이상해꽃", graduated.FinalName);
+
+        var reloaded = CreateStore(temporary);
+        Assert.Equal(new[] { 1, 2, 3 }, reloaded.DexSpecies.Select(item => item.SpeciesId));
+        Assert.Equal("이상해꽃", Assert.Single(reloaded.CollectionEntries).FinalName);
+    }
+
+    [Fact]
+    public void Fresh_store_has_an_empty_collection()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var store = CreateStore(temporary);
+
+        Assert.Empty(store.CurrentLineStages);
+        Assert.Empty(store.CollectionEntries);
+        Assert.Empty(store.DexSpecies);
+    }
+
+    [Fact]
+    public void Permanent_species_wins_raising_status_while_shiny_discovery_is_merged()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        File.WriteAllText(
+            StatePath(temporary),
+            """
+            {
+              "activePokemon": {
+                "baseId": 1,
+                "pathIds": [1],
+                "plannedPathIds": [1, 2, 3],
+                "stageIndex": 0,
+                "rarity": "common",
+                "totalForms": 3,
+                "isShiny": true,
+                "nature": "hardy",
+                "names": { "1": "이상해씨", "2": "이상해풀", "3": "이상해꽃" }
+              },
+              "dex": [{
+                "id": "graduated-one",
+                "baseId": 1,
+                "finalId": 2,
+                "chainOrder": [1, 2],
+                "rarity": "common",
+                "caughtAt": "2026-08-26T00:00:00Z",
+                "isShiny": false,
+                "nature": "hardy",
+                "names": { "1": "이상해씨", "2": "이상해풀" }
+              }]
+            }
+            """,
+            new UTF8Encoding(false));
+
+        var store = CreateStore(temporary);
+
+        Assert.Equal(new[] { 1, 2 }, store.DexSpecies.Select(item => item.SpeciesId));
+        var bulbasaur = store.DexSpecies[0];
+        Assert.False(bulbasaur.IsRaising);
+        Assert.True(bulbasaur.IsShiny);
+        Assert.Equal(2, store.CollectionEntries.Count);
     }
 
     [Fact]

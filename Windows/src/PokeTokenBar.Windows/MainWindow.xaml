@@ -21,6 +21,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -60,7 +61,35 @@
                 </StackPanel>
             </DockPanel>
 
-            <StackPanel Grid.Row="1"
+            <Border Grid.Row="1"
+                    Margin="0,12,0,6"
+                    Padding="3"
+                    Background="#FF11141A"
+                    CornerRadius="8">
+                <UniformGrid Columns="2">
+                    <Button x:Name="HomeTabButton"
+                            Height="28"
+                            Click="HomeTabButton_OnClick"
+                            Background="#FF2B3440"
+                            BorderThickness="0"
+                            Foreground="White"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Content="HOME" />
+                    <Button x:Name="PokedexTabButton"
+                            Height="28"
+                            Click="PokedexTabButton_OnClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FF7D8797"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Content="POKÉDEX" />
+                </UniformGrid>
+            </Border>
+
+            <StackPanel x:Name="HomeView"
+                        Grid.Row="2"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center">
                 <Grid Width="96"
@@ -113,8 +142,13 @@
                            Foreground="#FF8F98A8"
                            FontSize="10"
                            Text="첫 사용량 동기화 후 부화를 시작합니다" />
+                <StackPanel x:Name="EvolutionLinePanel"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal"
+                            Visibility="Collapsed" />
                 <TextBlock x:Name="TokenValueText"
-                           Margin="0,12,0,0"
+                           Margin="0,10,0,0"
                            HorizontalAlignment="Center"
                            Foreground="White"
                            FontFamily="Consolas"
@@ -165,7 +199,58 @@
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel Grid.Row="2">
+            <Grid x:Name="PokedexView"
+                  Grid.Row="2"
+                  Margin="0,8,0,6"
+                  Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <DockPanel Margin="2,0,2,10">
+                    <TextBlock x:Name="PokedexCountText"
+                               DockPanel.Dock="Right"
+                               VerticalAlignment="Bottom"
+                               Foreground="#FF7DD3FC"
+                               FontSize="11"
+                               Text="0종 · 0마리" />
+                    <StackPanel>
+                        <TextBlock Foreground="White"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Text="포켓몬 도감" />
+                        <TextBlock Margin="0,2,0,0"
+                                   Foreground="#FF7D8797"
+                                   FontSize="10"
+                                   Text="직접 만난 모습만 기록됩니다" />
+                    </StackPanel>
+                </DockPanel>
+                <Grid Grid.Row="1">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <WrapPanel x:Name="PokedexItemsPanel"
+                                   HorizontalAlignment="Left" />
+                    </ScrollViewer>
+                    <StackPanel x:Name="EmptyPokedexView"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                        <TextBlock HorizontalAlignment="Center"
+                                   Foreground="#FF7DD3FC"
+                                   FontSize="32"
+                                   Text="?" />
+                        <TextBlock Margin="0,6,0,0"
+                                   Foreground="#FFAEB7C7"
+                                   FontSize="12"
+                                   Text="아직 만난 포켓몬이 없습니다" />
+                        <TextBlock Margin="0,3,0,0"
+                                   Foreground="#FF7D8797"
+                                   FontSize="10"
+                                   Text="알이 부화하면 첫 기록이 생깁니다" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <StackPanel Grid.Row="3">
                 <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
                 <TextBlock Foreground="#FF7D8797"
                            FontSize="11"

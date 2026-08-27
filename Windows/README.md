@@ -43,6 +43,9 @@ implementation remains in `../Sources` and acts as the behavioral reference.
 - Strict evolution-chain URL validation and an offline-friendly cache. A stale
   base index remains usable when GraphQL is unavailable, with a bounded REST
   fallback when no index exists yet.
+- Home/Pokédex popup tabs, a hidden-future evolution line, and sprite-backed
+  species cards. The Pokédex shows only forms actually reached by the active
+  companion plus every form permanently registered by graduated companions.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.
@@ -52,9 +55,9 @@ time, and size. It reads only the metadata prefix of older candidate parent
 sessions until a fork dependency actually needs the full file.
 
 The current popup covers the complete core loop: egg, hatch, growth, evolution,
-graduation, and a fresh egg. The next porting layer is the collection/Pokédex
-view, event animations and notifications, inventory/shop, settings, and the
-remaining usage providers.
+graduation, a fresh egg, and the first collection/Pokédex view. The next
+porting layer is the catch log, event animations and notifications,
+inventory/shop, settings, and the remaining usage providers.
 
 ## Build
 
