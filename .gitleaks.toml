@@ -1,0 +1,11 @@
+title = "PokeTokenBar gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow the known non-secret Claude plan-tier test fixture"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^Tests/PokeTokenBarTests/PokeTokenBarTests\.swift$''']
+regexes = ['''XCTAssertEqual\(credential\.rateLimitTier,\s*"default_claude_max_20x"\)''']
