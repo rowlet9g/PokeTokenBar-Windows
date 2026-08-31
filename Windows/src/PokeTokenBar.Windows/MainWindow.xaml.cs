@@ -79,6 +79,7 @@ public partial class MainWindow : Window
 
     public void ApplyCompanionState()
     {
+        ApplyPersistenceStatus();
         ApplyEvolutionLine();
         ApplyPokedexState();
         if (_companionStore.HasActivePokemon)
@@ -112,6 +113,23 @@ public partial class MainWindow : Window
         CompanionProgressText.Text = _companionStore.EggStarted
             ? $"{TokenFormatter.Compact(_companionStore.EggTokensToHatch)} 토큰 후 부화"
             : "다음 사용량부터 알이 자라기 시작합니다";
+    }
+
+    private void ApplyPersistenceStatus()
+    {
+        if (_companionStore.LastPersistenceError is not { } error)
+        {
+            PersistenceErrorText.Visibility = Visibility.Visible;
+            PersistenceErrorText.Foreground = Brush("#FF697386");
+            PersistenceErrorText.Text = $"State · {_companionStore.StateLoadDescription}";
+            PersistenceErrorText.ToolTip = _companionStore.StateFilePath;
+            return;
+        }
+
+        PersistenceErrorText.Visibility = Visibility.Visible;
+        PersistenceErrorText.Foreground = Brush("#FFFF806B");
+        PersistenceErrorText.Text = $"저장 상태 오류 · {error}";
+        PersistenceErrorText.ToolTip = error;
     }
 
     public void SetPokemonSprite(byte[]? bytes)

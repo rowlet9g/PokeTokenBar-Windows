@@ -22,6 +22,7 @@ public sealed class CompanionStore
     private CompanionState _state;
     private string? _lastPersistenceError;
     private bool _persistenceEnabled = true;
+    private string _stateLoadDescription = "State loading has not started.";
 
     public CompanionStore(
         string filePath,
@@ -434,6 +435,17 @@ public sealed class CompanionStore
         }
     }
 
+    public string StateLoadDescription
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _stateLoadDescription;
+            }
+        }
+    }
+
     public void Update(
         IReadOnlyDictionary<string, long> todayTokensByProvider,
         DateOnly todayDate,
@@ -799,11 +811,6 @@ public sealed class CompanionStore
 
     private CompanionState LoadState()
     {
-        if (!File.Exists(_filePath))
-        {
-            return new CompanionState();
-        }
-
         const int readAttempts = 3;
         for (var attempt = 1; attempt <= readAttempts; attempt++)
         {
@@ -817,10 +824,24 @@ public sealed class CompanionStore
                 var decoded = JsonSerializer.Deserialize<CompanionState>(stream, JsonOptions)
                     ?? throw new JsonException("Companion state was empty.");
                 Sanitize(decoded);
+                _stateLoadDescription = decoded.ActivePokemon is { } active
+                    ? $"Loaded state with active species #{active.CurrentId}."
+                    : $"Loaded state with no active species and {decoded.Dex.Count} graduated entries.";
                 return decoded;
+            }
+            catch (FileNotFoundException)
+            {
+                _stateLoadDescription = "No companion state file existed at startup.";
+                return new CompanionState();
+            }
+            catch (DirectoryNotFoundException)
+            {
+                _stateLoadDescription = "The companion state directory did not exist at startup.";
+                return new CompanionState();
             }
             catch (JsonException error)
             {
+                _stateLoadDescription = $"The companion state was invalid JSON: {error.Message}";
                 BackupCorruptState(error.Message);
                 return new CompanionState();
             }
@@ -897,6 +918,7 @@ public sealed class CompanionStore
     private void DisablePersistenceAfterLoadFailure(string errorDescription)
     {
         _persistenceEnabled = false;
+        _stateLoadDescription = $"The companion state could not be read: {errorDescription}";
         _lastPersistenceError =
             $"Companion state could not be loaded; saving is disabled until restart: {errorDescription}";
     }

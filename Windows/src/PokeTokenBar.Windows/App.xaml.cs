@@ -58,6 +58,11 @@ public partial class App : System.Windows.Application
         _companionStore = new CompanionStore(
             Path.Combine(paths.DataDirectory, "companion-state.json"),
             pokemonProvider);
+        LogCompanionStateLoad(paths.LogsDirectory, _companionStore);
+        if (_companionStore.LastPersistenceError is { } persistenceError)
+        {
+            LogCompanionPersistenceError(paths.LogsDirectory, persistenceError);
+        }
         _companionStore.Changed += CompanionStore_OnChanged;
 
         _appIcon = LoadAppIcon();
@@ -307,6 +312,41 @@ public partial class App : System.Windows.Application
         finally
         {
             DestroyIcon(handle);
+        }
+    }
+
+    private static void LogCompanionPersistenceError(string logsDirectory, string description)
+    {
+        try
+        {
+            var line = $"{DateTimeOffset.Now:O} {description}{Environment.NewLine}";
+            File.AppendAllText(Path.Combine(logsDirectory, "companion-errors.log"), line);
+        }
+        catch (IOException)
+        {
+            // The visible popup still reports the persistence failure.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // The visible popup still reports the persistence failure.
+        }
+    }
+
+    private static void LogCompanionStateLoad(string logsDirectory, CompanionStore store)
+    {
+        try
+        {
+            var line = $"{DateTimeOffset.Now:O} {store.StateFilePath} | "
+                + $"{store.StateLoadDescription}{Environment.NewLine}";
+            File.AppendAllText(Path.Combine(logsDirectory, "companion-load.log"), line);
+        }
+        catch (IOException)
+        {
+            // State loading is unaffected when diagnostics cannot be written.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // State loading is unaffected when diagnostics cannot be written.
         }
     }
 

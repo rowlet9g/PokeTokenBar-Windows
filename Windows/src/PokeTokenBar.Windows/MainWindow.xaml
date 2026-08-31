@@ -295,6 +295,12 @@
                            FontFamily="Consolas"
                            FontSize="11"
                            TextWrapping="Wrap" />
+                <TextBlock x:Name="PersistenceErrorText"
+                           Margin="0,5,0,0"
+                           Foreground="#FFFF806B"
+                           FontSize="9"
+                           TextWrapping="Wrap"
+                           Visibility="Collapsed" />
             </StackPanel>
         </Grid>
     </Border>
