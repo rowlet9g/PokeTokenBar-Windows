@@ -8,6 +8,7 @@ Package.resolved
 **/bin/
 **/obj/
 **/TestResults/
+Windows/artifacts/
 .ptb-data/
 *.suo
 *.user

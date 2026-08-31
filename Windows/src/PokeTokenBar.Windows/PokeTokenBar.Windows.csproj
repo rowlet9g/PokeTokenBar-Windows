@@ -12,6 +12,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>..\..\..\assets\icon.ico</ApplicationIcon>
+    <Product>PokeTokenBar</Product>
+    <Description>Raise Pokémon with your local Codex token usage.</Description>
+    <Company>rowlet9g</Company>
   </PropertyGroup>
 
   <ItemGroup>

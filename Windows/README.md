@@ -80,3 +80,16 @@ Requires the .NET 10 SDK and Windows 10 or newer.
 dotnet build .\PokeTokenBar.Windows.sln
 dotnet test .\PokeTokenBar.Windows.sln
 ```
+
+## Install for the current Windows user
+
+`install.ps1` publishes a self-contained `win-x64` executable, installs it to
+`%LOCALAPPDATA%\Programs\PokeTokenBar`, and creates PokeTokenBar shortcuts on
+the desktop and in the Start menu:
+
+```powershell
+.\install.ps1
+```
+
+After installation, launch PokeTokenBar from either shortcut. Re-run the same
+script whenever a newer local build should replace the installed executable.
