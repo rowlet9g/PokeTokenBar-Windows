@@ -138,8 +138,30 @@ public sealed class CompanionStoreTests
         var store = new CompanionStore(path);
 
         Assert.False(store.InstallBaselineSet);
+        Assert.Equal(0, store.UsedSinceInstall);
         Assert.False(File.Exists(path));
         Assert.True(File.Exists($"{path}.corrupt"));
+    }
+
+    [Fact]
+    public void Transiently_locked_state_is_never_overwritten_by_a_fresh_fallback()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var path = StatePath(temporary);
+        const string original = "{ \"installBaselineSet\": true, \"usedSinceInstall\": 123 }";
+        File.WriteAllText(path, original, new UTF8Encoding(false));
+
+        CompanionStore store;
+        using (var exclusive = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            store = CreateStore(temporary);
+            Update(store, new Dictionary<string, long> { ["codex"] = 500 });
+        }
+
+        Assert.True(store.InstallBaselineSet);
+        Assert.Equal(0, store.UsedSinceInstall);
+        Assert.Contains("saving is disabled", store.LastPersistenceError, StringComparison.Ordinal);
+        Assert.Equal(original, File.ReadAllText(path));
     }
 
     [Fact]

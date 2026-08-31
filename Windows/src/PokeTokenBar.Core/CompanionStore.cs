@@ -21,6 +21,7 @@ public sealed class CompanionStore
     private readonly SemaphoreSlim _hatchGate = new(1, 1);
     private CompanionState _state;
     private string? _lastPersistenceError;
+    private bool _persistenceEnabled = true;
 
     public CompanionStore(
         string filePath,
@@ -803,37 +804,53 @@ public sealed class CompanionStore
             return new CompanionState();
         }
 
-        try
+        const int readAttempts = 3;
+        for (var attempt = 1; attempt <= readAttempts; attempt++)
         {
-            using var stream = new FileStream(
-                _filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read);
-            var decoded = JsonSerializer.Deserialize<CompanionState>(stream, JsonOptions)
-                ?? throw new JsonException("Companion state was empty.");
-            Sanitize(decoded);
-            return decoded;
+            try
+            {
+                using var stream = new FileStream(
+                    _filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete);
+                var decoded = JsonSerializer.Deserialize<CompanionState>(stream, JsonOptions)
+                    ?? throw new JsonException("Companion state was empty.");
+                Sanitize(decoded);
+                return decoded;
+            }
+            catch (JsonException error)
+            {
+                BackupCorruptState(error.Message);
+                return new CompanionState();
+            }
+            catch (IOException error) when (attempt < readAttempts)
+            {
+                _lastPersistenceError = error.Message;
+                Thread.Sleep(50 * attempt);
+            }
+            catch (IOException error)
+            {
+                DisablePersistenceAfterLoadFailure(error.Message);
+                return new CompanionState();
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                DisablePersistenceAfterLoadFailure(error.Message);
+                return new CompanionState();
+            }
         }
-        catch (JsonException error)
-        {
-            BackupCorruptState(error.Message);
-            return new CompanionState();
-        }
-        catch (IOException error)
-        {
-            _lastPersistenceError = error.Message;
-            return new CompanionState();
-        }
-        catch (UnauthorizedAccessException error)
-        {
-            _lastPersistenceError = error.Message;
-            return new CompanionState();
-        }
+
+        throw new InvalidOperationException("Companion state read attempts ended unexpectedly.");
     }
 
     private void TrySaveState()
     {
+        if (!_persistenceEnabled)
+        {
+            return;
+        }
+
         var temporaryPath = $"{_filePath}.tmp-{Guid.NewGuid():N}";
         try
         {
@@ -875,6 +892,13 @@ public sealed class CompanionStore
                 // A stale temporary file is preferable to losing in-memory progress.
             }
         }
+    }
+
+    private void DisablePersistenceAfterLoadFailure(string errorDescription)
+    {
+        _persistenceEnabled = false;
+        _lastPersistenceError =
+            $"Companion state could not be loaded; saving is disabled until restart: {errorDescription}";
     }
 
     private void BackupCorruptState(string errorDescription)
