@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     private readonly CancellationToken _applicationToken;
     private int _pokedexGeneration;
     private string? _pokedexSignature;
+    private bool _hideOnDeactivate = true;
 
     public MainWindow(
         WindowsAppPaths paths,
@@ -341,8 +342,9 @@ public partial class MainWindow : Window
             + $"{TokenFormatter.Compact(_companionStore.TokensToNextStage)} 토큰 후 {destination}";
     }
 
-    public void ShowNearNotificationArea()
+    public void ShowNearNotificationArea(bool hideOnDeactivate = true)
     {
+        _hideOnDeactivate = hideOnDeactivate;
         var workArea = SystemParameters.WorkArea;
         Left = workArea.Right - Width - 12;
         Top = workArea.Bottom - Height - 12;
@@ -353,11 +355,15 @@ public partial class MainWindow : Window
     protected override void OnDeactivated(EventArgs e)
     {
         base.OnDeactivated(e);
-        Hide();
+        if (_hideOnDeactivate)
+        {
+            Hide();
+        }
     }
 
     private void HideButton_OnClick(object sender, RoutedEventArgs e)
     {
+        _hideOnDeactivate = true;
         Hide();
     }
 

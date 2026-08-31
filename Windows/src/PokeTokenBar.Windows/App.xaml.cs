@@ -74,6 +74,11 @@ public partial class App : System.Windows.Application
         _trayIcon.ToggleRequested += (_, _) => TogglePopover();
         _trayIcon.ExitRequested += (_, _) => ExitApplication();
 
+        // A newly registered notification icon can be placed in Windows' overflow
+        // area. Showing the popup once makes first launch discoverable; after it is
+        // dismissed the application continues to behave as a tray-only app.
+        _popover.ShowNearNotificationArea(hideOnDeactivate: false);
+
         _usageTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromMinutes(2),
