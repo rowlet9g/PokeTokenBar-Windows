@@ -13,6 +13,8 @@ implementation remains in `../Sources` and acts as the behavioral reference.
 ## Current milestone
 
 - Windows notification-area icon and popup shell.
+- A draggable borderless popup. Drag the title area to move it; the `—` button
+  hides it to the notification area, and reopening preserves the session position.
 - Single-instance guard using a named mutex.
 - `%LOCALAPPDATA%/PokeTokenBar` data, cache, and log directories.
 - Swift-compatible `TokenFormatter` with contract tests.

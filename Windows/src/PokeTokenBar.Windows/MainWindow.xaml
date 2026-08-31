@@ -47,9 +47,12 @@
                             BorderThickness="0"
                             Foreground="#FFAEB7C7"
                             FontSize="18"
-                            Content="&#x2715;" />
+                            ToolTip="Hide to notification area"
+                            Content="&#x2014;" />
                 </StackPanel>
-                <StackPanel>
+                <StackPanel Cursor="SizeAll"
+                            MouseLeftButtonDown="HeaderDragRegion_OnMouseLeftButtonDown"
+                            ToolTip="Drag to move PokeTokenBar">
                     <TextBlock Foreground="White"
                                FontSize="22"
                                FontWeight="SemiBold"

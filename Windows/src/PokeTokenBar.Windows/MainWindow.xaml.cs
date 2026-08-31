@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Input;
 using PokeTokenBar.Core;
 using PokeTokenBar.Platform.Windows;
 using Image = System.Windows.Controls.Image;
@@ -23,6 +24,7 @@ public partial class MainWindow : Window
     private int _pokedexGeneration;
     private string? _pokedexSignature;
     private bool _hideOnDeactivate = true;
+    private bool _hasUserPosition;
 
     public MainWindow(
         WindowsAppPaths paths,
@@ -592,11 +594,50 @@ public partial class MainWindow : Window
     public void ShowNearNotificationArea(bool hideOnDeactivate = true)
     {
         _hideOnDeactivate = hideOnDeactivate;
-        var workArea = SystemParameters.WorkArea;
-        Left = workArea.Right - Width - 12;
-        Top = workArea.Bottom - Height - 12;
+        if (!_hasUserPosition)
+        {
+            var workArea = SystemParameters.WorkArea;
+            Left = workArea.Right - Width - 12;
+            Top = workArea.Bottom - Height - 12;
+        }
+        else
+        {
+            KeepInsideNearestWorkArea();
+        }
         Show();
         Activate();
+    }
+
+    private void HeaderDragRegion_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        try
+        {
+            DragMove();
+            _hasUserPosition = true;
+        }
+        catch (InvalidOperationException)
+        {
+            // The mouse button was released before WPF began the drag operation.
+        }
+    }
+
+    private void KeepInsideNearestWorkArea()
+    {
+        var width = ActualWidth > 0 ? ActualWidth : Width;
+        var height = ActualHeight > 0 ? ActualHeight : Height;
+        var center = new System.Drawing.Point(
+            (int)Math.Round(Left + width / 2),
+            (int)Math.Round(Top + height / 2));
+        var workArea = System.Windows.Forms.Screen.FromPoint(center).WorkingArea;
+        var maximumLeft = Math.Max(workArea.Left, workArea.Right - width);
+        var maximumTop = Math.Max(workArea.Top, workArea.Bottom - height);
+        Left = Math.Clamp(Left, workArea.Left, maximumLeft);
+        Top = Math.Clamp(Top, workArea.Top, maximumTop);
     }
 
     protected override void OnDeactivated(EventArgs e)
