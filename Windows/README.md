@@ -46,6 +46,9 @@ implementation remains in `../Sources` and acts as the behavioral reference.
 - Home/Pokédex popup tabs, a hidden-future evolution line, and sprite-backed
   species cards. The Pokédex shows only forms actually reached by the active
   companion plus every form permanently registered by graduated companions.
+- Species/Catch log collection modes. The catch log keeps the active companion
+  first, sorts graduated companions newest-first, and shows rarity, nature,
+  shiny state, evolution sprites, and graduation time for each individual.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.
@@ -56,8 +59,8 @@ sessions until a fork dependency actually needs the full file.
 
 The current popup covers the complete core loop: egg, hatch, growth, evolution,
 graduation, a fresh egg, and the first collection/Pokédex view. The next
-porting layer is the catch log, event animations and notifications,
-inventory/shop, settings, and the remaining usage providers.
+porting layer is event animations and notifications, inventory/shop, settings,
+and the remaining usage providers.
 
 ## Build
 

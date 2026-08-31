@@ -205,6 +205,7 @@
                   Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <DockPanel Margin="2,0,2,10">
@@ -225,11 +226,44 @@
                                    Text="직접 만난 모습만 기록됩니다" />
                     </StackPanel>
                 </DockPanel>
-                <Grid Grid.Row="1">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                <Border Grid.Row="1"
+                        Margin="0,0,0,8"
+                        Padding="3"
+                        Background="#FF11141A"
+                        CornerRadius="7">
+                    <UniformGrid Columns="2">
+                        <Button x:Name="SpeciesModeButton"
+                                Height="25"
+                                Click="SpeciesModeButton_OnClick"
+                                Background="#FF2B3440"
+                                BorderThickness="0"
+                                Foreground="White"
+                                FontSize="10"
+                                FontWeight="SemiBold"
+                                Content="종별 도감" />
+                        <Button x:Name="CatchLogModeButton"
+                                Height="25"
+                                Click="CatchLogModeButton_OnClick"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="#FF7D8797"
+                                FontSize="10"
+                                FontWeight="SemiBold"
+                                Content="포획 기록" />
+                    </UniformGrid>
+                </Border>
+                <Grid Grid.Row="2">
+                    <ScrollViewer x:Name="SpeciesScrollView"
+                                  VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
                         <WrapPanel x:Name="PokedexItemsPanel"
                                    HorizontalAlignment="Left" />
+                    </ScrollViewer>
+                    <ScrollViewer x:Name="CatchLogScrollView"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Visibility="Collapsed">
+                        <StackPanel x:Name="CatchLogItemsPanel" />
                     </ScrollViewer>
                     <StackPanel x:Name="EmptyPokedexView"
                                 HorizontalAlignment="Center"

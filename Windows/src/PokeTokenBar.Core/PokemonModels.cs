@@ -184,8 +184,9 @@ public sealed record PokemonCollectionEntry(
     int FinalSpeciesId,
     string FinalName,
     IReadOnlyList<int> ChainOrder,
+    IReadOnlyDictionary<int, string> Names,
     PokemonRarity Rarity,
-    DateTimeOffset CaughtAt,
+    DateTimeOffset? CaughtAt,
     bool IsShiny,
     PokemonNature Nature,
     bool IsRaising);

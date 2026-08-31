@@ -309,8 +309,9 @@ public sealed class CompanionStore
                         active.CurrentId,
                         active.CurrentName,
                         active.PathIds.ToArray(),
+                        new Dictionary<int, string>(active.Names),
                         active.Rarity,
-                        DateTimeOffset.MaxValue,
+                        null,
                         active.IsShiny,
                         active.Nature,
                         true));
@@ -323,6 +324,7 @@ public sealed class CompanionStore
                         entry.FinalId,
                         NameFor(entry.Names, entry.FinalId),
                         entry.ChainOrder.ToArray(),
+                        new Dictionary<int, string>(entry.Names),
                         entry.Rarity,
                         entry.CaughtAt,
                         entry.IsShiny,

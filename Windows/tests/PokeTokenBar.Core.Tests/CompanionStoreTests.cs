@@ -232,6 +232,8 @@ public sealed class CompanionStoreTests
         Assert.True(dexSpecies.IsRaising);
         var activeEntry = Assert.Single(store.CollectionEntries);
         Assert.True(activeEntry.IsRaising);
+        Assert.Null(activeEntry.CaughtAt);
+        Assert.Equal("이상해씨", activeEntry.Names[1]);
     }
 
     [Fact]
@@ -311,6 +313,7 @@ public sealed class CompanionStoreTests
         var graduated = Assert.Single(store.CollectionEntries);
         Assert.False(graduated.IsRaising);
         Assert.Equal("이상해꽃", graduated.FinalName);
+        Assert.NotNull(graduated.CaughtAt);
 
         var reloaded = CreateStore(temporary);
         Assert.Equal(new[] { 1, 2, 3 }, reloaded.DexSpecies.Select(item => item.SpeciesId));
@@ -369,6 +372,49 @@ public sealed class CompanionStoreTests
         Assert.False(bulbasaur.IsRaising);
         Assert.True(bulbasaur.IsShiny);
         Assert.Equal(2, store.CollectionEntries.Count);
+        Assert.True(store.CollectionEntries[0].IsRaising);
+        Assert.Equal("graduated-one", store.CollectionEntries[1].Id);
+    }
+
+    [Fact]
+    public void Graduated_collection_entries_are_sorted_newest_first()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        File.WriteAllText(
+            StatePath(temporary),
+            """
+            {
+              "dex": [
+                {
+                  "id": "older",
+                  "baseId": 1,
+                  "finalId": 1,
+                  "chainOrder": [1],
+                  "rarity": "common",
+                  "caughtAt": "2026-08-20T00:00:00Z",
+                  "nature": "hardy",
+                  "names": { "1": "이상해씨" }
+                },
+                {
+                  "id": "newer",
+                  "baseId": 4,
+                  "finalId": 4,
+                  "chainOrder": [4],
+                  "rarity": "common",
+                  "caughtAt": "2026-08-30T00:00:00Z",
+                  "nature": "brave",
+                  "names": { "4": "파이리" }
+                }
+              ]
+            }
+            """,
+            new UTF8Encoding(false));
+
+        var store = CreateStore(temporary);
+
+        Assert.Equal(new[] { "newer", "older" }, store.CollectionEntries.Select(item => item.Id));
+        Assert.Equal("파이리", store.CollectionEntries[0].FinalName);
+        Assert.Equal(PokemonNature.Brave, store.CollectionEntries[0].Nature);
     }
 
     [Fact]
