@@ -8,6 +8,7 @@ Package.resolved
 **/bin/
 **/obj/
 **/TestResults/
+.ptb-data/
 *.suo
 *.user
 

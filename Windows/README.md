@@ -53,6 +53,14 @@ implementation remains in `../Sources` and acts as the behavioral reference.
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.
 
+When launching from a Codex-integrated PowerShell session, use `run-dev.ps1`.
+It keeps development state in the repository-local, git-ignored `.ptb-data`
+directory so Windows sandbox virtualization cannot split the LocalAppData view:
+
+```powershell
+.\run-dev.ps1
+```
+
 The Codex parser is streaming and keeps a cache keyed by path, modification
 time, and size. It reads only the metadata prefix of older candidate parent
 sessions until a fork dependency actually needs the full file.
