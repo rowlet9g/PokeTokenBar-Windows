@@ -2,6 +2,8 @@
 
 This directory contains the Windows-only WPF port. The original Swift/macOS
 implementation remains in `../Sources` and acts as the behavioral reference.
+Feature parity and source-retirement decisions are tracked in
+[`PORTING_STATUS.md`](PORTING_STATUS.md).
 
 ## Projects
 
@@ -51,6 +53,8 @@ implementation remains in `../Sources` and acts as the behavioral reference.
 - Species/Catch log collection modes. The catch log keeps the active companion
   first, sorts graduated companions newest-first, and shows rarity, nature,
   shiny state, evolution sprites, and graduation time for each individual.
+- Windows tray notifications for hatch, evolution, and graduation milestones.
+  Clicking a milestone notification opens the PokeTokenBar popup.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.

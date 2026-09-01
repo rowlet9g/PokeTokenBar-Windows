@@ -25,11 +25,14 @@ public sealed class TrayIconController : IDisposable
         };
 
         _notifyIcon.MouseUp += OnMouseUp;
+        _notifyIcon.BalloonTipClicked += OnBalloonTipClicked;
     }
 
     public event EventHandler? ToggleRequested;
 
     public event EventHandler? ExitRequested;
+
+    public event EventHandler? NotificationClicked;
 
     public void UpdateTooltip(string text)
     {
@@ -37,6 +40,16 @@ public sealed class TrayIconController : IDisposable
         _notifyIcon.Text = text.Length <= notifyIconTextLimit
             ? text
             : text[..notifyIconTextLimit];
+    }
+
+    public void ShowNotification(string title, string message)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _notifyIcon.ShowBalloonTip(
+            timeout: 5_000,
+            tipTitle: title,
+            tipText: message,
+            tipIcon: ToolTipIcon.Info);
     }
 
     public void Dispose()
@@ -47,6 +60,7 @@ public sealed class TrayIconController : IDisposable
         }
 
         _notifyIcon.MouseUp -= OnMouseUp;
+        _notifyIcon.BalloonTipClicked -= OnBalloonTipClicked;
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
         _contextMenu.Dispose();
@@ -60,4 +74,7 @@ public sealed class TrayIconController : IDisposable
             ToggleRequested?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    private void OnBalloonTipClicked(object? sender, EventArgs e) =>
+        NotificationClicked?.Invoke(this, EventArgs.Empty);
 }

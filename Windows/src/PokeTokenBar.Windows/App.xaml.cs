@@ -19,6 +19,7 @@ public partial class App : System.Windows.Application
     private Icon? _appIcon;
     private UsageStore? _usageStore;
     private CompanionStore? _companionStore;
+    private CompanionMilestoneTracker? _milestoneTracker;
     private PokemonSpriteStore? _spriteStore;
     private HttpClient? _httpClient;
     private DispatcherTimer? _usageTimer;
@@ -58,6 +59,7 @@ public partial class App : System.Windows.Application
         _companionStore = new CompanionStore(
             Path.Combine(paths.DataDirectory, "companion-state.json"),
             pokemonProvider);
+        _milestoneTracker = new CompanionMilestoneTracker(CaptureCompanionSnapshot());
         LogCompanionStateLoad(paths.LogsDirectory, _companionStore);
         if (_companionStore.LastPersistenceError is { } persistenceError)
         {
@@ -77,6 +79,7 @@ public partial class App : System.Windows.Application
         _trayIcon = new TrayIconController(_appIcon);
         _trayIcon.ToggleRequested += (_, _) => TogglePopover();
         _trayIcon.ExitRequested += (_, _) => ExitApplication();
+        _trayIcon.NotificationClicked += (_, _) => ShowPopover();
 
         // A newly registered notification icon can be placed in Windows' overflow
         // area. Showing the popup once makes first launch discoverable; after it is
@@ -142,6 +145,16 @@ public partial class App : System.Windows.Application
         {
             _popover.ShowNearNotificationArea();
         }
+    }
+
+    private void ShowPopover()
+    {
+        if (_popover is null)
+        {
+            return;
+        }
+
+        _popover.ShowNearNotificationArea();
     }
 
     private void ExitApplication()
@@ -231,6 +244,7 @@ public partial class App : System.Windows.Application
 
         _popover?.ApplyCompanionState();
         QueueSpriteRefresh();
+        ShowCompanionMilestoneIfNeeded();
         var compact = TokenFormatter.Compact(_usageStore.TodayTotalTokens);
         if (_companionStore.HasActivePokemon)
         {
@@ -243,6 +257,46 @@ public partial class App : System.Windows.Application
             var eggPercent = (int)Math.Round(_companionStore.EggProgress * 100);
             _trayIcon?.UpdateTooltip($"PokeTokenBar · {compact} today · Egg {eggPercent}%");
         }
+    }
+
+    private CompanionMilestoneSnapshot CaptureCompanionSnapshot()
+    {
+        if (_companionStore is null)
+        {
+            return default;
+        }
+
+        return new CompanionMilestoneSnapshot(
+            _companionStore.CurrentSpeciesId,
+            _companionStore.CurrentPokemonName,
+            _companionStore.HasActivePokemon ? _companionStore.CurrentStage : 0,
+            _companionStore.IsCurrentPokemonShiny,
+            _companionStore.DexCount);
+    }
+
+    private void ShowCompanionMilestoneIfNeeded()
+    {
+        var milestone = _milestoneTracker?.Observe(CaptureCompanionSnapshot());
+        if (milestone is null || _trayIcon is null)
+        {
+            return;
+        }
+
+        var name = string.IsNullOrWhiteSpace(milestone.PokemonName)
+            ? "포켓몬"
+            : milestone.PokemonName;
+        var shiny = milestone.IsShiny ? "이로치 " : string.Empty;
+        var (title, message) = milestone.Kind switch
+        {
+            CompanionMilestoneKind.Hatched =>
+                ("포켓몬이 태어났어요!", $"새로운 동료: {shiny}{name}"),
+            CompanionMilestoneKind.Evolved =>
+                ("포켓몬이 진화했어요!", $"새로운 모습: {shiny}{name}"),
+            CompanionMilestoneKind.Graduated =>
+                ("육성을 완료했어요!", $"{shiny}{name}의 기록이 도감에 등록되었습니다."),
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+        _trayIcon.ShowNotification(title, message);
     }
 
     private void QueueSpriteRefresh()
