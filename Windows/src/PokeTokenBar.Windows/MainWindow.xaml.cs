@@ -29,6 +29,8 @@ public partial class MainWindow : Window
     private bool _applyingSettings;
     private CompanionMilestone? _pendingMilestone;
     private CompanionItemKind? _pendingPurchase;
+    private FreshEggTier? _pendingEggPurchase;
+    private bool _pendingEggShinyConfirmed;
     private CompanionItemKind? _pendingUse;
 
     public MainWindow(
@@ -242,7 +244,13 @@ public partial class MainWindow : Window
         CompanionProgressBar.Value = progress;
         CompanionProgressBar.Foreground = new SolidColorBrush(MediaColor.FromRgb(255, 90, 60));
         CompanionTitleText.Foreground = new SolidColorBrush(MediaColor.FromRgb(255, 128, 107));
-        CompanionTitleText.Text = $"새 알 · {percent}%";
+        var eggTitle = _companionStore.EggGuarantee switch
+        {
+            PokemonRarity.Uncommon => "고급 이상 알",
+            PokemonRarity.Rare => "희귀 이상 알",
+            _ => "새 알",
+        };
+        CompanionTitleText.Text = $"{eggTitle} · {percent}%";
 
         if (!_companionStore.InstallBaselineSet)
         {
@@ -549,6 +557,13 @@ public partial class MainWindow : Window
         {
             ShopItemsPanel.Children.Add(CreateShopItemCard(kind));
         }
+        if (_companionStore.HasActivePokemon)
+        {
+            foreach (var tier in Enum.GetValues<FreshEggTier>())
+            {
+                ShopItemsPanel.Children.Add(CreateFreshEggCard(tier));
+            }
+        }
 
         BagItemsPanel.Children.Clear();
         foreach (var item in _companionStore.OwnedItems)
@@ -678,6 +693,63 @@ public partial class MainWindow : Window
         return ItemCard(content);
     }
 
+    private Border CreateFreshEggCard(FreshEggTier tier)
+    {
+        var button = new System.Windows.Controls.Button
+        {
+            Margin = new Thickness(8, 0, 0, 0),
+            Padding = new Thickness(10, 4, 10, 4),
+            Tag = tier,
+            Content = _companionStore.CanBuyFreshEgg(tier) ? "구매" : "잔액 부족",
+            IsEnabled = _companionStore.CanBuyFreshEgg(tier),
+        };
+        button.Click += FreshEggBuyButton_OnClick;
+
+        var footer = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
+        DockPanel.SetDock(button, Dock.Right);
+        footer.Children.Add(button);
+        footer.Children.Add(new TextBlock
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = Brush("#FF8F98A8"),
+            FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+            FontSize = 10,
+            Text = $"가격 {TokenFormatter.Compact(CompanionItemRules.FreshEggPrice(tier))}",
+        });
+
+        var header = new StackPanel { Orientation = WpfOrientation.Horizontal };
+        header.Children.Add(new TextBlock
+        {
+            Width = 34,
+            VerticalAlignment = VerticalAlignment.Top,
+            FontSize = 23,
+            Text = "🥚",
+        });
+        var copy = new StackPanel();
+        copy.Children.Add(new TextBlock
+        {
+            Foreground = MediaBrushes.White,
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            Text = FreshEggName(tier),
+        });
+        copy.Children.Add(new TextBlock
+        {
+            Margin = new Thickness(0, 2, 0, 0),
+            Foreground = Brush("#FF8F98A8"),
+            FontSize = 9,
+            Text = FreshEggDescription(tier),
+            TextWrapping = TextWrapping.Wrap,
+            MaxWidth = 250,
+        });
+        header.Children.Add(copy);
+
+        var content = new StackPanel();
+        content.Children.Add(header);
+        content.Children.Add(footer);
+        return ItemCard(content);
+    }
+
     private static Border ItemCard(UIElement content) => new()
     {
         Margin = new Thickness(0, 0, 0, 8),
@@ -711,6 +783,22 @@ public partial class MainWindow : Window
         CompanionItemKind.Mint => "현재 포켓몬의 성격을 다른 성격으로 변경합니다.",
         CompanionItemKind.ShinyCharm => "향후 부화하는 포켓몬의 이로치 확률을 1/48로 높입니다.",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
+
+    private static string FreshEggName(FreshEggTier tier) => tier switch
+    {
+        FreshEggTier.Basic => "새 알",
+        FreshEggTier.Uncommon => "고급 이상 알",
+        FreshEggTier.Rare => "희귀 이상 알",
+        _ => throw new ArgumentOutOfRangeException(nameof(tier)),
+    };
+
+    private static string FreshEggDescription(FreshEggTier tier) => tier switch
+    {
+        FreshEggTier.Basic => "현재 포켓몬을 놓아주고 보증 없는 새 알을 받습니다.",
+        FreshEggTier.Uncommon => "현재 포켓몬을 놓아주고 고급 이상 등급을 보증합니다.",
+        FreshEggTier.Rare => "현재 포켓몬을 놓아주고 희귀 이상 등급을 보증합니다.",
+        _ => throw new ArgumentOutOfRangeException(nameof(tier)),
     };
 
     private static Image CreateSpriteImage(double size)
@@ -994,6 +1082,9 @@ public partial class MainWindow : Window
         }
 
         _pendingPurchase = kind;
+        _pendingEggPurchase = null;
+        _pendingEggShinyConfirmed = false;
+        ConfirmPurchaseButton.Content = "구매 확정";
         ShopConfirmationText.Text =
             $"{ItemName(kind)}을(를) {TokenFormatter.Compact(CompanionItemRules.Price(kind))} 토큰에 구매하겠습니까?";
         ShopConfirmationPanel.Visibility = Visibility.Visible;
@@ -1001,6 +1092,33 @@ public partial class MainWindow : Window
 
     private void ConfirmPurchaseButton_OnClick(object sender, RoutedEventArgs e)
     {
+        if (_pendingEggPurchase is { } eggTier)
+        {
+            if (_companionStore.IsCurrentPokemonShiny && !_pendingEggShinyConfirmed)
+            {
+                _pendingEggShinyConfirmed = true;
+                ShopConfirmationText.Text =
+                    "현재 포켓몬은 이로치입니다. 도감에 등록되지 않은 채 영구히 놓아주게 됩니다. 정말 계속하겠습니까?";
+                ConfirmPurchaseButton.Content = "이로치 놓아주기";
+                return;
+            }
+
+            _pendingEggPurchase = null;
+            _pendingEggShinyConfirmed = false;
+            ConfirmPurchaseButton.Content = "구매 확정";
+            ShopConfirmationPanel.Visibility = Visibility.Collapsed;
+            var purchasedEgg = _companionStore.BuyFreshEgg(eggTier);
+            ShopStatusText.Text = purchasedEgg
+                ? $"{FreshEggName(eggTier)} 구매 완료"
+                : "새 알을 구매할 수 없습니다";
+            if (purchasedEgg)
+            {
+                ShowTab(MainTab.Home);
+            }
+            ApplyInventoryState();
+            return;
+        }
+
         if (_pendingPurchase is not { } kind)
         {
             return;
@@ -1018,7 +1136,28 @@ public partial class MainWindow : Window
     private void CancelPurchaseButton_OnClick(object sender, RoutedEventArgs e)
     {
         _pendingPurchase = null;
+        _pendingEggPurchase = null;
+        _pendingEggShinyConfirmed = false;
+        ConfirmPurchaseButton.Content = "구매 확정";
         ShopConfirmationPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void FreshEggBuyButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { Tag: FreshEggTier tier })
+        {
+            return;
+        }
+
+        _pendingPurchase = null;
+        _pendingEggPurchase = tier;
+        _pendingEggShinyConfirmed = false;
+        ConfirmPurchaseButton.Content = "구매 확정";
+        ShopConfirmationText.Text =
+            $"{_companionStore.CurrentPokemonName ?? "현재 포켓몬"}을(를) 놓아주고 "
+            + $"{FreshEggName(tier)}을(를) {TokenFormatter.Compact(CompanionItemRules.FreshEggPrice(tier))} 토큰에 구매하겠습니까? "
+            + "놓아준 포켓몬은 도감에 등록되지 않습니다.";
+        ShopConfirmationPanel.Visibility = Visibility.Visible;
     }
 
     private void BagUseButton_OnClick(object sender, RoutedEventArgs e)

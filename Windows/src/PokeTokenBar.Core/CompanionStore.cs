@@ -322,6 +322,52 @@ public sealed class CompanionStore
         }
     }
 
+    public PokemonRarity? EggGuarantee
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _state.ActivePokemon is null ? _state.EggGuarantee : null;
+            }
+        }
+    }
+
+    public bool CanBuyFreshEgg(FreshEggTier tier)
+    {
+        lock (_stateLock)
+        {
+            return _state.ActivePokemon is not null
+                && Math.Max(0, _state.UsedSinceInstall - _state.SpentTokens)
+                    >= CompanionItemRules.FreshEggPrice(tier);
+        }
+    }
+
+    public bool BuyFreshEgg(FreshEggTier tier)
+    {
+        lock (_stateLock)
+        {
+            if (_state.ActivePokemon is null
+                || Math.Max(0, _state.UsedSinceInstall - _state.SpentTokens)
+                    < CompanionItemRules.FreshEggPrice(tier))
+            {
+                return false;
+            }
+
+            _state.SpentTokens = SaturatingTokenAdd(
+                _state.SpentTokens,
+                CompanionItemRules.FreshEggPrice(tier));
+            _state.ActivePokemon = null;
+            _state.EggUsage = 0;
+            _state.PendingHatchId = null;
+            _state.EggGuarantee = CompanionItemRules.FreshEggGuarantee(tier);
+            TrySaveState();
+        }
+
+        Changed?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
     public int CurrentStage
     {
         get
@@ -709,6 +755,13 @@ public sealed class CompanionStore
                     return false;
                 }
 
+                if (!CompanionItemRules.MeetsGuarantee(line.Rarity, _state.EggGuarantee))
+                {
+                    _state.PendingHatchId = null;
+                    TrySaveState();
+                    return false;
+                }
+
                 var overflow = Math.Max(0, _state.EggUsage - PokemonBalance.EggHatchThreshold);
                 var natureCount = Enum.GetValues<PokemonNature>().Length;
                 _state.ActivePokemon = new PokemonMonState
@@ -727,6 +780,7 @@ public sealed class CompanionStore
                     Names = line.Names.ToDictionary(pair => pair.Key, pair => pair.Value),
                 };
                 _state.EggUsage = 0;
+                _state.EggGuarantee = null;
                 _state.PendingHatchId = null;
                 ProcessActiveProgress();
                 TrySaveState();
@@ -830,11 +884,23 @@ public sealed class CompanionStore
     {
         try
         {
+            PokemonRarity? guarantee;
+            lock (_stateLock)
+            {
+                guarantee = _state.EggGuarantee;
+            }
+
             var index = await _pokemonProvider!.GetBaseSpeciesIndexAsync(cancellationToken)
                 .ConfigureAwait(false);
             var candidates = index
                 .Where(species => PokemonAssets.HasSprite(species.Id)
                     && species.Id != PokemonAssets.DittoSpeciesId)
+                .Where(species => CompanionItemRules.MeetsGuarantee(
+                    PokemonBalance.RarityFrom(
+                        species.CaptureRate,
+                        isLegendary: false,
+                        isMythical: false),
+                    guarantee))
                 .ToArray();
             if (candidates.Length > 0)
             {
@@ -1149,6 +1215,7 @@ public sealed class CompanionStore
         if (state.ActivePokemon is { } active)
         {
             SanitizeActivePokemon(state, active);
+            state.EggGuarantee = null;
         }
 
         state.Inventory ??= [];

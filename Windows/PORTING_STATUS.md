@@ -19,8 +19,8 @@ or loaded by the Windows solution.
 | Distribution | release scripts | Partial | Self-contained `win-x64` install and shortcuts exist; signing and a packaged installer remain. |
 | Event animations | `SpriteAnimation`, `FloatingPetPanel` | Partial | Milestone overlays queue while hidden and the companion gently idles while visible; the separate floating-pet panel remains. |
 | Settings and startup | `SettingsView`, `LoginItem` | Complete | Refresh interval, topmost, notifications, and per-user launch-at-login are persisted and applied. |
-| Bag and shop | `BagView`, `ShopView` | Partial | Wallet, inventory, two-step purchase/use, Rare Candy, Mint, and Shiny Charm are complete; paid egg rerolls remain. |
-| Rare Candy, premium eggs, Shiny Charm | related Swift models/tests | Partial | Rare Candy, Mint, and Shiny Charm are complete; guaranteed paid eggs remain. |
+| Bag and shop | `BagView`, `ShopView` | Complete | Wallet, inventory, confirmations, three items, and paid egg rerolls are implemented. |
+| Rare Candy, premium eggs, Shiny Charm | related Swift models/tests | Complete | Item effects and Basic/Uncommon/Rare guaranteed egg tiers match the original balance. |
 | Additional usage providers | provider implementations and tests | Not ported | Codex is the only Windows provider today. Add providers individually. |
 | Save transfer | `SaveTransfer` | Not ported | Define a versioned Windows import/export format before implementation. |
 | Update checker | `UpdateChecker` | Not ported | Choose a signed release channel before enabling self-update. |
@@ -39,6 +39,5 @@ license files, and behavioral test data should remain.
 ## Recommended order
 
 1. Hatch/evolution animations.
-2. Paid egg rerolls and guarantee tiers.
-3. Selected additional usage providers.
-4. Signed installer, update channel, and final macOS-source retirement.
+2. Selected additional usage providers.
+3. Signed installer, update channel, and final macOS-source retirement.

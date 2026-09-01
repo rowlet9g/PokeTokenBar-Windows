@@ -63,6 +63,10 @@ Feature parity and source-retirement decisions are tracked in
   Candy adds 100M companion XP, Mint rerolls nature, and the one-time Shiny
   Charm improves future hatch odds from 1/64 to 1/48. Purchases and item use
   require an inline confirmation.
+- Paid fresh-egg rerolls at the original 1B/2.5B/4B balance for Basic,
+  Uncommon-or-better, and Rare-or-better tiers. Releasing a shiny companion
+  requires an additional warning step, and rolled rarity is revalidated before
+  a guarantee is consumed.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.

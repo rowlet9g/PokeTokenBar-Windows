@@ -103,6 +103,76 @@ public sealed class CompanionItemTests
         Assert.Equal(500_000_000, restored.SpentTokens);
     }
 
+    [Theory]
+    [InlineData(FreshEggTier.Basic, 1_000_000_000)]
+    [InlineData(FreshEggTier.Uncommon, 2_500_000_000)]
+    [InlineData(FreshEggTier.Rare, 4_000_000_000)]
+    public void Fresh_egg_prices_match_the_original_balance(FreshEggTier tier, long expected)
+    {
+        Assert.Equal(expected, CompanionItemRules.FreshEggPrice(tier));
+    }
+
+    [Fact]
+    public void Buying_a_guaranteed_egg_discards_active_without_graduating_it()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var store = CreateStore(
+            temporary,
+            used: 3_000_000_000,
+            active: ActivePokemon(usedAtStage: 90_000_000));
+
+        Assert.True(store.BuyFreshEgg(FreshEggTier.Uncommon));
+
+        Assert.False(store.HasActivePokemon);
+        Assert.Equal(0, store.DexCount);
+        Assert.Equal(0, store.EggUsage);
+        Assert.Equal(PokemonRarity.Uncommon, store.EggGuarantee);
+        Assert.Equal(2_500_000_000, store.SpentTokens);
+        Assert.Equal(3_000_000_000, store.UsedSinceInstall);
+    }
+
+    [Fact]
+    public void Fresh_egg_requires_an_active_companion_and_sufficient_wallet()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var eggStore = CreateStore(temporary, used: 5_000_000_000);
+        Assert.False(eggStore.BuyFreshEgg(FreshEggTier.Basic));
+
+        using var second = TemporaryDirectory.Create();
+        var poorStore = CreateStore(second, used: 999_999_999, active: ActivePokemon());
+        Assert.False(poorStore.BuyFreshEgg(FreshEggTier.Basic));
+        Assert.True(poorStore.HasActivePokemon);
+    }
+
+    [Theory]
+    [InlineData(PokemonRarity.Common, PokemonRarity.Uncommon, false)]
+    [InlineData(PokemonRarity.Uncommon, PokemonRarity.Uncommon, true)]
+    [InlineData(PokemonRarity.Legendary, PokemonRarity.Rare, true)]
+    public void Guarantee_rejects_only_lower_rarities(
+        PokemonRarity rolled,
+        PokemonRarity guarantee,
+        bool expected)
+    {
+        Assert.Equal(expected, CompanionItemRules.MeetsGuarantee(rolled, guarantee));
+    }
+
+    [Fact]
+    public void Egg_guarantee_and_spending_survive_restart()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var first = CreateStore(
+            temporary,
+            used: 5_000_000_000,
+            active: ActivePokemon());
+        Assert.True(first.BuyFreshEgg(FreshEggTier.Rare));
+
+        var restored = new CompanionStore(temporary.StatePath);
+
+        Assert.Equal(PokemonRarity.Rare, restored.EggGuarantee);
+        Assert.Equal(4_000_000_000, restored.SpentTokens);
+        Assert.False(restored.HasActivePokemon);
+    }
+
     private static CompanionStore CreateStore(
         TemporaryDirectory temporary,
         long used,

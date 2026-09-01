@@ -12,6 +12,8 @@ public sealed class CompanionState
 
     public int? PendingHatchId { get; set; }
 
+    public PokemonRarity? EggGuarantee { get; set; }
+
     public Dictionary<string, long>? ClaimedTodayTokensByProvider { get; set; }
 
     public string LastDate { get; set; } = string.Empty;
