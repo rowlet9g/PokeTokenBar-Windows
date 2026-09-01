@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-release:
+    name: build Windows release
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Validate release version
+        id: version
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Release tag must use vMAJOR.MINOR.PATCH format."
+          }
+
+          [xml]$props = Get-Content -LiteralPath "Windows/Directory.Build.props"
+          $declaredVersion = [string]$props.Project.PropertyGroup.VersionPrefix
+          if ($version -ne $declaredVersion) {
+            throw "Tag version $version does not match project version $declaredVersion."
+          }
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Restore
+        run: dotnet restore Windows/PokeTokenBar.Windows.sln
+
+      - name: Build
+        run: dotnet build Windows/PokeTokenBar.Windows.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Windows/PokeTokenBar.Windows.sln --configuration Release --no-build --verbosity normal
+
+      - name: Install verified Inno Setup 7
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $downloadDirectory = Join-Path $env:RUNNER_TEMP "inno-setup"
+          New-Item -ItemType Directory -Path $downloadDirectory -Force | Out-Null
+          gh release download "is-7_1_0" --repo "jrsoftware/issrc" --pattern "innosetup-7.1.0-x64.exe" --dir $downloadDirectory
+          $installer = Join-Path $downloadDirectory "innosetup-7.1.0-x64.exe"
+          gh release verify-asset $installer --repo "jrsoftware/issrc"
+          $process = Start-Process -FilePath $installer -ArgumentList @("/VERYSILENT", "/CURRENTUSER", "/NORESTART", "/SUPPRESSMSGBOXES", "/SP-") -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "Inno Setup installation failed with exit code $($process.ExitCode)."
+          }
+
+          $compiler = @(
+            (Join-Path $env:LOCALAPPDATA "Programs/Inno Setup 7/ISCC.exe")
+            (Join-Path $env:ProgramFiles "Inno Setup 7/ISCC.exe")
+          ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if ([string]::IsNullOrWhiteSpace($compiler)) {
+            throw "Inno Setup compiler was not found after installation."
+          }
+          "ISCC_PATH=$compiler" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build release artifacts
+        shell: pwsh
+        run: .\Windows\publish-release.ps1 -Version "${{ steps.version.outputs.version }}" -RequireInstaller
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $assets = Get-ChildItem -LiteralPath "Windows/artifacts/release/$version" -File |
+            Select-Object -ExpandProperty FullName
+          gh release create "${{ github.ref_name }}" @assets --verify-tag --title "PokeTokenBar $version" --generate-notes

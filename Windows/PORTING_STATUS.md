@@ -16,7 +16,7 @@ or loaded by the Windows solution.
 | Tray popup and single instance | `PokeTokenBarApp`, `SingleInstance` | Complete | Implemented with WPF, WinForms `NotifyIcon`, and a named mutex. |
 | Milestone notifications | companion UI events | Complete | Windows tray notifications cover hatch, evolution, and graduation. |
 | Persistence diagnostics | `AppLog`, companion storage | Complete | Diagnostics are written to logs and kept out of the user-facing popup. |
-| Distribution | release scripts | Partial | Self-contained `win-x64` install and shortcuts exist; signing and a packaged installer remain. |
+| Distribution | release scripts | Partial | Portable ZIP, checksums, a per-user Inno Setup installer, and tag-based GitHub Releases are implemented; Authenticode signing remains. |
 | Event animations | `SpriteAnimation`, `FloatingPetPanel` | Complete | Milestone overlays, idle motion, and the manually verified draggable floating-pet window are implemented. |
 | Settings and startup | `SettingsView`, `LoginItem` | Complete | Refresh interval, topmost, notifications, and per-user launch-at-login are persisted and applied. |
 | Bag and shop | `BagView`, `ShopView` | Complete | Wallet, inventory, confirmations, three items, and paid egg rerolls are implemented. |
@@ -38,6 +38,6 @@ license files, and behavioral test data should remain.
 
 ## Recommended order
 
-1. Hatch/evolution animations.
-2. Signed installer and update channel.
+1. Manually validate clean install, in-place update, uninstall, and portable ZIP on Windows.
+2. Add Authenticode signing and an update channel.
 3. Final macOS-source retirement.

@@ -1,74 +1,78 @@
-# 릴리스 프로세스
+# Windows 릴리스 절차
 
-버전 배포 시 **코드뿐 아니라 문서(README·웹페이지·cask)까지 일관되게** 갱신하기 위한 런북.
-기계적 단계는 `scripts/release.sh` 가 자동화하고, 내용 판단이 필요한 부분은 아래 체크리스트로 검토한다.
+PokeTokenBar Windows 포팅판은 `Windows/Directory.Build.props`의 버전을 단일 기준으로
+사용합니다. `vMAJOR.MINOR.PATCH` 태그가 같은 버전의 커밋을 가리킬 때 GitHub Actions가
+빌드, 테스트, 패키징과 GitHub Release 생성을 수행합니다.
 
-## 한 줄 배포
+## 로컬 산출물 만들기
 
-```bash
-# (선택) 릴리스 노트를 파일로 작성
-cat > /tmp/notes.md <<'EOF'
-## What's new
-- ...
-EOF
+Portable ZIP만 만들려면 다음 명령을 사용합니다.
 
-PTB_NOTES_FILE=/tmp/notes.md ./scripts/release.sh 2.1.1
+```powershell
+.\Windows\publish-release.ps1 -SkipInstaller
 ```
 
-`scripts/release.sh <version>` 가 순서대로 수행:
+Inno Setup 7이 설치되어 있다면 Installer까지 함께 만들어집니다.
 
-1. **test-gate** (`./scripts/test-gate.sh`) — 전체 테스트 + 로직 커버리지. 실패 시 중단.
-2. **문서 일관성 검토** — 정적 버전 배지·제거된 의존성(예: `ccusage`) 잔존을 자동 경고 + 아래 수동 체크리스트 출력. 경고 시 진행 여부를 묻는다.
-3. **VERSION 범프** (`scripts/build-app.sh`, 아직 미커밋).
-4. **빌드 + zip** (`build/PokeTokenBar.zip`) + 빌드 버전 일치 확인 — **push 전 검증**(실패해도 범프 미커밋이라 origin/main 무손상).
-5. **커밋 + push** (`git push origin main`, 빌드 성공 후).
-6. **GitHub Release** 생성 (노트는 `PTB_NOTES_FILE` 또는 최소 노트).
-7. **Homebrew cask** 버전 갱신 (`chattymin/homebrew-tap`).
-8. **GitHub Pages 재빌드** 요청 (랜딩 동적 배지 갱신 유도).
-
-> `main` 브랜치에서만 실행(스크립트가 가드). 비-main 에서 실행 시 즉시 중단.
-
-검토만 하려면: `./scripts/release.sh --check-only`
-
-## E2E 스모크 (선택 — GUI 세션 필요)
-
-```bash
-./scripts/e2e.sh
+```powershell
+.\Windows\publish-release.ps1 -RequireInstaller
 ```
 
-실제 앱 번들로 빌드→기동→데이터 파이프라인(스냅샷 갱신·구조 검증·AppLog)→메뉴바
-status item(AX)→팝오버 오픈(AXPress)까지 7개 체크. 5단계는 터미널에 손쉬운 사용
-(Accessibility) 권한 필요 — 미허용이면 해당 단계만 SKIP. release.sh 에 포함하지 않는
-이유: GUI 세션·권한 의존이라 헤드리스 실행이 깨질 수 있음. 릴리스 전 수동 1회 권장.
+필요하면 `ISCC_PATH` 환경 변수로 `ISCC.exe` 위치를 지정할 수 있습니다. 산출물은
+`Windows/artifacts/release/<version>`에 생성되며 Git에서 제외됩니다.
 
-## 문서 검토 체크리스트 (내용 변경 시)
+- `PokeTokenBar-<version>-win-x64.zip`
+- `PokeTokenBar-<version>-win-x64-setup.exe`
+- `SHA256SUMS.txt`
+- `release-manifest.json`
 
-`release.sh` 2단계가 출력하는 것 — **기능/동작이 바뀐 릴리스면 반드시 갱신**:
+## 새 버전 배포
 
-- [ ] **README.md / README.ko.md / README.ja.md** — 기능 목록, 요구사항, 데이터 소스, 스크린샷. 3개 언어 동시.
-- [ ] **랜딩 페이지** (`gh-pages` 브랜치 `index.html`) — hero·features·companion·install·works-with·요구사항·푸터.
-  - 릴리스 배지는 **동적**(`img.shields.io/github/v/release/...`) → 버전 자동 반영. **기능/문구만 수동.**
-  - i18n 사전 **en/ko/ja 동시** 갱신 + 마크업 키 ⊆ 사전, en==ko==ja 키 정합 유지.
-  - 갱신은 worktree 로: `git worktree add /tmp/ptb-gh-pages gh-pages` → 편집 → commit/push → `git worktree remove`.
-- [ ] **homebrew-tap cask** caveats — 설치 요구사항(의존성 등) 최신인지. 버전은 release.sh 가 갱신.
+1. `Windows/Directory.Build.props`의 `VersionPrefix`, `AssemblyVersion`, `FileVersion`을
+   같은 새 버전으로 변경합니다.
+2. Release 빌드와 전체 테스트를 통과시킵니다.
+3. 변경을 커밋하고 `main`에 푸시합니다.
+4. 해당 커밋에 버전 태그를 만들고 푸시합니다.
 
-## 자동으로 갱신되는 것 (수동 불필요)
-
-- README·랜딩의 **release 배지** = shields 동적 배지 → 최신 릴리스 자동(캐시로 수 분 지연 가능).
-- 인앱 업데이트 알림 — `releases/latest` 기준 자동.
-
-## 배포 후 검증
-
-```bash
-brew update && brew upgrade --cask poke-token-bar
+```powershell
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
-`brew list --cask --versions poke-token-bar` 와 `/Applications/PokeTokenBar.app` 버전이 새 버전인지 확인.
+태그와 프로젝트 버전이 일치하지 않거나 태그 형식이 잘못되면 Release workflow는
+배포 전에 실패합니다. 성공하면 GitHub Release에 Installer, Portable ZIP, 체크섬,
+manifest가 첨부됩니다.
 
-## 서명 (2026-07-08 부터)
+## 설치와 제거 정책
 
-릴리스 빌드는 이 머신의 `PokeTokenBar Local` 자체서명 인증서로 서명된다
-(`scripts/create-signing-cert.sh` 로 생성, keychain 에만 존재 — 레포 미커밋).
-- designated requirement 가 버전 간 고정 → 사용자의 Keychain "항상 허용"이 업데이트 후에도 유지.
-- 전환 직후 첫 업데이트 1회는 기존(ad-hoc 시절) 허용이 무효라 마지막 프롬프트가 뜰 수 있음.
-- 인증서를 분실/재생성하면 DR 이 바뀌어 전 사용자 재프롬프트 — 재생성 금지(스크립트가 가드).
+- 설치 대상: `%LOCALAPPDATA%\Programs\PokeTokenBar`
+- 시작 메뉴 바로가기 생성
+- 바탕화면 바로가기는 기본 선택
+- 관리자 권한을 요구하지 않는 현재 사용자 설치
+- 제거 시 로그인 자동 실행 레지스트리 값 제거
+- 제거·업데이트 시 `%LOCALAPPDATA%\PokeTokenBar` 사용자 진행 상황 보존
+
+## 릴리스 전 수동 확인
+
+먼저 설치·업데이트·제거 과정에서 핵심 사용자 파일의 SHA-256이 유지되는지 자동으로
+검사할 수 있습니다. 이 스크립트는 검증 후 앱을 다시 설치합니다.
+
+```powershell
+.\Windows\test-installer.ps1 -LaunchAfter
+```
+
+- [ ] 새 설치 후 앱과 트레이 아이콘이 실행되는가
+- [ ] 기존 버전 위에 설치해도 포켓몬 진행 상황이 유지되는가
+- [ ] 바탕화면 및 시작 메뉴 바로가기가 정상인가
+- [ ] 제거 후 프로그램 파일과 바로가기는 사라지는가
+- [ ] 제거 후 `%LOCALAPPDATA%\PokeTokenBar` 데이터는 남아 있는가
+- [ ] Portable ZIP을 별도 폴더에서 실행할 수 있는가
+- [ ] `SHA256SUMS.txt`의 해시가 실제 파일과 일치하는가
+
+## 아직 자동화하지 않은 항목
+
+- Authenticode 코드 서명
+- 서명 인증서와 timestamp 서버 설정
+- 앱 내부 업데이트 확인 및 다운로드
+
+서명은 인증서와 배포 정책이 결정된 뒤 Release workflow에 별도 단계로 추가합니다.

@@ -101,8 +101,8 @@ sessions until a fork dependency actually needs the full file.
 The current popup covers the complete core loop, collection/Pokédex, shop and
 bag, milestone notifications and animations, runtime settings, startup, and
 save transfer. Gemini, Cursor, and Copilot are available as additional local
-providers. The floating pet is implemented and manually verified; release
-packaging remains afterward.
+providers. The floating pet is implemented and manually verified. Portable ZIP
+and per-user Inno Setup packaging are implemented; Authenticode signing remains.
 
 ## Build
 
@@ -128,3 +128,16 @@ script whenever a newer local build should replace the installed executable.
 On the first install, an existing `.ptb-data\companion-state.json` from
 `run-dev.ps1` is copied into the Windows data directory when no installed state
 exists yet. Existing installed progress is never overwritten.
+
+## Build release artifacts
+
+The project version is declared in `Directory.Build.props`. The release script
+always creates a self-contained portable ZIP and SHA-256 checksum. If Inno
+Setup 7 is installed, it also creates a per-user installer:
+
+```powershell
+.\publish-release.ps1 -RequireInstaller
+```
+
+See [`../RELEASE.md`](../RELEASE.md) for the tag-based GitHub Release workflow
+and the manual install/update/uninstall checks.
