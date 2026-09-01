@@ -165,7 +165,7 @@
             </Setter>
         </Style>
 
-        <Style x:Key="SettingsActionButton" TargetType="Button">
+        <Style x:Key="ModernActionButton" TargetType="Button">
             <Setter Property="Foreground" Value="#FFF3F6FA" />
             <Setter Property="Background" Value="#FF2B3440" />
             <Setter Property="BorderBrush" Value="#FF465160" />
@@ -251,6 +251,9 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style TargetType="ScrollBar"
+               BasedOn="{StaticResource ModernVerticalScrollBar}" />
     </Window.Resources>
     <Border Padding="22"
             Background="#FF171A21"
@@ -610,9 +613,11 @@
                                 <Button x:Name="ConfirmPurchaseButton"
                                         Margin="0,0,6,0"
                                         Padding="10,4"
+                                        Style="{StaticResource ModernActionButton}"
                                         Click="ConfirmPurchaseButton_OnClick"
                                         Content="구매 확정" />
                                 <Button Padding="10,4"
+                                        Style="{StaticResource ModernActionButton}"
                                         Click="CancelPurchaseButton_OnClick"
                                         Content="취소" />
                             </StackPanel>
@@ -669,9 +674,11 @@
                                         Orientation="Horizontal">
                                 <Button Margin="0,0,6,0"
                                         Padding="10,4"
+                                        Style="{StaticResource ModernActionButton}"
                                         Click="ConfirmUseButton_OnClick"
                                         Content="사용 확정" />
                                 <Button Padding="10,4"
+                                        Style="{StaticResource ModernActionButton}"
                                         Click="CancelUseButton_OnClick"
                                         Content="취소" />
                             </StackPanel>
@@ -689,10 +696,6 @@
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Collapsed">
-                <ScrollViewer.Resources>
-                    <Style TargetType="ScrollBar"
-                           BasedOn="{StaticResource ModernVerticalScrollBar}" />
-                </ScrollViewer.Resources>
                 <StackPanel Margin="2,0,2,4">
                     <TextBlock Foreground="White"
                                FontSize="18"
@@ -868,12 +871,12 @@
                                        Text="진행 상황을 파일로 백업하거나 다른 PC에서 가져옵니다" />
                             <UniformGrid Columns="2">
                                 <Button Margin="0,0,4,0"
-                                        Style="{StaticResource SettingsActionButton}"
+                                        Style="{StaticResource ModernActionButton}"
                                         Padding="8,5"
                                         Click="ExportSaveButton_OnClick"
                                         Content="내보내기" />
                                 <Button Margin="4,0,0,0"
-                                        Style="{StaticResource SettingsActionButton}"
+                                        Style="{StaticResource ModernActionButton}"
                                         Padding="8,5"
                                         Click="ImportSaveButton_OnClick"
                                         Content="가져오기" />

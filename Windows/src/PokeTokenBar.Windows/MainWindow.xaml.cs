@@ -601,6 +601,7 @@ public partial class MainWindow : Window
         {
             Margin = new Thickness(8, 0, 0, 0),
             Padding = new Thickness(10, 4, 10, 4),
+            Style = (Style)FindResource("ModernActionButton"),
             Tag = kind,
             Content = passiveOwned
                 ? "보유 중"
@@ -694,6 +695,7 @@ public partial class MainWindow : Window
                 Margin = new Thickness(0, 8, 0, 0),
                 Padding = new Thickness(10, 4, 10, 4),
                 HorizontalAlignment = WpfHorizontalAlignment.Right,
+                Style = (Style)FindResource("ModernActionButton"),
                 Tag = item.Kind,
                 Content = "사용",
                 IsEnabled = item.Kind switch
@@ -716,6 +718,7 @@ public partial class MainWindow : Window
         {
             Margin = new Thickness(8, 0, 0, 0),
             Padding = new Thickness(10, 4, 10, 4),
+            Style = (Style)FindResource("ModernActionButton"),
             Tag = tier,
             Content = _companionStore.CanBuyFreshEgg(tier) ? "구매" : "잔액 부족",
             IsEnabled = _companionStore.CanBuyFreshEgg(tier),
