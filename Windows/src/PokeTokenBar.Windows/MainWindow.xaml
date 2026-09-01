@@ -23,7 +23,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <DockPanel Grid.Row="0">
@@ -287,24 +286,6 @@
                 </Grid>
             </Grid>
 
-            <StackPanel Grid.Row="3">
-                <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
-                <TextBlock Foreground="#FF7D8797"
-                           FontSize="11"
-                           Text="Windows data directory" />
-                <TextBlock x:Name="StoragePathText"
-                           Margin="0,4,0,0"
-                           Foreground="#FFAEB7C7"
-                           FontFamily="Consolas"
-                           FontSize="11"
-                           TextWrapping="Wrap" />
-                <TextBlock x:Name="PersistenceErrorText"
-                           Margin="0,5,0,0"
-                           Foreground="#FFFF806B"
-                           FontSize="9"
-                           TextWrapping="Wrap"
-                           Visibility="Collapsed" />
-            </StackPanel>
         </Grid>
     </Border>
 </Window>

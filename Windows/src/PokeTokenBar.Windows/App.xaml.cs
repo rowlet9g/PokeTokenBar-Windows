@@ -67,7 +67,6 @@ public partial class App : System.Windows.Application
 
         _appIcon = LoadAppIcon();
         _popover = new MainWindow(
-            paths,
             _usageStore,
             _companionStore,
             _spriteStore,
