@@ -19,4 +19,6 @@ public sealed class CompanionState
     public PokemonMonState? ActivePokemon { get; set; }
 
     public List<PokemonDexEntry> Dex { get; set; } = [];
+
+    public Dictionary<string, int> Inventory { get; set; } = [];
 }

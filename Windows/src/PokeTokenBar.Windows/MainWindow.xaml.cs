@@ -28,6 +28,8 @@ public partial class MainWindow : Window
     private bool _hasUserPosition;
     private bool _applyingSettings;
     private CompanionMilestone? _pendingMilestone;
+    private CompanionItemKind? _pendingPurchase;
+    private CompanionItemKind? _pendingUse;
 
     public MainWindow(
         UsageStore usageStore,
@@ -226,6 +228,7 @@ public partial class MainWindow : Window
     {
         ApplyEvolutionLine();
         ApplyPokedexState();
+        ApplyInventoryState();
         if (_companionStore.HasActivePokemon)
         {
             ApplyPokemonState();
@@ -537,6 +540,179 @@ public partial class MainWindow : Window
         },
     };
 
+    private void ApplyInventoryState()
+    {
+        ShopWalletText.Text = TokenFormatter.Compact(_companionStore.AvailableTokens);
+        ShopItemsPanel.Children.Clear();
+        foreach (var kind in Enum.GetValues<CompanionItemKind>()
+                     .OrderBy(CompanionItemRules.Price))
+        {
+            ShopItemsPanel.Children.Add(CreateShopItemCard(kind));
+        }
+
+        BagItemsPanel.Children.Clear();
+        foreach (var item in _companionStore.OwnedItems)
+        {
+            BagItemsPanel.Children.Add(CreateBagItemCard(item));
+        }
+
+        EmptyBagView.Visibility = _companionStore.OwnedItems.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private Border CreateShopItemCard(CompanionItemKind kind)
+    {
+        var owned = _companionStore.ItemCount(kind);
+        var passiveOwned = CompanionItemRules.IsPassive(kind) && owned > 0;
+        var button = new System.Windows.Controls.Button
+        {
+            Margin = new Thickness(8, 0, 0, 0),
+            Padding = new Thickness(10, 4, 10, 4),
+            Tag = kind,
+            Content = passiveOwned
+                ? "보유 중"
+                : _companionStore.CanBuyItem(kind) ? "구매" : "잔액 부족",
+            IsEnabled = !passiveOwned && _companionStore.CanBuyItem(kind),
+        };
+        button.Click += ShopBuyButton_OnClick;
+
+        var footer = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
+        DockPanel.SetDock(button, Dock.Right);
+        footer.Children.Add(button);
+        footer.Children.Add(new TextBlock
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = Brush("#FF8F98A8"),
+            FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+            FontSize = 10,
+            Text = $"가격 {TokenFormatter.Compact(CompanionItemRules.Price(kind))}"
+                + (owned > 0 && !CompanionItemRules.IsPassive(kind) ? $" · 보유 {owned}" : string.Empty),
+        });
+
+        var header = new StackPanel { Orientation = WpfOrientation.Horizontal };
+        header.Children.Add(new TextBlock
+        {
+            Width = 34,
+            VerticalAlignment = VerticalAlignment.Top,
+            FontSize = 23,
+            Text = ItemEmoji(kind),
+        });
+        var copy = new StackPanel();
+        copy.Children.Add(new TextBlock
+        {
+            Foreground = MediaBrushes.White,
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            Text = ItemName(kind),
+        });
+        copy.Children.Add(new TextBlock
+        {
+            Margin = new Thickness(0, 2, 0, 0),
+            Foreground = Brush("#FF8F98A8"),
+            FontSize = 9,
+            Text = ItemDescription(kind),
+            TextWrapping = TextWrapping.Wrap,
+            MaxWidth = 250,
+        });
+        header.Children.Add(copy);
+
+        var content = new StackPanel();
+        content.Children.Add(header);
+        content.Children.Add(footer);
+        return ItemCard(content);
+    }
+
+    private Border CreateBagItemCard(OwnedCompanionItem item)
+    {
+        var header = new DockPanel();
+        var count = new TextBlock
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = Brush("#FF7DD3FC"),
+            FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+            FontSize = 11,
+            FontWeight = FontWeights.Bold,
+            Text = CompanionItemRules.IsPassive(item.Kind) ? "적용 중" : $"×{item.Count}",
+        };
+        DockPanel.SetDock(count, Dock.Right);
+        header.Children.Add(count);
+        header.Children.Add(new TextBlock
+        {
+            Foreground = MediaBrushes.White,
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            Text = $"{ItemEmoji(item.Kind)}  {ItemName(item.Kind)}",
+        });
+
+        var content = new StackPanel();
+        content.Children.Add(header);
+        content.Children.Add(new TextBlock
+        {
+            Margin = new Thickness(0, 4, 0, 0),
+            Foreground = Brush("#FF8F98A8"),
+            FontSize = 9,
+            Text = ItemDescription(item.Kind),
+            TextWrapping = TextWrapping.Wrap,
+        });
+        if (!CompanionItemRules.IsPassive(item.Kind))
+        {
+            var button = new System.Windows.Controls.Button
+            {
+                Margin = new Thickness(0, 8, 0, 0),
+                Padding = new Thickness(10, 4, 10, 4),
+                HorizontalAlignment = WpfHorizontalAlignment.Right,
+                Tag = item.Kind,
+                Content = "사용",
+                IsEnabled = item.Kind switch
+                {
+                    CompanionItemKind.RareCandy => _companionStore.CanUseRareCandy,
+                    CompanionItemKind.Mint => _companionStore.CanUseMint,
+                    _ => false,
+                },
+            };
+            button.Click += BagUseButton_OnClick;
+            content.Children.Add(button);
+        }
+
+        return ItemCard(content);
+    }
+
+    private static Border ItemCard(UIElement content) => new()
+    {
+        Margin = new Thickness(0, 0, 0, 8),
+        Padding = new Thickness(10),
+        Background = Brush("#FF20242C"),
+        BorderBrush = Brush("#FF343A46"),
+        BorderThickness = new Thickness(1),
+        CornerRadius = new CornerRadius(10),
+        Child = content,
+    };
+
+    private static string ItemName(CompanionItemKind kind) => kind switch
+    {
+        CompanionItemKind.RareCandy => "이상한 사탕",
+        CompanionItemKind.Mint => "민트",
+        CompanionItemKind.ShinyCharm => "이로치 부적",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
+
+    private static string ItemEmoji(CompanionItemKind kind) => kind switch
+    {
+        CompanionItemKind.RareCandy => "🍬",
+        CompanionItemKind.Mint => "🌿",
+        CompanionItemKind.ShinyCharm => "✨",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
+
+    private static string ItemDescription(CompanionItemKind kind) => kind switch
+    {
+        CompanionItemKind.RareCandy => "현재 포켓몬에게 100M 성장 경험치를 줍니다.",
+        CompanionItemKind.Mint => "현재 포켓몬의 성격을 다른 성격으로 변경합니다.",
+        CompanionItemKind.ShinyCharm => "향후 부화하는 포켓몬의 이로치 확률을 1/48로 높입니다.",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
+
     private static Image CreateSpriteImage(double size)
     {
         var image = new Image
@@ -800,6 +976,111 @@ public partial class MainWindow : Window
         ShowTab(MainTab.Settings);
     }
 
+    private void ShopTabButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ShowTab(MainTab.Shop);
+    }
+
+    private void BagTabButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ShowTab(MainTab.Bag);
+    }
+
+    private void ShopBuyButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { Tag: CompanionItemKind kind })
+        {
+            return;
+        }
+
+        _pendingPurchase = kind;
+        ShopConfirmationText.Text =
+            $"{ItemName(kind)}을(를) {TokenFormatter.Compact(CompanionItemRules.Price(kind))} 토큰에 구매하겠습니까?";
+        ShopConfirmationPanel.Visibility = Visibility.Visible;
+    }
+
+    private void ConfirmPurchaseButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_pendingPurchase is not { } kind)
+        {
+            return;
+        }
+
+        _pendingPurchase = null;
+        ShopConfirmationPanel.Visibility = Visibility.Collapsed;
+        var purchased = _companionStore.BuyItem(kind);
+        ShopStatusText.Text = purchased
+            ? $"{ItemName(kind)} 구매 완료"
+            : "구매할 수 없습니다";
+        ApplyInventoryState();
+    }
+
+    private void CancelPurchaseButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        _pendingPurchase = null;
+        ShopConfirmationPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void BagUseButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { Tag: CompanionItemKind kind })
+        {
+            return;
+        }
+
+        _pendingUse = kind;
+        BagConfirmationText.Text = $"현재 포켓몬에게 {ItemName(kind)}을(를) 사용하겠습니까?";
+        BagConfirmationPanel.Visibility = Visibility.Visible;
+    }
+
+    private void ConfirmUseButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_pendingUse is not { } kind)
+        {
+            return;
+        }
+
+        _pendingUse = null;
+        BagConfirmationPanel.Visibility = Visibility.Collapsed;
+        switch (kind)
+        {
+            case CompanionItemKind.RareCandy:
+                var result = _companionStore.UseRareCandy();
+                BagStatusText.Text = result == RareCandyUseResult.Unavailable
+                    ? "지금은 이상한 사탕을 사용할 수 없습니다"
+                    : "+100M 성장 경험치를 적용했습니다";
+                if (result != RareCandyUseResult.Unavailable)
+                {
+                    ShowTab(MainTab.Home);
+                    CompanionProgressText.Text = "+100M XP";
+                }
+                break;
+            case CompanionItemKind.Mint:
+                var nature = _companionStore.UseMint();
+                BagStatusText.Text = nature is null
+                    ? "지금은 민트를 사용할 수 없습니다"
+                    : $"성격 변경 완료 · {NatureName(nature.Value)}";
+                if (nature is not null)
+                {
+                    ShowTab(MainTab.Home);
+                    CompanionProgressText.Text = $"성격 변경 · {NatureName(nature.Value)}";
+                }
+                break;
+            case CompanionItemKind.ShinyCharm:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        ApplyInventoryState();
+    }
+
+    private void CancelUseButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        _pendingUse = null;
+        BagConfirmationPanel.Visibility = Visibility.Collapsed;
+    }
+
     private void SettingsControls_OnChanged(object sender, RoutedEventArgs e)
     {
         if (_applyingSettings
@@ -843,9 +1124,13 @@ public partial class MainWindow : Window
     {
         HomeView.Visibility = tab == MainTab.Home ? Visibility.Visible : Visibility.Collapsed;
         PokedexView.Visibility = tab == MainTab.Pokedex ? Visibility.Visible : Visibility.Collapsed;
+        ShopView.Visibility = tab == MainTab.Shop ? Visibility.Visible : Visibility.Collapsed;
+        BagView.Visibility = tab == MainTab.Bag ? Visibility.Visible : Visibility.Collapsed;
         SettingsView.Visibility = tab == MainTab.Settings ? Visibility.Visible : Visibility.Collapsed;
         SetTabStyle(HomeTabButton, tab == MainTab.Home);
         SetTabStyle(PokedexTabButton, tab == MainTab.Pokedex);
+        SetTabStyle(ShopTabButton, tab == MainTab.Shop);
+        SetTabStyle(BagTabButton, tab == MainTab.Bag);
         SetTabStyle(SettingsTabButton, tab == MainTab.Settings);
     }
 
@@ -859,6 +1144,8 @@ public partial class MainWindow : Window
     {
         Home,
         Pokedex,
+        Shop,
+        Bag,
         Settings,
     }
 }

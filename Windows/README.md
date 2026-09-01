@@ -59,6 +59,10 @@ Feature parity and source-retirement decisions are tracked in
   refresh interval, and background launch at Windows login.
 - Hatch, evolution, and graduation presentation overlays. Milestones that occur
   while the popup is hidden are queued and play the next time it opens.
+- Shop and Bag tabs backed by a persisted token wallet and inventory. Rare
+  Candy adds 100M companion XP, Mint rerolls nature, and the one-time Shiny
+  Charm improves future hatch odds from 1/64 to 1/48. Purchases and item use
+  require an inline confirmation.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.

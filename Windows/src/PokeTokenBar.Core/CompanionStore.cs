@@ -75,6 +75,153 @@ public sealed class CompanionStore
         }
     }
 
+    public long SpentTokens
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _state.SpentTokens;
+            }
+        }
+    }
+
+    public bool OwnsShinyCharm => ItemCount(CompanionItemKind.ShinyCharm) > 0;
+
+    public IReadOnlyList<OwnedCompanionItem> OwnedItems
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return Enum.GetValues<CompanionItemKind>()
+                    .Select(kind => new OwnedCompanionItem(kind, ItemCountUnsafe(kind)))
+                    .Where(item => item.Count > 0)
+                    .ToArray();
+            }
+        }
+    }
+
+    public int ItemCount(CompanionItemKind kind)
+    {
+        lock (_stateLock)
+        {
+            return ItemCountUnsafe(kind);
+        }
+    }
+
+    public bool CanBuyItem(CompanionItemKind kind)
+    {
+        lock (_stateLock)
+        {
+            return CanBuyItemUnsafe(kind);
+        }
+    }
+
+    public bool BuyItem(CompanionItemKind kind)
+    {
+        var changed = false;
+        lock (_stateLock)
+        {
+            if (!CanBuyItemUnsafe(kind))
+            {
+                return false;
+            }
+
+            var price = CompanionItemRules.Price(kind);
+            _state.SpentTokens = SaturatingTokenAdd(_state.SpentTokens, price);
+            var key = CompanionItemRules.StorageKey(kind);
+            _state.Inventory[key] = Math.Min(int.MaxValue, ItemCountUnsafe(kind) + 1);
+            TrySaveState();
+            changed = true;
+        }
+
+        if (changed)
+        {
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+
+        return true;
+    }
+
+    public bool CanUseRareCandy
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _state.ActivePokemon is not null
+                    && ItemCountUnsafe(CompanionItemKind.RareCandy) > 0;
+            }
+        }
+    }
+
+    public RareCandyUseResult UseRareCandy()
+    {
+        RareCandyUseResult result;
+        lock (_stateLock)
+        {
+            if (_state.ActivePokemon is not { } active
+                || ItemCountUnsafe(CompanionItemKind.RareCandy) <= 0)
+            {
+                return RareCandyUseResult.Unavailable;
+            }
+
+            var beforeStage = active.StageIndex;
+            DecrementItemUnsafe(CompanionItemKind.RareCandy);
+            active.UsedAtStage = SaturatingTokenAdd(
+                active.UsedAtStage,
+                CompanionItemRules.RareCandyExperience);
+            ProcessActiveProgress();
+            result = _state.ActivePokemon switch
+            {
+                null => RareCandyUseResult.Graduated,
+                { StageIndex: var stage } when stage > beforeStage => RareCandyUseResult.Evolved,
+                _ => RareCandyUseResult.Progressed,
+            };
+            TrySaveState();
+        }
+
+        Changed?.Invoke(this, EventArgs.Empty);
+        return result;
+    }
+
+    public bool CanUseMint
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _state.ActivePokemon is not null
+                    && ItemCountUnsafe(CompanionItemKind.Mint) > 0;
+            }
+        }
+    }
+
+    public PokemonNature? UseMint()
+    {
+        PokemonNature selected;
+        lock (_stateLock)
+        {
+            if (_state.ActivePokemon is not { } active
+                || ItemCountUnsafe(CompanionItemKind.Mint) <= 0)
+            {
+                return null;
+            }
+
+            var candidates = Enum.GetValues<PokemonNature>()
+                .Where(nature => nature != active.Nature)
+                .ToArray();
+            selected = candidates[(int)_randomSource.NextInt64(candidates.Length)];
+            active.Nature = selected;
+            DecrementItemUnsafe(CompanionItemKind.Mint);
+            TrySaveState();
+        }
+
+        Changed?.Invoke(this, EventArgs.Empty);
+        return selected;
+    }
+
     public long EggUsage
     {
         get
@@ -573,7 +720,9 @@ public sealed class CompanionStore
                     UsedAtStage = overflow,
                     Rarity = line.Rarity,
                     TotalForms = plan.Count,
-                    IsShiny = _randomSource.NextInt64(64) == 0,
+                    IsShiny = CompanionItemRules.IsShinyRoll(
+                        _randomSource.NextInt64(long.MaxValue),
+                        OwnsShinyCharm),
                     Nature = (PokemonNature)_randomSource.NextInt64(natureCount),
                     Names = line.Names.ToDictionary(pair => pair.Key, pair => pair.Value),
                 };
@@ -1000,6 +1149,47 @@ public sealed class CompanionStore
         if (state.ActivePokemon is { } active)
         {
             SanitizeActivePokemon(state, active);
+        }
+
+        state.Inventory ??= [];
+        state.Inventory = Enum.GetValues<CompanionItemKind>()
+            .Select(kind => (Key: CompanionItemRules.StorageKey(kind), Kind: kind))
+            .Where(item => state.Inventory.TryGetValue(item.Key, out var count) && count > 0)
+            .ToDictionary(
+                item => item.Key,
+                item => CompanionItemRules.IsPassive(item.Kind)
+                    ? 1
+                    : Math.Clamp(state.Inventory[item.Key], 1, 1_000_000),
+                StringComparer.Ordinal);
+    }
+
+    private int ItemCountUnsafe(CompanionItemKind kind) =>
+        _state.Inventory.TryGetValue(CompanionItemRules.StorageKey(kind), out var count)
+            ? Math.Max(0, count)
+            : 0;
+
+    private bool CanBuyItemUnsafe(CompanionItemKind kind)
+    {
+        if (CompanionItemRules.IsPassive(kind) && ItemCountUnsafe(kind) > 0)
+        {
+            return false;
+        }
+
+        return Math.Max(0, _state.UsedSinceInstall - _state.SpentTokens)
+            >= CompanionItemRules.Price(kind);
+    }
+
+    private void DecrementItemUnsafe(CompanionItemKind kind)
+    {
+        var key = CompanionItemRules.StorageKey(kind);
+        var next = Math.Max(0, ItemCountUnsafe(kind) - 1);
+        if (next == 0)
+        {
+            _state.Inventory.Remove(key);
+        }
+        else
+        {
+            _state.Inventory[key] = next;
         }
     }
 

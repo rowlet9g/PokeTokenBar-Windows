@@ -68,7 +68,7 @@
                     Padding="3"
                     Background="#FF11141A"
                     CornerRadius="8">
-                <UniformGrid Columns="3">
+                <UniformGrid Columns="5">
                     <Button x:Name="HomeTabButton"
                             Height="28"
                             Click="HomeTabButton_OnClick"
@@ -87,6 +87,24 @@
                             FontSize="11"
                             FontWeight="SemiBold"
                             Content="POKÉDEX" />
+                    <Button x:Name="ShopTabButton"
+                            Height="28"
+                            Click="ShopTabButton_OnClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FF7D8797"
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            Content="SHOP" />
+                    <Button x:Name="BagTabButton"
+                            Height="28"
+                            Click="BagTabButton_OnClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FF7D8797"
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            Content="BAG" />
                     <Button x:Name="SettingsTabButton"
                             Height="28"
                             Click="SettingsTabButton_OnClick"
@@ -298,6 +316,132 @@
                     </StackPanel>
                 </Grid>
             </Grid>
+
+            <ScrollViewer x:Name="ShopView"
+                          Grid.Row="2"
+                          Margin="0,10,0,0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="Collapsed">
+                <StackPanel Margin="2,0,2,4">
+                    <TextBlock Foreground="White"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Text="포켓몬 상점" />
+                    <Border Margin="0,8,0,10"
+                            Padding="12"
+                            Background="#FF20242C"
+                            BorderBrush="#FF343A46"
+                            BorderThickness="1"
+                            CornerRadius="10">
+                        <StackPanel>
+                            <TextBlock Foreground="#FF8F98A8"
+                                       FontSize="9"
+                                       Text="사용 가능한 토큰" />
+                            <TextBlock x:Name="ShopWalletText"
+                                       Margin="0,2,0,0"
+                                       Foreground="White"
+                                       FontFamily="Consolas"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Text="0" />
+                            <TextBlock Margin="0,2,0,0"
+                                       Foreground="#FF697386"
+                                       FontSize="9"
+                                       Text="실제 사용량은 줄지 않으며 상점 지출만 별도로 기록됩니다" />
+                        </StackPanel>
+                    </Border>
+                    <StackPanel x:Name="ShopItemsPanel" />
+                    <Border x:Name="ShopConfirmationPanel"
+                            Margin="0,2,0,8"
+                            Padding="10"
+                            Background="#FF263E4B"
+                            BorderBrush="#FF3C8DAA"
+                            BorderThickness="1"
+                            CornerRadius="9"
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock x:Name="ShopConfirmationText"
+                                       Foreground="White"
+                                       FontSize="10"
+                                       TextWrapping="Wrap" />
+                            <StackPanel Margin="0,8,0,0"
+                                        HorizontalAlignment="Right"
+                                        Orientation="Horizontal">
+                                <Button Margin="0,0,6,0"
+                                        Padding="10,4"
+                                        Click="ConfirmPurchaseButton_OnClick"
+                                        Content="구매 확정" />
+                                <Button Padding="10,4"
+                                        Click="CancelPurchaseButton_OnClick"
+                                        Content="취소" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Name="ShopStatusText"
+                               Foreground="#FF7DD3FC"
+                               FontSize="9" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <ScrollViewer x:Name="BagView"
+                          Grid.Row="2"
+                          Margin="0,10,0,0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="Collapsed">
+                <StackPanel Margin="2,0,2,4">
+                    <TextBlock Foreground="White"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Text="가방" />
+                    <TextBlock Margin="0,3,0,10"
+                               Foreground="#FF7D8797"
+                               FontSize="10"
+                               Text="보유 아이템과 현재 적용 효과" />
+                    <StackPanel x:Name="BagItemsPanel" />
+                    <StackPanel x:Name="EmptyBagView"
+                                Margin="0,50,0,0"
+                                HorizontalAlignment="Center">
+                        <TextBlock HorizontalAlignment="Center"
+                                   FontSize="36"
+                                   Text="🎒" />
+                        <TextBlock Margin="0,8,0,0"
+                                   Foreground="#FFAEB7C7"
+                                   FontSize="12"
+                                   Text="아직 보유한 아이템이 없습니다" />
+                    </StackPanel>
+                    <Border x:Name="BagConfirmationPanel"
+                            Margin="0,2,0,8"
+                            Padding="10"
+                            Background="#FF263E4B"
+                            BorderBrush="#FF3C8DAA"
+                            BorderThickness="1"
+                            CornerRadius="9"
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock x:Name="BagConfirmationText"
+                                       Foreground="White"
+                                       FontSize="10"
+                                       TextWrapping="Wrap" />
+                            <StackPanel Margin="0,8,0,0"
+                                        HorizontalAlignment="Right"
+                                        Orientation="Horizontal">
+                                <Button Margin="0,0,6,0"
+                                        Padding="10,4"
+                                        Click="ConfirmUseButton_OnClick"
+                                        Content="사용 확정" />
+                                <Button Padding="10,4"
+                                        Click="CancelUseButton_OnClick"
+                                        Content="취소" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Name="BagStatusText"
+                               Foreground="#FF7DD3FC"
+                               FontSize="9" />
+                </StackPanel>
+            </ScrollViewer>
 
             <ScrollViewer x:Name="SettingsView"
                           Grid.Row="2"
