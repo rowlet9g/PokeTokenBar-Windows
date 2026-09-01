@@ -15,10 +15,24 @@ public sealed record AppSettings
 
     public bool LaunchAtLogin { get; init; }
 
+    public bool FloatingPetEnabled { get; init; }
+
+    public int FloatingPetSize { get; init; } = 96;
+
+    public double? FloatingPetLeft { get; init; }
+
+    public double? FloatingPetTop { get; init; }
+
     public AppSettings Normalize() => this with
     {
         RefreshIntervalMinutes = Math.Clamp(RefreshIntervalMinutes, 1, 60),
+        FloatingPetSize = Math.Clamp(FloatingPetSize, 64, 160),
+        FloatingPetLeft = NormalizeCoordinate(FloatingPetLeft),
+        FloatingPetTop = NormalizeCoordinate(FloatingPetTop),
     };
+
+    private static double? NormalizeCoordinate(double? value) =>
+        value is { } number && double.IsFinite(number) ? number : null;
 }
 
 public sealed class AppSettingsStore

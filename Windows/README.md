@@ -67,6 +67,9 @@ Feature parity and source-retirement decisions are tracked in
   refresh interval, and background launch at Windows login.
 - Hatch, evolution, and graduation presentation overlays. Milestones that occur
   while the popup is hidden are queued and play the next time it opens.
+- An opt-in floating pet in Settings. It uses the current companion sprite (or
+  egg), gently idles above normal windows, opens the popup on click, persists a
+  drag position across monitors, and offers open/disable actions on right-click.
 - Shop and Bag tabs backed by a persisted token wallet and inventory. Rare
   Candy adds 100M companion XP, Mint rerolls nature, and the one-time Shiny
   Charm improves future hatch odds from 1/64 to 1/48. Purchases and item use
@@ -98,7 +101,8 @@ sessions until a fork dependency actually needs the full file.
 The current popup covers the complete core loop, collection/Pokédex, shop and
 bag, milestone notifications and animations, runtime settings, startup, and
 save transfer. Gemini, Cursor, and Copilot are available as additional local
-providers; the separate floating pet and release packaging remain.
+providers. The floating pet is implemented pending one manual visual/input
+check; release packaging remains afterward.
 
 ## Build
 

@@ -16,6 +16,7 @@ public partial class App : System.Windows.Application
     private SingleInstanceGuard? _singleInstance;
     private TrayIconController? _trayIcon;
     private MainWindow? _popover;
+    private FloatingPetWindow? _floatingPet;
     private Icon? _appIcon;
     private UsageStore? _usageStore;
     private CompanionStore? _companionStore;
@@ -99,6 +100,12 @@ public partial class App : System.Windows.Application
         _popover.SettingsChanged += Popover_OnSettingsChanged;
         MainWindow = _popover;
 
+        _floatingPet = new FloatingPetWindow();
+        _floatingPet.OpenRequested += FloatingPet_OnOpenRequested;
+        _floatingPet.HideRequested += FloatingPet_OnHideRequested;
+        _floatingPet.PositionChanged += FloatingPet_OnPositionChanged;
+        _floatingPet.ApplySettings(_settings);
+
         _trayIcon = new TrayIconController(_appIcon);
         _trayIcon.ToggleRequested += (_, _) => TogglePopover();
         _trayIcon.ExitRequested += (_, _) => ExitApplication();
@@ -138,6 +145,14 @@ public partial class App : System.Windows.Application
         {
             _popover.RefreshRequested -= Popover_OnRefreshRequested;
             _popover.SettingsChanged -= Popover_OnSettingsChanged;
+        }
+
+        if (_floatingPet is not null)
+        {
+            _floatingPet.OpenRequested -= FloatingPet_OnOpenRequested;
+            _floatingPet.HideRequested -= FloatingPet_OnHideRequested;
+            _floatingPet.PositionChanged -= FloatingPet_OnPositionChanged;
+            _floatingPet.Close();
         }
 
         if (_usageStore is not null)
@@ -243,6 +258,7 @@ public partial class App : System.Windows.Application
         }
 
         _popover?.ApplySettings(_settings);
+        _floatingPet?.ApplySettings(_settings);
     }
 
     private void TryRepairStartupRegistration()
@@ -335,6 +351,7 @@ public partial class App : System.Windows.Application
         }
 
         _popover?.ApplyCompanionState();
+        ApplyFloatingCompanionState();
         QueueSpriteRefresh();
         ShowCompanionMilestoneIfNeeded();
         var compact = TokenFormatter.Compact(_usageStore.TodayTotalTokens);
@@ -349,6 +366,20 @@ public partial class App : System.Windows.Application
             var eggPercent = (int)Math.Round(_companionStore.EggProgress * 100);
             _trayIcon?.UpdateTooltip($"PokeTokenBar · {compact} today · Egg {eggPercent}%");
         }
+    }
+
+    private void ApplyFloatingCompanionState()
+    {
+        if (_usageStore is null || _companionStore is null || _floatingPet is null)
+        {
+            return;
+        }
+
+        var today = TokenFormatter.Grouped(_usageStore.TodayTotalTokens);
+        var tooltip = _companionStore.HasActivePokemon
+            ? $"{_companionStore.CurrentPokemonName ?? "Pokémon"} · 오늘 {today} 토큰"
+            : $"새 알 · 오늘 {today} 토큰";
+        _floatingPet.UpdateCompanionState(_companionStore.HasActivePokemon, tooltip);
     }
 
     private CompanionMilestoneSnapshot CaptureCompanionSnapshot()
@@ -408,6 +439,7 @@ public partial class App : System.Windows.Application
         if (_companionStore.CurrentSpeciesId is not { } speciesId)
         {
             _popover.SetPokemonSprite(null);
+            _floatingPet?.SetPokemonSprite(null);
             return;
         }
 
@@ -434,7 +466,11 @@ public partial class App : System.Windows.Application
                 return;
             }
 
-            await Dispatcher.InvokeAsync(() => _popover?.SetPokemonSprite(bytes));
+            await Dispatcher.InvokeAsync(() =>
+            {
+                _popover?.SetPokemonSprite(bytes);
+                _floatingPet?.SetPokemonSprite(bytes);
+            });
         }
         catch (OperationCanceledException) when (_refreshCancellation.IsCancellationRequested)
         {
@@ -443,6 +479,42 @@ public partial class App : System.Windows.Application
         catch
         {
             // The name and growth state remain useful while the sprite host is offline.
+        }
+    }
+
+    private void FloatingPet_OnOpenRequested(object? sender, EventArgs e) => ShowPopover();
+
+    private void FloatingPet_OnHideRequested(object? sender, EventArgs e)
+    {
+        SaveFloatingPetSettings(_settings with { FloatingPetEnabled = false });
+    }
+
+    private void FloatingPet_OnPositionChanged(double left, double top)
+    {
+        SaveFloatingPetSettings(_settings with
+        {
+            FloatingPetLeft = left,
+            FloatingPetTop = top,
+        });
+    }
+
+    private void SaveFloatingPetSettings(AppSettings requested)
+    {
+        if (_settingsStore is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _settingsStore.Save(requested);
+            _settings = _settingsStore.Current;
+            _popover?.ApplySettings(_settings);
+            _floatingPet?.ApplySettings(_settings);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            LogSettingsError(error.Message);
         }
     }
 

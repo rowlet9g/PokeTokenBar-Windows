@@ -30,6 +30,7 @@ public partial class MainWindow : Window
     private bool _hideOnDeactivate = true;
     private bool _hasUserPosition;
     private bool _applyingSettings;
+    private AppSettings _currentSettings = new();
     private CompanionMilestone? _pendingMilestone;
     private CompanionItemKind? _pendingPurchase;
     private FreshEggTier? _pendingEggPurchase;
@@ -63,9 +64,11 @@ public partial class MainWindow : Window
         _applyingSettings = true;
         try
         {
+            _currentSettings = settings;
             NotificationsCheckBox.IsChecked = settings.NotificationsEnabled;
             AlwaysOnTopCheckBox.IsChecked = settings.AlwaysOnTop;
             LaunchAtLoginCheckBox.IsChecked = settings.LaunchAtLogin;
+            FloatingPetCheckBox.IsChecked = settings.FloatingPetEnabled;
             Topmost = settings.AlwaysOnTop;
 
             var selected = RefreshIntervalComboBox.Items
@@ -77,6 +80,16 @@ public partial class MainWindow : Window
             RefreshIntervalComboBox.SelectedItem = selected
                 ?? RefreshIntervalComboBox.Items.OfType<ComboBoxItem>()
                     .First(item => string.Equals(item.Tag?.ToString(), "2", StringComparison.Ordinal));
+
+            var selectedPetSize = FloatingPetSizeComboBox.Items
+                .OfType<ComboBoxItem>()
+                .FirstOrDefault(item => string.Equals(
+                    item.Tag?.ToString(),
+                    settings.FloatingPetSize.ToString(),
+                    StringComparison.Ordinal));
+            FloatingPetSizeComboBox.SelectedItem = selectedPetSize
+                ?? FloatingPetSizeComboBox.Items.OfType<ComboBoxItem>()
+                    .First(item => string.Equals(item.Tag?.ToString(), "96", StringComparison.Ordinal));
         }
         finally
         {
@@ -1228,18 +1241,22 @@ public partial class MainWindow : Window
     {
         if (_applyingSettings
             || RefreshIntervalComboBox.SelectedItem is not ComboBoxItem intervalItem
-            || !int.TryParse(intervalItem.Tag?.ToString(), out var intervalMinutes))
+            || !int.TryParse(intervalItem.Tag?.ToString(), out var intervalMinutes)
+            || FloatingPetSizeComboBox.SelectedItem is not ComboBoxItem petSizeItem
+            || !int.TryParse(petSizeItem.Tag?.ToString(), out var petSize))
         {
             return;
         }
 
         ShowSettingsStatus("설정을 저장하는 중...");
-        SettingsChanged?.Invoke(new AppSettings
+        SettingsChanged?.Invoke(_currentSettings with
         {
             RefreshIntervalMinutes = intervalMinutes,
             NotificationsEnabled = NotificationsCheckBox.IsChecked == true,
             AlwaysOnTop = AlwaysOnTopCheckBox.IsChecked == true,
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
+            FloatingPetEnabled = FloatingPetCheckBox.IsChecked == true,
+            FloatingPetSize = petSize,
         });
     }
 

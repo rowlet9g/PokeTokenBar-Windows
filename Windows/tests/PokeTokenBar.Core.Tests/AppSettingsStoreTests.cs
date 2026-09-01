@@ -14,6 +14,8 @@ public sealed class AppSettingsStoreTests
         Assert.True(store.Current.NotificationsEnabled);
         Assert.True(store.Current.AlwaysOnTop);
         Assert.False(store.Current.LaunchAtLogin);
+        Assert.False(store.Current.FloatingPetEnabled);
+        Assert.Equal(96, store.Current.FloatingPetSize);
     }
 
     [Fact]
@@ -28,6 +30,10 @@ public sealed class AppSettingsStoreTests
             NotificationsEnabled = false,
             AlwaysOnTop = false,
             LaunchAtLogin = true,
+            FloatingPetEnabled = true,
+            FloatingPetSize = 128,
+            FloatingPetLeft = 321.5,
+            FloatingPetTop = 123.5,
         });
 
         var restored = new AppSettingsStore(path).Current;
@@ -36,6 +42,10 @@ public sealed class AppSettingsStoreTests
         Assert.False(restored.NotificationsEnabled);
         Assert.False(restored.AlwaysOnTop);
         Assert.True(restored.LaunchAtLogin);
+        Assert.True(restored.FloatingPetEnabled);
+        Assert.Equal(128, restored.FloatingPetSize);
+        Assert.Equal(321.5, restored.FloatingPetLeft);
+        Assert.Equal(123.5, restored.FloatingPetTop);
     }
 
     [Theory]
@@ -65,6 +75,18 @@ public sealed class AppSettingsStoreTests
         Assert.NotNull(store.LastError);
         Assert.Equal("{ invalid", File.ReadAllText(path));
         Assert.Equal(2, store.Current.RefreshIntervalMinutes);
+    }
+
+    [Theory]
+    [InlineData(1, 64)]
+    [InlineData(999, 160)]
+    public void Floating_pet_size_is_clamped(int raw, int expected)
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var path = Path.Combine(temporary.Path, "settings.json");
+        File.WriteAllText(path, $$"""{"floatingPetSize":{{raw}}}""");
+
+        Assert.Equal(expected, new AppSettingsStore(path).Current.FloatingPetSize);
     }
 
     private sealed class TemporaryDirectory : IDisposable
