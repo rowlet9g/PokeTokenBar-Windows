@@ -21,7 +21,7 @@ or loaded by the Windows solution.
 | Settings and startup | `SettingsView`, `LoginItem` | Complete | Refresh interval, topmost, notifications, and per-user launch-at-login are persisted and applied. |
 | Bag and shop | `BagView`, `ShopView` | Complete | Wallet, inventory, confirmations, three items, and paid egg rerolls are implemented. |
 | Rare Candy, premium eggs, Shiny Charm | related Swift models/tests | Complete | Item effects and Basic/Uncommon/Rare guaranteed egg tiers match the original balance. |
-| Additional usage providers | provider implementations and tests | Partial | Gemini CLI local JSON/JSONL usage is complete beside Codex; Cursor and Copilot are next. |
+| Additional usage providers | provider implementations and tests | Partial | Gemini CLI JSON/JSONL and Cursor SQLite usage are complete beside Codex; Copilot is next. |
 | Save transfer | `SaveTransfer` | Complete | Versioned JSON export/import, validation, local-ledger rebasing, confirmation, and five pre-import backups are implemented. |
 | Update checker | `UpdateChecker` | Not ported | Choose a signed release channel before enabling self-update. |
 | Localization | `Localization` and localized UI tests | Not ported | Current Windows UI is Korean-first with some English labels. |

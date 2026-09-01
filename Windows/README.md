@@ -24,6 +24,9 @@ Feature parity and source-retirement decisions are tracked in
   `%USERPROFILE%\.codex\archived_sessions`.
 - Direct Gemini CLI JSON/JSONL scanning from `%USERPROFILE%\.gemini\tmp`.
   Only token metadata is mapped; prompt content is neither retained nor shown.
+- Direct Cursor stable/nightly SQLite scanning from roaming AppData, using the
+  Windows inbox SQLite runtime and an incremental row watermark. Only
+  `bubbleId:*` token metadata is read; flat-rate Cursor usage reports no cost.
 - Replay-safe Codex aggregation for normal sessions, manual forks, and
   subagents, including cumulative-counter resets and duplicate snapshots.
 - Today, week, and month usage in the WPF popup, with active five-hour usage
@@ -91,7 +94,7 @@ sessions until a fork dependency actually needs the full file.
 
 The current popup covers the complete core loop, collection/Pokédex, shop and
 bag, milestone notifications and animations, runtime settings, startup, and
-save transfer. Gemini is the first additional local provider; Cursor and
+save transfer. Gemini and Cursor are available as additional local providers;
 Copilot, the separate floating pet, and release packaging remain.
 
 ## Build

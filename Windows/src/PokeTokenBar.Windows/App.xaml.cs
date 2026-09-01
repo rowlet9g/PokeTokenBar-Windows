@@ -62,6 +62,7 @@ public partial class App : System.Windows.Application
         [
             new CodexUsageProvider(WindowsCodexPaths.CreateDefaultRoots()),
             new GeminiUsageProvider(WindowsGeminiPaths.CreateDefaultRoots()),
+            new CursorUsageProvider(WindowsCursorPaths.CreateDefaultRoots()),
         ]);
         _usageStore.Changed += UsageStore_OnChanged;
         _httpClient = new HttpClient
