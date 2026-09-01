@@ -93,3 +93,6 @@ the desktop and in the Start menu:
 
 After installation, launch PokeTokenBar from either shortcut. Re-run the same
 script whenever a newer local build should replace the installed executable.
+On the first install, an existing `.ptb-data\companion-state.json` from
+`run-dev.ps1` is copied into the Windows data directory when no installed state
+exists yet. Existing installed progress is never overwritten.

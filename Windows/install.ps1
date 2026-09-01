@@ -7,6 +7,9 @@ $ErrorActionPreference = "Stop"
 $projectPath = Join-Path $PSScriptRoot "src\PokeTokenBar.Windows\PokeTokenBar.Windows.csproj"
 $publishDirectory = Join-Path $PSScriptRoot "artifacts\win-x64"
 $installDirectory = Join-Path $env:LOCALAPPDATA "Programs\PokeTokenBar"
+$dataDirectory = Join-Path $env:LOCALAPPDATA "PokeTokenBar"
+$installedStatePath = Join-Path $dataDirectory "companion-state.json"
+$developmentStatePath = Join-Path (Split-Path -Parent $PSScriptRoot) ".ptb-data\companion-state.json"
 $executableName = "PokeTokenBar.Windows.exe"
 $installedExecutable = Join-Path $installDirectory $executableName
 
@@ -33,6 +36,13 @@ Copy-Item -Path (Join-Path $publishDirectory "*") -Destination $installDirectory
 
 if (-not (Test-Path -LiteralPath $installedExecutable)) {
     throw "Published executable was not installed: $installedExecutable"
+}
+
+if ((Test-Path -LiteralPath $developmentStatePath) -and
+    -not (Test-Path -LiteralPath $installedStatePath)) {
+    New-Item -ItemType Directory -Path $dataDirectory -Force | Out-Null
+    Copy-Item -LiteralPath $developmentStatePath -Destination $installedStatePath
+    Write-Host "Migrated development companion state: $installedStatePath"
 }
 
 function New-PokeTokenBarShortcut {
