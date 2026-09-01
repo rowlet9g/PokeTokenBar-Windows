@@ -103,9 +103,13 @@
                         Grid.Row="2"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center">
-                <Grid Width="96"
+                <Grid x:Name="CompanionVisualContainer"
+                      Width="96"
                       Height="96"
                       HorizontalAlignment="Center">
+                    <Grid.RenderTransform>
+                        <TranslateTransform x:Name="CompanionIdleTranslate" />
+                    </Grid.RenderTransform>
                     <Grid x:Name="EggVisual">
                         <Path Fill="#FF1B1F27"
                           Stroke="#FFFF5A3C"
@@ -408,6 +412,42 @@
                                Text="설정을 불러왔습니다" />
                 </StackPanel>
             </ScrollViewer>
+
+            <Border x:Name="MilestoneOverlay"
+                    Grid.Row="2"
+                    Panel.ZIndex="20"
+                    Margin="0,8,0,0"
+                    Background="#EE171A21"
+                    CornerRadius="12"
+                    Opacity="0"
+                    IsHitTestVisible="False"
+                    Visibility="Collapsed">
+                <Border.RenderTransform>
+                    <ScaleTransform x:Name="MilestoneOverlayScale" ScaleX="0.88" ScaleY="0.88" />
+                </Border.RenderTransform>
+                <Border.RenderTransformOrigin>0.5,0.5</Border.RenderTransformOrigin>
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <TextBlock x:Name="MilestoneGlyphText"
+                               HorizontalAlignment="Center"
+                               Foreground="#FFFACC15"
+                               FontSize="42"
+                               Text="★" />
+                    <TextBlock x:Name="MilestoneTitleText"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Center"
+                               Foreground="White"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Text="진화 성공!" />
+                    <TextBlock x:Name="MilestoneDetailText"
+                               Margin="0,6,0,0"
+                               HorizontalAlignment="Center"
+                               Foreground="#FF7DD3FC"
+                               FontSize="13"
+                               Text="새로운 모습" />
+                </StackPanel>
+            </Border>
 
         </Grid>
     </Border>

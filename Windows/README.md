@@ -57,6 +57,8 @@ Feature parity and source-retirement decisions are tracked in
   Clicking a milestone notification opens the PokeTokenBar popup.
 - A persisted Settings tab for notification preferences, topmost behavior,
   refresh interval, and background launch at Windows login.
+- Hatch, evolution, and graduation presentation overlays. Milestones that occur
+  while the popup is hidden are queued and play the next time it opens.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.

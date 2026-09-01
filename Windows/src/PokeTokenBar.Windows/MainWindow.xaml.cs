@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using PokeTokenBar.Core;
@@ -26,6 +27,7 @@ public partial class MainWindow : Window
     private bool _hideOnDeactivate = true;
     private bool _hasUserPosition;
     private bool _applyingSettings;
+    private CompanionMilestone? _pendingMilestone;
 
     public MainWindow(
         UsageStore usageStore,
@@ -39,6 +41,7 @@ public partial class MainWindow : Window
         _spriteStore = spriteStore;
         _applicationToken = applicationToken;
         InitializeComponent();
+        IsVisibleChanged += MainWindow_OnIsVisibleChanged;
         ApplySettings(settings);
         ApplyUsageState();
         ApplyCompanionState();
@@ -78,6 +81,111 @@ public partial class MainWindow : Window
     {
         SettingsStatusText.Foreground = Brush(isError ? "#FFFF806B" : "#FF7DD3FC");
         SettingsStatusText.Text = message;
+    }
+
+    public void QueueMilestoneAnimation(CompanionMilestone milestone)
+    {
+        _pendingMilestone = milestone;
+        if (IsVisible)
+        {
+            PlayPendingMilestoneAnimation();
+        }
+    }
+
+    private void MainWindow_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (IsVisible)
+        {
+            StartIdleAnimation();
+            PlayPendingMilestoneAnimation();
+        }
+        else
+        {
+            CompanionIdleTranslate.BeginAnimation(TranslateTransform.YProperty, null);
+            CompanionIdleTranslate.Y = 0;
+        }
+    }
+
+    private void StartIdleAnimation()
+    {
+        if (!SystemParameters.ClientAreaAnimation)
+        {
+            return;
+        }
+
+        var bob = new DoubleAnimation(
+            fromValue: -2,
+            toValue: 2,
+            duration: TimeSpan.FromMilliseconds(1_300))
+        {
+            AutoReverse = true,
+            RepeatBehavior = RepeatBehavior.Forever,
+            EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+        };
+        CompanionIdleTranslate.BeginAnimation(TranslateTransform.YProperty, bob);
+    }
+
+    private void PlayPendingMilestoneAnimation()
+    {
+        if (_pendingMilestone is not { } milestone)
+        {
+            return;
+        }
+
+        _pendingMilestone = null;
+        if (!SystemParameters.ClientAreaAnimation)
+        {
+            return;
+        }
+
+        var name = string.IsNullOrWhiteSpace(milestone.PokemonName)
+            ? "포켓몬"
+            : milestone.PokemonName;
+        var shiny = milestone.IsShiny ? "이로치 " : string.Empty;
+        (MilestoneGlyphText.Text, MilestoneTitleText.Text, MilestoneDetailText.Text) = milestone.Kind switch
+        {
+            CompanionMilestoneKind.Hatched => ("✦", "새로운 포켓몬!", $"{shiny}{name} 부화"),
+            CompanionMilestoneKind.Evolved => ("★", "진화 성공!", $"새로운 모습 · {shiny}{name}"),
+            CompanionMilestoneKind.Graduated => ("✓", "도감 등록 완료!", $"{shiny}{name} 육성 완료"),
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+
+        MilestoneOverlay.Visibility = Visibility.Visible;
+        MilestoneOverlay.Opacity = 0;
+        MilestoneOverlayScale.ScaleX = 0.88;
+        MilestoneOverlayScale.ScaleY = 0.88;
+
+        var fade = new DoubleAnimationUsingKeyFrames
+        {
+            Duration = TimeSpan.FromMilliseconds(2_400),
+            FillBehavior = FillBehavior.Stop,
+        };
+        fade.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromPercent(0)));
+        fade.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromPercent(0.18)));
+        fade.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromPercent(0.78)));
+        fade.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromPercent(1)));
+        fade.Completed += (_, _) =>
+        {
+            MilestoneOverlay.Visibility = Visibility.Collapsed;
+            MilestoneOverlay.BeginAnimation(OpacityProperty, null);
+            MilestoneOverlayScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            MilestoneOverlayScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        };
+
+        var scale = new DoubleAnimation(
+            fromValue: 0.88,
+            toValue: 1,
+            duration: TimeSpan.FromMilliseconds(420))
+        {
+            EasingFunction = new BackEase
+            {
+                Amplitude = 0.32,
+                EasingMode = EasingMode.EaseOut,
+            },
+        };
+        MilestoneOverlay.BeginAnimation(OpacityProperty, fade);
+        MilestoneOverlayScale.BeginAnimation(ScaleTransform.ScaleXProperty, scale);
+        MilestoneOverlayScale.BeginAnimation(ScaleTransform.ScaleYProperty, scale);
     }
 
     public void ApplyUsageState()

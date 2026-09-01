@@ -366,7 +366,13 @@ public partial class App : System.Windows.Application
     private void ShowCompanionMilestoneIfNeeded()
     {
         var milestone = _milestoneTracker?.Observe(CaptureCompanionSnapshot());
-        if (milestone is null || _trayIcon is null || !_settings.NotificationsEnabled)
+        if (milestone is null)
+        {
+            return;
+        }
+
+        _popover?.QueueMilestoneAnimation(milestone);
+        if (_trayIcon is null || !_settings.NotificationsEnabled)
         {
             return;
         }

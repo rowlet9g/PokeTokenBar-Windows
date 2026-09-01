@@ -17,7 +17,7 @@ or loaded by the Windows solution.
 | Milestone notifications | companion UI events | Complete | Windows tray notifications cover hatch, evolution, and graduation. |
 | Persistence diagnostics | `AppLog`, companion storage | Complete | Diagnostics are written to logs and kept out of the user-facing popup. |
 | Distribution | release scripts | Partial | Self-contained `win-x64` install and shortcuts exist; signing and a packaged installer remain. |
-| Event animations | `SpriteAnimation`, `FloatingPetPanel` | Not ported | Add hatch/evolution presentation after notification behavior is stable. |
+| Event animations | `SpriteAnimation`, `FloatingPetPanel` | Partial | Milestone overlays queue while hidden and the companion gently idles while visible; the separate floating-pet panel remains. |
 | Settings and startup | `SettingsView`, `LoginItem` | Complete | Refresh interval, topmost, notifications, and per-user launch-at-login are persisted and applied. |
 | Bag and shop | `BagView`, `ShopView` | Not ported | Port only after the desired Windows game economy is confirmed. |
 | Rare Candy, premium eggs, Shiny Charm | related Swift models/tests | Not ported | Port domain rules first, then WPF surfaces. |
