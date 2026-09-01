@@ -68,7 +68,7 @@
                     Padding="3"
                     Background="#FF11141A"
                     CornerRadius="8">
-                <UniformGrid Columns="2">
+                <UniformGrid Columns="3">
                     <Button x:Name="HomeTabButton"
                             Height="28"
                             Click="HomeTabButton_OnClick"
@@ -87,6 +87,15 @@
                             FontSize="11"
                             FontWeight="SemiBold"
                             Content="POKÉDEX" />
+                    <Button x:Name="SettingsTabButton"
+                            Height="28"
+                            Click="SettingsTabButton_OnClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FF7D8797"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Content="SETTINGS" />
                 </UniformGrid>
             </Border>
 
@@ -285,6 +294,120 @@
                     </StackPanel>
                 </Grid>
             </Grid>
+
+            <ScrollViewer x:Name="SettingsView"
+                          Grid.Row="2"
+                          Margin="0,10,0,0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="Collapsed">
+                <StackPanel Margin="2,0,2,4">
+                    <TextBlock Foreground="White"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Text="Windows 설정" />
+                    <TextBlock Margin="0,3,0,12"
+                               Foreground="#FF7D8797"
+                               FontSize="10"
+                               Text="변경 사항은 즉시 저장되고 적용됩니다" />
+
+                    <Border Padding="14"
+                            Background="#FF20242C"
+                            BorderBrush="#FF343A46"
+                            BorderThickness="1"
+                            CornerRadius="10">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,14">
+                                <CheckBox x:Name="NotificationsCheckBox"
+                                          DockPanel.Dock="Right"
+                                          VerticalAlignment="Center"
+                                          Click="SettingsControls_OnChanged" />
+                                <StackPanel>
+                                    <TextBlock Foreground="White"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Text="포켓몬 알림" />
+                                    <TextBlock Margin="0,2,18,0"
+                                               Foreground="#FF8F98A8"
+                                               FontSize="9"
+                                               Text="부화·진화·육성 완료 알림" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
+
+                            <DockPanel Margin="0,0,0,14">
+                                <CheckBox x:Name="AlwaysOnTopCheckBox"
+                                          DockPanel.Dock="Right"
+                                          VerticalAlignment="Center"
+                                          Click="SettingsControls_OnChanged" />
+                                <StackPanel>
+                                    <TextBlock Foreground="White"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Text="항상 위에 표시" />
+                                    <TextBlock Margin="0,2,18,0"
+                                               Foreground="#FF8F98A8"
+                                               FontSize="9"
+                                               Text="다른 창 위에 팝업을 유지합니다" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
+
+                            <DockPanel Margin="0,0,0,14">
+                                <CheckBox x:Name="LaunchAtLoginCheckBox"
+                                          DockPanel.Dock="Right"
+                                          VerticalAlignment="Center"
+                                          Click="SettingsControls_OnChanged" />
+                                <StackPanel>
+                                    <TextBlock Foreground="White"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Text="로그인 시 자동 실행" />
+                                    <TextBlock Margin="0,2,18,0"
+                                               Foreground="#FF8F98A8"
+                                               FontSize="9"
+                                               Text="Windows 로그인 후 트레이에서 시작합니다" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
+
+                            <DockPanel>
+                                <ComboBox x:Name="RefreshIntervalComboBox"
+                                          DockPanel.Dock="Right"
+                                          Width="88"
+                                          Height="26"
+                                          VerticalAlignment="Center"
+                                          SelectionChanged="SettingsControls_OnChanged">
+                                    <ComboBoxItem Tag="1" Content="1분" />
+                                    <ComboBoxItem Tag="2" Content="2분" />
+                                    <ComboBoxItem Tag="5" Content="5분" />
+                                    <ComboBoxItem Tag="10" Content="10분" />
+                                    <ComboBoxItem Tag="30" Content="30분" />
+                                </ComboBox>
+                                <StackPanel>
+                                    <TextBlock Foreground="White"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Text="자동 새로고침" />
+                                    <TextBlock Margin="0,2,18,0"
+                                               Foreground="#FF8F98A8"
+                                               FontSize="9"
+                                               Text="Codex 로그 확인 주기" />
+                                </StackPanel>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock x:Name="SettingsStatusText"
+                               Margin="2,10,2,0"
+                               Foreground="#FF7DD3FC"
+                               FontSize="10"
+                               Text="설정을 불러왔습니다" />
+                </StackPanel>
+            </ScrollViewer>
 
         </Grid>
     </Border>

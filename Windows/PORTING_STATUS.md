@@ -18,7 +18,7 @@ or loaded by the Windows solution.
 | Persistence diagnostics | `AppLog`, companion storage | Complete | Diagnostics are written to logs and kept out of the user-facing popup. |
 | Distribution | release scripts | Partial | Self-contained `win-x64` install and shortcuts exist; signing and a packaged installer remain. |
 | Event animations | `SpriteAnimation`, `FloatingPetPanel` | Not ported | Add hatch/evolution presentation after notification behavior is stable. |
-| Settings and startup | `SettingsView`, `LoginItem` | Not ported | Add refresh, topmost, launch-at-login, and notification preferences. |
+| Settings and startup | `SettingsView`, `LoginItem` | Complete | Refresh interval, topmost, notifications, and per-user launch-at-login are persisted and applied. |
 | Bag and shop | `BagView`, `ShopView` | Not ported | Port only after the desired Windows game economy is confirmed. |
 | Rare Candy, premium eggs, Shiny Charm | related Swift models/tests | Not ported | Port domain rules first, then WPF surfaces. |
 | Additional usage providers | provider implementations and tests | Not ported | Codex is the only Windows provider today. Add providers individually. |
@@ -38,8 +38,7 @@ license files, and behavioral test data should remain.
 
 ## Recommended order
 
-1. Settings and Windows launch-at-login.
-2. Hatch/evolution animations.
-3. Bag, shop, and item rules.
-4. Selected additional usage providers.
-5. Signed installer, update channel, and final macOS-source retirement.
+1. Hatch/evolution animations.
+2. Bag, shop, and item rules.
+3. Selected additional usage providers.
+4. Signed installer, update channel, and final macOS-source retirement.

@@ -25,11 +25,13 @@ public partial class MainWindow : Window
     private string? _pokedexSignature;
     private bool _hideOnDeactivate = true;
     private bool _hasUserPosition;
+    private bool _applyingSettings;
 
     public MainWindow(
         UsageStore usageStore,
         CompanionStore companionStore,
         PokemonSpriteStore spriteStore,
+        AppSettings settings,
         CancellationToken applicationToken)
     {
         _usageStore = usageStore;
@@ -37,11 +39,46 @@ public partial class MainWindow : Window
         _spriteStore = spriteStore;
         _applicationToken = applicationToken;
         InitializeComponent();
+        ApplySettings(settings);
         ApplyUsageState();
         ApplyCompanionState();
     }
 
     public event EventHandler? RefreshRequested;
+
+    public event Action<AppSettings>? SettingsChanged;
+
+    public void ApplySettings(AppSettings settings)
+    {
+        _applyingSettings = true;
+        try
+        {
+            NotificationsCheckBox.IsChecked = settings.NotificationsEnabled;
+            AlwaysOnTopCheckBox.IsChecked = settings.AlwaysOnTop;
+            LaunchAtLoginCheckBox.IsChecked = settings.LaunchAtLogin;
+            Topmost = settings.AlwaysOnTop;
+
+            var selected = RefreshIntervalComboBox.Items
+                .OfType<ComboBoxItem>()
+                .FirstOrDefault(item => string.Equals(
+                    item.Tag?.ToString(),
+                    settings.RefreshIntervalMinutes.ToString(),
+                    StringComparison.Ordinal));
+            RefreshIntervalComboBox.SelectedItem = selected
+                ?? RefreshIntervalComboBox.Items.OfType<ComboBoxItem>()
+                    .First(item => string.Equals(item.Tag?.ToString(), "2", StringComparison.Ordinal));
+        }
+        finally
+        {
+            _applyingSettings = false;
+        }
+    }
+
+    public void ShowSettingsStatus(string message, bool isError = false)
+    {
+        SettingsStatusText.Foreground = Brush(isError ? "#FFFF806B" : "#FF7DD3FC");
+        SettingsStatusText.Text = message;
+    }
 
     public void ApplyUsageState()
     {
@@ -642,12 +679,36 @@ public partial class MainWindow : Window
 
     private void HomeTabButton_OnClick(object sender, RoutedEventArgs e)
     {
-        ShowTab(showPokedex: false);
+        ShowTab(MainTab.Home);
     }
 
     private void PokedexTabButton_OnClick(object sender, RoutedEventArgs e)
     {
-        ShowTab(showPokedex: true);
+        ShowTab(MainTab.Pokedex);
+    }
+
+    private void SettingsTabButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ShowTab(MainTab.Settings);
+    }
+
+    private void SettingsControls_OnChanged(object sender, RoutedEventArgs e)
+    {
+        if (_applyingSettings
+            || RefreshIntervalComboBox.SelectedItem is not ComboBoxItem intervalItem
+            || !int.TryParse(intervalItem.Tag?.ToString(), out var intervalMinutes))
+        {
+            return;
+        }
+
+        ShowSettingsStatus("설정을 저장하는 중...");
+        SettingsChanged?.Invoke(new AppSettings
+        {
+            RefreshIntervalMinutes = intervalMinutes,
+            NotificationsEnabled = NotificationsCheckBox.IsChecked == true,
+            AlwaysOnTop = AlwaysOnTopCheckBox.IsChecked == true,
+            LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
+        });
     }
 
     private void SpeciesModeButton_OnClick(object sender, RoutedEventArgs e)
@@ -670,13 +731,26 @@ public partial class MainWindow : Window
         CatchLogModeButton.Foreground = Brush(showCatchLog ? "#FFFFFFFF" : "#FF7D8797");
     }
 
-    private void ShowTab(bool showPokedex)
+    private void ShowTab(MainTab tab)
     {
-        HomeView.Visibility = showPokedex ? Visibility.Collapsed : Visibility.Visible;
-        PokedexView.Visibility = showPokedex ? Visibility.Visible : Visibility.Collapsed;
-        HomeTabButton.Background = Brush(showPokedex ? "#00171A21" : "#FF2B3440");
-        HomeTabButton.Foreground = Brush(showPokedex ? "#FF7D8797" : "#FFFFFFFF");
-        PokedexTabButton.Background = Brush(showPokedex ? "#FF2B3440" : "#00171A21");
-        PokedexTabButton.Foreground = Brush(showPokedex ? "#FFFFFFFF" : "#FF7D8797");
+        HomeView.Visibility = tab == MainTab.Home ? Visibility.Visible : Visibility.Collapsed;
+        PokedexView.Visibility = tab == MainTab.Pokedex ? Visibility.Visible : Visibility.Collapsed;
+        SettingsView.Visibility = tab == MainTab.Settings ? Visibility.Visible : Visibility.Collapsed;
+        SetTabStyle(HomeTabButton, tab == MainTab.Home);
+        SetTabStyle(PokedexTabButton, tab == MainTab.Pokedex);
+        SetTabStyle(SettingsTabButton, tab == MainTab.Settings);
+    }
+
+    private static void SetTabStyle(System.Windows.Controls.Button button, bool selected)
+    {
+        button.Background = Brush(selected ? "#FF2B3440" : "#00171A21");
+        button.Foreground = Brush(selected ? "#FFFFFFFF" : "#FF7D8797");
+    }
+
+    private enum MainTab
+    {
+        Home,
+        Pokedex,
+        Settings,
     }
 }

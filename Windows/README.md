@@ -55,6 +55,8 @@ Feature parity and source-retirement decisions are tracked in
   shiny state, evolution sprites, and graduation time for each individual.
 - Windows tray notifications for hatch, evolution, and graduation milestones.
   Clicking a milestone notification opens the PokeTokenBar popup.
+- A persisted Settings tab for notification preferences, topmost behavior,
+  refresh interval, and background launch at Windows login.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.

@@ -20,6 +20,10 @@ public partial class App : System.Windows.Application
     private UsageStore? _usageStore;
     private CompanionStore? _companionStore;
     private CompanionMilestoneTracker? _milestoneTracker;
+    private AppSettingsStore? _settingsStore;
+    private AppSettings _settings = new();
+    private WindowsStartupRegistration? _startupRegistration;
+    private string? _logsDirectory;
     private PokemonSpriteStore? _spriteStore;
     private HttpClient? _httpClient;
     private DispatcherTimer? _usageTimer;
@@ -39,6 +43,20 @@ public partial class App : System.Windows.Application
 
         var paths = WindowsAppPaths.CreateDefault();
         paths.EnsureDirectories();
+        _logsDirectory = paths.LogsDirectory;
+        _settingsStore = new AppSettingsStore(Path.Combine(paths.DataDirectory, "settings.json"));
+        _settings = _settingsStore.Current;
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var installedExecutable = Path.Combine(
+            localAppData,
+            "Programs",
+            "PokeTokenBar",
+            "PokeTokenBar.Windows.exe");
+        _startupRegistration = new WindowsStartupRegistration(installedExecutable);
+        if (_settings.LaunchAtLogin)
+        {
+            TryRepairStartupRegistration();
+        }
 
         _usageStore = new UsageStore(
         [
@@ -72,8 +90,10 @@ public partial class App : System.Windows.Application
             _usageStore,
             _companionStore,
             _spriteStore,
+            _settings,
             _refreshCancellation.Token);
         _popover.RefreshRequested += Popover_OnRefreshRequested;
+        _popover.SettingsChanged += Popover_OnSettingsChanged;
         MainWindow = _popover;
 
         _trayIcon = new TrayIconController(_appIcon);
@@ -84,11 +104,16 @@ public partial class App : System.Windows.Application
         // A newly registered notification icon can be placed in Windows' overflow
         // area. Showing the popup once makes first launch discoverable; after it is
         // dismissed the application continues to behave as a tray-only app.
-        _popover.ShowNearNotificationArea(hideOnDeactivate: false);
+        var backgroundLaunch = e.Args.Any(argument =>
+            string.Equals(argument, "--background", StringComparison.OrdinalIgnoreCase));
+        if (!backgroundLaunch)
+        {
+            _popover.ShowNearNotificationArea(hideOnDeactivate: false);
+        }
 
         _usageTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
-            Interval = TimeSpan.FromMinutes(2),
+            Interval = TimeSpan.FromMinutes(_settings.RefreshIntervalMinutes),
         };
         _usageTimer.Tick += UsageTimer_OnTick;
         _usageTimer.Start();
@@ -109,6 +134,7 @@ public partial class App : System.Windows.Application
         if (_popover is not null)
         {
             _popover.RefreshRequested -= Popover_OnRefreshRequested;
+            _popover.SettingsChanged -= Popover_OnSettingsChanged;
         }
 
         if (_usageStore is not null)
@@ -166,6 +192,69 @@ public partial class App : System.Windows.Application
     private async void Popover_OnRefreshRequested(object? sender, EventArgs e)
     {
         await RefreshUsageAsync();
+    }
+
+    private void Popover_OnSettingsChanged(AppSettings requested)
+    {
+        if (_settingsStore is null || _startupRegistration is null || _popover is null)
+        {
+            return;
+        }
+
+        var previous = _settings;
+        try
+        {
+            _startupRegistration.SetEnabled(requested.LaunchAtLogin);
+            _settingsStore.Save(requested);
+            _settings = _settingsStore.Current;
+            ApplyRuntimeSettings();
+            _popover.ApplySettings(_settings);
+            _popover.ShowSettingsStatus("설정을 저장했습니다");
+        }
+        catch (Exception error) when (error is IOException
+                                           or UnauthorizedAccessException
+                                           or System.Security.SecurityException
+                                           or InvalidOperationException)
+        {
+            try
+            {
+                _startupRegistration.SetEnabled(previous.LaunchAtLogin);
+            }
+            catch
+            {
+                // Preserve the original settings error shown below.
+            }
+
+            _settings = previous;
+            _popover.ApplySettings(previous);
+            _popover.ShowSettingsStatus($"설정 저장 실패 · {error.Message}", isError: true);
+            LogSettingsError(error.Message);
+        }
+    }
+
+    private void ApplyRuntimeSettings()
+    {
+        if (_usageTimer is not null)
+        {
+            _usageTimer.Interval = TimeSpan.FromMinutes(_settings.RefreshIntervalMinutes);
+        }
+
+        _popover?.ApplySettings(_settings);
+    }
+
+    private void TryRepairStartupRegistration()
+    {
+        try
+        {
+            _startupRegistration?.SetEnabled(enabled: true);
+        }
+        catch (Exception error) when (error is IOException
+                                           or UnauthorizedAccessException
+                                           or System.Security.SecurityException
+                                           or InvalidOperationException)
+        {
+            LogSettingsError(error.Message);
+        }
     }
 
     private async void UsageTimer_OnTick(object? sender, EventArgs e)
@@ -277,7 +366,7 @@ public partial class App : System.Windows.Application
     private void ShowCompanionMilestoneIfNeeded()
     {
         var milestone = _milestoneTracker?.Observe(CaptureCompanionSnapshot());
-        if (milestone is null || _trayIcon is null)
+        if (milestone is null || _trayIcon is null || !_settings.NotificationsEnabled)
         {
             return;
         }
@@ -377,11 +466,11 @@ public partial class App : System.Windows.Application
         }
         catch (IOException)
         {
-            // The visible popup still reports the persistence failure.
+            // Companion operation is unaffected when diagnostics cannot be written.
         }
         catch (UnauthorizedAccessException)
         {
-            // The visible popup still reports the persistence failure.
+            // Companion operation is unaffected when diagnostics cannot be written.
         }
     }
 
@@ -400,6 +489,24 @@ public partial class App : System.Windows.Application
         catch (UnauthorizedAccessException)
         {
             // State loading is unaffected when diagnostics cannot be written.
+        }
+    }
+
+    private void LogSettingsError(string description)
+    {
+        if (_logsDirectory is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var line = $"{DateTimeOffset.Now:O} {description}{Environment.NewLine}";
+            File.AppendAllText(Path.Combine(_logsDirectory, "settings-errors.log"), line);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // Settings remain usable even when diagnostics cannot be written.
         }
     }
 
