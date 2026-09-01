@@ -24,11 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\Tests\PokeTokenBarTests\Fixtures\CodexFork\*.jsonl"
-          Link="Fixtures\CodexFork\%(Filename)%(Extension)"
+    <None Update="Fixtures\CodexFork\*.jsonl"
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\..\Tests\PokeTokenBarTests\Fixtures\CodexSubagent\*.jsonl"
-          Link="Fixtures\CodexSubagent\%(Filename)%(Extension)"
+    <None Update="Fixtures\CodexSubagent\*.jsonl"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

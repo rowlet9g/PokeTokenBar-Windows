@@ -15,10 +15,10 @@
 ## UI changes
 
 <!--
-When this PR changes anything under `Sources/PokeTokenBar/UI/`, describe the
+When this PR changes anything under `Windows/src/PokeTokenBar.Windows/`, describe the
 before/after below. Images (screenshots or GIFs) are welcome but optional — a
 clear text description is fine. The canonical app screenshots in `assets/` are
-regenerated at release, so they don't need updating per PR. Remove this section
+  reviewed at release, so they don't need updating per PR. Remove this section
 only if there are no UI changes.
 -->
 
@@ -28,7 +28,7 @@ only if there are no UI changes.
 
 ## Checklist
 
-- [ ] `swift build` and `swift test` pass locally
+- [ ] Release `dotnet build` and `dotnet test` pass locally
 - [ ] PR title and description are written in English
 - [ ] UI changes are described above (before/after — images optional)
 - [ ] No copyrighted assets, secrets, or private tooling references are committed (see [CONTRIBUTING](../CONTRIBUTING.md))

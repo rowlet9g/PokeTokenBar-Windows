@@ -1,43 +1,34 @@
 # Windows porting status
 
-The Swift/macOS tree remains a behavioral reference while the Windows product
-is implemented independently in C# and WPF. Swift source files are not compiled
-or loaded by the Windows solution.
+The desired macOS behavior has been audited and the Windows product is now
+implemented independently in C# and WPF. The retired Swift source remains
+available through Git history and the upstream project, not in the active tree.
 
 ## Feature matrix
 
-| Area | Swift reference | Windows status | Decision / next work |
-| --- | --- | --- | --- |
-| Codex local usage | `LocalUsageReader`, `UsageStore` | Complete | Keep contract and performance tests in C#. |
-| Today/week/month totals | `UsageStore`, `PopoverView` | Complete | Windows locale controls the week boundary. |
-| Egg, hatch, growth, evolution | `CompanionStore`, `CompanionView` | Complete | C# owns persistence and balance rules. |
-| PokéAPI, sprites, evolution trees | `PokeAPIClient`, `SpriteLoader` | Complete | Windows disk cache and URL validation are in place. |
-| Pokédex and catch log | `CompanionView`, `PopoverView` | Complete | Only encountered forms are revealed. |
-| Tray popup and single instance | `PokeTokenBarApp`, `SingleInstance` | Complete | Implemented with WPF, WinForms `NotifyIcon`, and a named mutex. |
-| Milestone notifications | companion UI events | Complete | Windows tray notifications cover hatch, evolution, and graduation. |
-| Persistence diagnostics | `AppLog`, companion storage | Complete | Diagnostics are written to logs and kept out of the user-facing popup. |
-| Distribution | release scripts | Partial | Portable ZIP, checksums, a per-user Inno Setup installer, and tag-based GitHub Releases are implemented; Authenticode signing remains. |
-| Event animations | `SpriteAnimation`, `FloatingPetPanel` | Complete | Milestone overlays, idle motion, and the manually verified draggable floating-pet window are implemented. |
-| Settings and startup | `SettingsView`, `LoginItem` | Complete | Refresh interval, topmost, notifications, and per-user launch-at-login are persisted and applied. |
-| Bag and shop | `BagView`, `ShopView` | Complete | Wallet, inventory, confirmations, three items, and paid egg rerolls are implemented. |
-| Rare Candy, premium eggs, Shiny Charm | related Swift models/tests | Complete | Item effects and Basic/Uncommon/Rare guaranteed egg tiers match the original balance. |
-| Additional usage providers | provider implementations and tests | Partial | Codex, Gemini CLI, Cursor, and Copilot CLI are complete; uninstalled niche providers remain deliberately deferred. |
-| Save transfer | `SaveTransfer` | Complete | Versioned JSON export/import, validation, local-ledger rebasing, confirmation, and five pre-import backups are implemented. |
-| Update checker | `UpdateChecker` | Not ported | Choose a signed release channel before enabling self-update. |
-| Localization | `Localization` and localized UI tests | Not ported | Current Windows UI is Korean-first with some English labels. |
-| macOS-only integration | AppKit, Keychain, Homebrew, login item | Replaced / excluded | Do not translate directly; use Windows equivalents only where required. |
-
-## Source-retirement rule
-
-Do not translate Swift files line by line. For each desired feature, extract its
-behavior and tests, implement the Windows contract in C#, and verify it. The
-macOS-only `Sources`, Swift tests, `Package.swift`, scripts, and `.icns` can be
-removed from this Windows repository after every desired row above is either
-complete or explicitly excluded. Shared fixtures, artwork, documentation,
-license files, and behavioral test data should remain.
+| Area | Windows status | Decision / next work |
+| --- | --- | --- |
+| Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |
+| Today/week/month totals | Complete | Windows locale controls the week boundary. |
+| Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
+| PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
+| Pokédex and catch log | Complete | Only encountered forms are revealed. |
+| Tray popup and single instance | Complete | WPF, WinForms `NotifyIcon`, and a named mutex are used. |
+| Milestone notifications and animations | Complete | Hatch, evolution, graduation, and queued overlays are implemented. |
+| Floating pet | Complete | Click toggle, drag persistence, sizing, and disable menu are implemented. |
+| Persistence diagnostics | Complete | Diagnostics remain in logs rather than the user-facing popup. |
+| Settings and startup | Complete | Refresh, topmost, notifications, floating pet, and login startup persist. |
+| Bag and shop | Complete | Wallet, inventory, confirmations, items, and paid egg rerolls are implemented. |
+| Save transfer | Complete | Versioned import/export, validation, rebasing, and recovery backups are implemented. |
+| Usage providers | Scoped complete | Codex, Gemini CLI, Cursor, and Copilot CLI are supported; niche providers are excluded until requested. |
+| Distribution | Partial | ZIP, checksums, installer, and tag releases exist; Authenticode signing remains. |
+| Update checker | Not ported | Choose a signed release channel before enabling updates. |
+| Localization | Not ported | The Windows UI is Korean-first with some English labels. |
+| macOS-only integration | Excluded | AppKit, Keychain, Homebrew, and macOS login-item behavior are outside scope. |
+| Swift/macOS source retirement | Complete | Swift code, tests, build scripts, `.icns`, and obsolete docs were removed after fixture migration. |
 
 ## Recommended order
 
-1. Manually validate clean install, in-place update, uninstall, and portable ZIP on Windows.
+1. Manually validate the interactive installer and unsigned SmartScreen behavior.
 2. Add Authenticode signing and an update channel.
-3. Final macOS-source retirement.
+3. Decide whether Windows UI localization or more providers are worth adding.

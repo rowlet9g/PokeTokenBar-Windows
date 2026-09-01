@@ -1,8 +1,8 @@
 # PokeTokenBar for Windows
 
-This directory contains the Windows-only WPF port. The original Swift/macOS
-implementation remains in `../Sources` and acts as the behavioral reference.
-Feature parity and source-retirement decisions are tracked in
+This directory contains the Windows-only WPF product. The retired Swift/macOS
+implementation remains available through Git history and the upstream project.
+Current scope and remaining Windows work are tracked in
 [`PORTING_STATUS.md`](PORTING_STATUS.md).
 
 ## Projects

@@ -118,16 +118,12 @@ Windows/
 자세한 Windows 구현 내용은 [`Windows/README.md`](Windows/README.md), 기능별 진행
 상태는 [`Windows/PORTING_STATUS.md`](Windows/PORTING_STATUS.md)에서 확인할 수 있습니다.
 
-## Swift/macOS 소스가 아직 남아 있는 이유
+## macOS 원작과 Windows 포팅
 
-루트의 `Sources`, `Tests`, `Package.swift`와 일부 macOS용 스크립트·아이콘은 원작의
-동작을 비교하기 위한 참고 자료입니다. 이 파일들은 Windows 솔루션에서 컴파일되거나
-실행되지 않으므로 GitHub 언어 통계에 Swift가 많이 표시되어도 Windows 앱이 Swift에
-의존한다는 뜻은 아닙니다.
-
-남은 Windows 기능의 범위를 확정하고 필요한 동작과 테스트를 모두 C#으로 옮긴 뒤,
-macOS 전용 소스는 마지막 정리 단계에서 제거할 예정입니다. Swift 파일을 줄 단위로
-기계 번역하는 방식은 사용하지 않습니다.
+이 저장소에서 macOS 전용 Swift 소스, 테스트, 빌드·배포 스크립트는 포팅 감사를 마친
+뒤 제거되었습니다. Windows 앱의 동작과 회귀 테스트는 이제 `Windows` 아래의 C#과
+WPF 프로젝트가 독립적으로 소유합니다. 원작 구현을 확인해야 할 때는 Git 이력 또는
+[chattymin/PokeTokenBar](https://github.com/chattymin/PokeTokenBar)를 참조합니다.
 
 ## 아직 남은 작업
 
@@ -135,7 +131,6 @@ macOS 전용 소스는 마지막 정리 단계에서 제거할 예정입니다. 
 - 서명된 배포 채널을 전제로 한 업데이트 확인
 - Windows UI 다국어 지원(현재 한국어 중심)
 - 필요성이 확인된 추가 사용량 공급자
-- 포팅 완료 후 macOS 전용 참조 소스 정리
 
 ## 원작과 라이선스
 
