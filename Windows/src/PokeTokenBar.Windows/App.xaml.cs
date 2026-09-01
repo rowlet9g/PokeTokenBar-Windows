@@ -482,7 +482,7 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private void FloatingPet_OnOpenRequested(object? sender, EventArgs e) => ShowPopover();
+    private void FloatingPet_OnOpenRequested(object? sender, EventArgs e) => TogglePopover();
 
     private void FloatingPet_OnHideRequested(object? sender, EventArgs e)
     {

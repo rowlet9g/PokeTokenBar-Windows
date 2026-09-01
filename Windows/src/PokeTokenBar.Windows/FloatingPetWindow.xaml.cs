@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,6 +13,9 @@ namespace PokeTokenBar.Windows;
 
 public partial class FloatingPetWindow : Window
 {
+    private const int GwlExStyle = -20;
+    private const int WsExNoActivate = 0x08000000;
+    private const int WsExToolWindow = 0x00000080;
     private bool _positionInitialized;
     private bool _applyingPosition;
 
@@ -26,6 +30,17 @@ public partial class FloatingPetWindow : Window
     public event EventHandler? HideRequested;
 
     public event Action<double, double>? PositionChanged;
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        var handle = new WindowInteropHelper(this).Handle;
+        var style = GetWindowLongPtr(handle, GwlExStyle).ToInt64();
+        SetWindowLongPtr(
+            handle,
+            GwlExStyle,
+            new IntPtr(style | WsExNoActivate | WsExToolWindow));
+    }
 
     public void ApplySettings(AppSettings settings)
     {
@@ -149,12 +164,8 @@ public partial class FloatingPetWindow : Window
     {
         e.Handled = true;
         var menu = new System.Windows.Controls.ContextMenu();
-        var open = new System.Windows.Controls.MenuItem { Header = "PokeTokenBar 열기" };
-        open.Click += (_, _) => OpenRequested?.Invoke(this, EventArgs.Empty);
         var hide = new System.Windows.Controls.MenuItem { Header = "플로팅 펫 끄기" };
         hide.Click += (_, _) => HideRequested?.Invoke(this, EventArgs.Empty);
-        menu.Items.Add(open);
-        menu.Items.Add(new Separator());
         menu.Items.Add(hide);
         menu.PlacementTarget = PetHitSurface;
         menu.IsOpen = true;
@@ -207,4 +218,10 @@ public partial class FloatingPetWindow : Window
         };
         transform.BeginAnimation(TranslateTransform.YProperty, bob);
     }
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static extern IntPtr GetWindowLongPtr(IntPtr window, int index);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    private static extern IntPtr SetWindowLongPtr(IntPtr window, int index, IntPtr newValue);
 }
