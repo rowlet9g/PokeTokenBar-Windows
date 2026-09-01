@@ -206,7 +206,7 @@ public partial class MainWindow : Window
 
         if (_usageStore.IsRefreshing)
         {
-            StatusText.Text = "Codex 로그를 읽는 중...";
+            StatusText.Text = "로컬 AI 로그를 읽는 중...";
             return;
         }
 
@@ -219,14 +219,15 @@ public partial class MainWindow : Window
         if (_usageStore.Snapshots.Count == 0)
         {
             StatusText.Text = _usageStore.LastUpdated is null
-                ? "Codex 로그 연결 준비 중"
-                : "오늘 기록된 Codex 사용량이 없습니다";
+                ? "로컬 사용량 연결 준비 중"
+                : "오늘 기록된 로컬 AI 사용량이 없습니다";
             return;
         }
 
+        var providers = string.Join(" + ", _usageStore.Snapshots.Select(snapshot => snapshot.DisplayName));
         StatusText.Text = _usageStore.LastUpdated is { } updated
-            ? $"Codex · {updated.LocalDateTime:HH:mm:ss} 갱신"
-            : "Codex";
+            ? $"{providers} · {updated.LocalDateTime:HH:mm:ss} 갱신"
+            : providers;
     }
 
     public void ApplyCompanionState()

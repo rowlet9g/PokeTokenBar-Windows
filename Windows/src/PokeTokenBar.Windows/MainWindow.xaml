@@ -37,7 +37,7 @@
                             BorderThickness="0"
                             Foreground="#FFAEB7C7"
                             FontSize="18"
-                            ToolTip="Refresh Codex usage"
+                            ToolTip="Refresh local AI usage"
                             Content="&#x21BB;" />
                     <Button Width="30"
                             Height="30"
@@ -59,7 +59,7 @@
                     <TextBlock Margin="0,4,0,0"
                                Foreground="#FF7DD3FC"
                                FontSize="12"
-                               Text="Windows port · Codex usage" />
+                               Text="Windows port · Local AI usage" />
                 </StackPanel>
             </DockPanel>
 
@@ -199,7 +199,7 @@
                            Margin="0,8,0,0"
                            HorizontalAlignment="Center"
                            Foreground="#FFAEB7C7"
-                           Text="Codex 로그 연결 준비 중" />
+                           Text="로컬 사용량 연결 준비 중" />
                 <StackPanel Margin="0,18,0,0"
                             HorizontalAlignment="Center"
                             Orientation="Horizontal">
@@ -544,7 +544,7 @@
                                     <TextBlock Margin="0,2,18,0"
                                                Foreground="#FF8F98A8"
                                                FontSize="9"
-                                               Text="Codex 로그 확인 주기" />
+                                               Text="로컬 로그 확인 주기" />
                                 </StackPanel>
                             </DockPanel>
                         </StackPanel>

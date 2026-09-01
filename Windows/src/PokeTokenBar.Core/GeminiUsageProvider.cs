@@ -2,22 +2,22 @@ using System.Globalization;
 
 namespace PokeTokenBar.Core;
 
-public sealed class CodexUsageProvider : IUsageProvider
+public sealed class GeminiUsageProvider : IUsageProvider
 {
-    private readonly CodexUsageReader _reader;
+    private readonly GeminiUsageReader _reader;
     private readonly IReadOnlyList<string> _roots;
 
-    public CodexUsageProvider(
+    public GeminiUsageProvider(
         IEnumerable<string> roots,
-        CodexUsageReader? reader = null)
+        GeminiUsageReader? reader = null)
     {
         _roots = roots.Select(Path.GetFullPath).ToArray();
-        _reader = reader ?? new CodexUsageReader();
+        _reader = reader ?? new GeminiUsageReader();
     }
 
-    public string Id => "codex";
+    public string Id => "gemini";
 
-    public string DisplayName => "Codex";
+    public string DisplayName => "Gemini";
 
     public bool ReportsCost => false;
 
@@ -48,7 +48,6 @@ public sealed class CodexUsageProvider : IUsageProvider
             UsageAggregation.MonthKey(localDay),
             monthStart,
             localDay);
-
         if (daily is null
             && block is null
             && week.TotalTokens == 0
