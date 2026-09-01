@@ -42,6 +42,76 @@ public sealed class CompanionStore
 
     public string StateFilePath => _filePath;
 
+    public CompanionState ExportStateSnapshot()
+    {
+        lock (_stateLock)
+        {
+            return SaveTransfer.CloneState(_state);
+        }
+    }
+
+    public async Task ImportStateAsync(
+        CompanionState imported,
+        IReadOnlyDictionary<string, long> todayTokensByProvider,
+        DateOnly today,
+        bool hasUsageData,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(imported);
+        ArgumentNullException.ThrowIfNull(todayTokensByProvider);
+        await _hatchGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            lock (_stateLock)
+            {
+                var previous = SaveTransfer.CloneState(_state);
+                var replacement = SaveTransfer.CloneState(imported);
+                Sanitize(replacement);
+                if (hasUsageData && todayTokensByProvider.Count > 0)
+                {
+                    replacement.InstallBaselineSet = true;
+                    replacement.ClaimedTodayTokensByProvider = NormalizeLedger(todayTokensByProvider);
+                    replacement.LastDate = DateKey(today);
+                }
+                else
+                {
+                    replacement.InstallBaselineSet = false;
+                    replacement.ClaimedTodayTokensByProvider = null;
+                    replacement.LastDate = string.Empty;
+                }
+
+                var directory = Path.GetDirectoryName(_filePath)
+                    ?? throw new InvalidOperationException("Companion state path has no parent directory.");
+                var backupPath = Path.Combine(
+                    directory,
+                    $"{SaveTransfer.BackupFilePrefix}{now:yyyy-MM-dd-HHmmss-fff}.json");
+                SaveTransfer.WriteStateFile(backupPath, previous);
+
+                try
+                {
+                    SaveTransfer.WriteStateFile(_filePath, replacement);
+                    _state = replacement;
+                    _persistenceEnabled = true;
+                    _lastPersistenceError = null;
+                    _stateLoadDescription = "Imported a versioned save file.";
+                    TrimImportBackups(directory);
+                }
+                catch
+                {
+                    _state = previous;
+                    throw;
+                }
+            }
+        }
+        finally
+        {
+            _hatchGate.Release();
+        }
+
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
     public bool InstallBaselineSet
     {
         get
@@ -1171,6 +1241,8 @@ public sealed class CompanionStore
         return normalized;
     }
 
+    internal static void SanitizeImportedState(CompanionState state) => Sanitize(state);
+
     private static void Sanitize(CompanionState state)
     {
         state.UsedSinceInstall = ClampToken(state.UsedSinceInstall);
@@ -1228,6 +1300,32 @@ public sealed class CompanionStore
                     ? 1
                     : Math.Clamp(state.Inventory[item.Key], 1, 1_000_000),
                 StringComparer.Ordinal);
+    }
+
+    private static void TrimImportBackups(string directory)
+    {
+        try
+        {
+            var backups = Directory.EnumerateFiles(
+                    directory,
+                    $"{SaveTransfer.BackupFilePrefix}*.json",
+                    SearchOption.TopDirectoryOnly)
+                .Select(path => new FileInfo(path))
+                .OrderByDescending(file => file.Name, StringComparer.Ordinal)
+                .Skip(SaveTransfer.BackupsToKeep)
+                .ToArray();
+            foreach (var backup in backups)
+            {
+                backup.Delete();
+            }
+        }
+        catch (IOException)
+        {
+            // A successful import must not be rolled back only because old backup cleanup failed.
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     private int ItemCountUnsafe(CompanionItemKind kind) =>

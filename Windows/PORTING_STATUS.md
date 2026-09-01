@@ -22,7 +22,7 @@ or loaded by the Windows solution.
 | Bag and shop | `BagView`, `ShopView` | Complete | Wallet, inventory, confirmations, three items, and paid egg rerolls are implemented. |
 | Rare Candy, premium eggs, Shiny Charm | related Swift models/tests | Complete | Item effects and Basic/Uncommon/Rare guaranteed egg tiers match the original balance. |
 | Additional usage providers | provider implementations and tests | Not ported | Codex is the only Windows provider today. Add providers individually. |
-| Save transfer | `SaveTransfer` | Not ported | Define a versioned Windows import/export format before implementation. |
+| Save transfer | `SaveTransfer` | Complete | Versioned JSON export/import, validation, local-ledger rebasing, confirmation, and five pre-import backups are implemented. |
 | Update checker | `UpdateChecker` | Not ported | Choose a signed release channel before enabling self-update. |
 | Localization | `Localization` and localized UI tests | Not ported | Current Windows UI is Korean-first with some English labels. |
 | macOS-only integration | AppKit, Keychain, Homebrew, login item | Replaced / excluded | Do not translate directly; use Windows equivalents only where required. |

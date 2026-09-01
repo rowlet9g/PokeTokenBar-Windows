@@ -1,10 +1,13 @@
 using System.IO;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
+using WpfOpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using WpfSaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using PokeTokenBar.Core;
 using PokeTokenBar.Platform.Windows;
 using Image = System.Windows.Controls.Image;
@@ -1237,6 +1240,97 @@ public partial class MainWindow : Window
             AlwaysOnTop = AlwaysOnTopCheckBox.IsChecked == true,
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
         });
+    }
+
+    private void ExportSaveButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var now = DateTimeOffset.Now;
+        var dialog = new WpfSaveFileDialog
+        {
+            Title = "PokeTokenBar 세이브 내보내기",
+            FileName = SaveTransfer.SuggestedFileName(now),
+            DefaultExt = ".json",
+            Filter = "PokeTokenBar save (*.json)|*.json",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "unknown";
+            var bytes = SaveTransfer.Encode(
+                _companionStore.ExportStateSnapshot(),
+                version,
+                Environment.MachineName,
+                now);
+            File.WriteAllBytes(dialog.FileName, bytes);
+            ShowSettingsStatus($"세이브를 내보냈습니다 · {Path.GetFileName(dialog.FileName)}");
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            ShowSettingsStatus($"내보내기 실패 · {error.Message}", isError: true);
+        }
+    }
+
+    private async void ImportSaveButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new WpfOpenFileDialog
+        {
+            Title = "PokeTokenBar 세이브 가져오기",
+            DefaultExt = ".json",
+            Filter = "PokeTokenBar save (*.json)|*.json",
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var envelope = SaveTransfer.Decode(SaveTransfer.ReadFile(dialog.FileName));
+            var incoming = SaveSummary.From(envelope.State);
+            var current = SaveSummary.From(_companionStore.ExportStateSnapshot());
+            var answer = System.Windows.MessageBox.Show(
+                this,
+                $"현재 진행을 가져온 세이브로 교체합니다.\n\n"
+                + $"현재: 누적 {TokenFormatter.Compact(current.LifetimeTokens)}, 도감 {current.DexCount}마리\n"
+                + $"가져올 파일: 누적 {TokenFormatter.Compact(incoming.LifetimeTokens)}, 도감 {incoming.DexCount}마리\n"
+                + $"출처: {envelope.SourceDevice} · {envelope.ExportedAt.LocalDateTime:yyyy-MM-dd HH:mm}\n\n"
+                + "교체 직전 상태는 자동 백업됩니다.",
+                "세이브 가져오기",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning,
+                MessageBoxResult.No);
+            if (answer != MessageBoxResult.Yes)
+            {
+                ShowSettingsStatus("가져오기를 취소했습니다");
+                return;
+            }
+
+            var todayTokens = _usageStore.TodayTokensByProvider;
+            await _companionStore.ImportStateAsync(
+                envelope.State,
+                todayTokens,
+                DateOnly.FromDateTime(DateTime.Now),
+                hasUsageData: todayTokens.Count > 0,
+                DateTimeOffset.Now,
+                _applicationToken);
+            ApplyCompanionState();
+            ShowSettingsStatus("세이브를 가져왔습니다 · 이전 상태는 자동 백업됨");
+        }
+        catch (Exception error) when (error is SaveTransferException
+                                          or IOException
+                                          or UnauthorizedAccessException
+                                          or JsonException)
+        {
+            ShowSettingsStatus($"가져오기 실패 · {error.Message}", isError: true);
+        }
     }
 
     private void SpeciesModeButton_OnClick(object sender, RoutedEventArgs e)

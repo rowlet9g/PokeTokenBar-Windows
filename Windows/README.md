@@ -67,6 +67,10 @@ Feature parity and source-retirement decisions are tracked in
   Uncommon-or-better, and Rare-or-better tiers. Releasing a shiny companion
   requires an additional warning step, and rolled rarity is revalidated before
   a guarantee is consumed.
+- Settings can export a versioned JSON save or import one from another PC.
+  Imports validate the format and numeric values, require explicit replacement
+  confirmation, rebase this PC's daily usage ledger, and retain the five newest
+  pre-import recovery backups beside `companion-state.json`.
 
 Set `PTB_DATA_DIR` to override the data directory for isolated development and
 smoke tests.
@@ -83,10 +87,10 @@ The Codex parser is streaming and keeps a cache keyed by path, modification
 time, and size. It reads only the metadata prefix of older candidate parent
 sessions until a fork dependency actually needs the full file.
 
-The current popup covers the complete core loop: egg, hatch, growth, evolution,
-graduation, a fresh egg, and the first collection/Pokédex view. The next
-porting layer is event animations and notifications, inventory/shop, settings,
-and the remaining usage providers.
+The current popup covers the complete core loop, collection/Pokédex, shop and
+bag, milestone notifications and animations, runtime settings, startup, and
+save transfer. The next porting layer is selected additional local usage
+providers, the separate floating pet, and release packaging.
 
 ## Build
 
