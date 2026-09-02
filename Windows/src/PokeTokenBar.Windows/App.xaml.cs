@@ -38,6 +38,7 @@ public partial class App : System.Windows.Application
         _singleInstance = new SingleInstanceGuard(SingleInstanceName);
         if (!_singleInstance.IsPrimaryInstance)
         {
+            _singleInstance.SignalPrimary();
             Shutdown();
             return;
         }
@@ -110,6 +111,8 @@ public partial class App : System.Windows.Application
         _trayIcon.ToggleRequested += (_, _) => TogglePopover();
         _trayIcon.ExitRequested += (_, _) => ExitApplication();
         _trayIcon.NotificationClicked += (_, _) => ShowPopover();
+        _singleInstance.StartListening(() =>
+            Dispatcher.BeginInvoke(new Action(ShowPopover)));
 
         // A newly registered notification icon can be placed in Windows' overflow
         // area. Showing the popup once makes first launch discoverable; after it is
@@ -476,9 +479,13 @@ public partial class App : System.Windows.Application
         {
             // Normal application shutdown.
         }
-        catch
+        catch (Exception error) when (error is HttpRequestException
+                                           or IOException
+                                           or InvalidDataException
+                                           or UnauthorizedAccessException)
         {
             // The name and growth state remain useful while the sprite host is offline.
+            LogSpriteError(speciesId, shiny, error.Message);
         }
     }
 
@@ -511,10 +518,35 @@ public partial class App : System.Windows.Application
             _settings = _settingsStore.Current;
             _popover?.ApplySettings(_settings);
             _floatingPet?.ApplySettings(_settings);
+            if (_settings.FloatingPetEnabled)
+            {
+                ApplyFloatingCompanionState();
+                QueueSpriteRefresh();
+            }
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
             LogSettingsError(error.Message);
+        }
+    }
+
+    private void LogSpriteError(int speciesId, bool shiny, string description)
+    {
+        if (_logsDirectory is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var variant = shiny ? "shiny" : "normal";
+            var line = $"{DateTimeOffset.Now:O} species #{speciesId} ({variant}) | "
+                + $"{description}{Environment.NewLine}";
+            File.AppendAllText(Path.Combine(_logsDirectory, "sprite-errors.log"), line);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // Sprite loading remains unaffected when diagnostics cannot be written.
         }
     }
 

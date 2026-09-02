@@ -36,6 +36,7 @@ WizardStyle=modern dynamic
 CloseApplications=yes
 RestartApplications=no
 UsePreviousAppDir=yes
+UsePreviousTasks=no
 VersionInfoVersion={#MyAppVersion}.0
 VersionInfoCompany=rowlet9g
 VersionInfoDescription=PokeTokenBar for Windows installer
@@ -47,7 +48,7 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "바탕화면 바로가기 만들기"; GroupDescription: "추가 바로가기:"; Flags: checkedonce
+Name: "desktopicon"; Description: "바탕화면 바로가기 만들기"; GroupDescription: "추가 바로가기:"; Flags: unchecked
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

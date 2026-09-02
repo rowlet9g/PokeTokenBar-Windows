@@ -67,11 +67,11 @@ PowerShell에서 저장소 루트를 연 뒤 다음 명령을 실행합니다.
 스크립트는 self-contained `win-x64` 실행 파일을 만들고 다음 작업을 수행합니다.
 
 - `%LOCALAPPDATA%\Programs\PokeTokenBar`에 설치
-- 바탕화면과 시작 메뉴에 `PokeTokenBar` 바로가기 생성
+- 시작 메뉴에 `PokeTokenBar` 바로가기 생성
 - 기존 `%LOCALAPPDATA%\PokeTokenBar` 진행 상황 유지
 
-이후에는 PowerShell 명령 없이 바로가기로 실행할 수 있습니다. 새 로컬 빌드로
-교체하려면 같은 설치 명령을 다시 실행하면 됩니다.
+이후에는 PowerShell 명령 없이 시작 메뉴나 작업 표시줄 고정 아이콘으로 실행할 수
+있습니다. 새 로컬 빌드로 교체하려면 같은 설치 명령을 다시 실행하면 됩니다.
 
 > Installer와 GitHub Release 자동화는 저장소에 포함되어 있지만 아직 코드 서명되지
 > 않았습니다. 최초 정식 Release 전에는 개발 저장소의 로컬 설치 스크립트를 사용합니다.
@@ -83,14 +83,14 @@ dotnet build .\Windows\PokeTokenBar.Windows.sln -c Release
 dotnet test .\Windows\PokeTokenBar.Windows.sln -c Release
 ```
 
-개발 상태를 설치본과 분리해 실행하려면 다음 스크립트를 사용합니다.
+최신 로컬 빌드를 설치판에 반영하고 실행하려면 다음 스크립트를 사용합니다.
 
 ```powershell
 .\Windows\run-dev.ps1
 ```
 
-이 명령은 Git에서 제외된 저장소 로컬 `.ptb-data` 폴더를 사용합니다. `PTB_DATA_DIR`
-환경 변수로 다른 데이터 폴더를 지정할 수도 있습니다.
+이 명령도 설치판과 동일한 `%LOCALAPPDATA%\PokeTokenBar`를 사용합니다. 포켓몬 진행
+상태는 이 폴더 한 곳만 정본으로 관리되며 로컬 빌드와 배포판이 같은 상태를 이어갑니다.
 
 ## 데이터와 네트워크
 

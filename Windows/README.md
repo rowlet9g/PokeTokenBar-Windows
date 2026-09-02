@@ -83,12 +83,12 @@ Current scope and remaining Windows work are tracked in
   confirmation, rebase this PC's daily usage ledger, and retain the five newest
   pre-import recovery backups beside `companion-state.json`.
 
-Set `PTB_DATA_DIR` to override the data directory for isolated development and
-smoke tests.
+`%LOCALAPPDATA%\PokeTokenBar` is the single canonical store for installed and
+local-development progress. `PTB_DATA_DIR` remains available only for automated
+isolated smoke tests.
 
-When launching from a Codex-integrated PowerShell session, use `run-dev.ps1`.
-It keeps development state in the repository-local, git-ignored `.ptb-data`
-directory so Windows sandbox virtualization cannot split the LocalAppData view:
+Use `run-dev.ps1` to publish the latest local build over the installed app and
+launch it against that canonical store:
 
 ```powershell
 .\run-dev.ps1
@@ -116,18 +116,16 @@ dotnet test .\PokeTokenBar.Windows.sln
 ## Install for the current Windows user
 
 `install.ps1` publishes a self-contained `win-x64` executable, installs it to
-`%LOCALAPPDATA%\Programs\PokeTokenBar`, and creates PokeTokenBar shortcuts on
-the desktop and in the Start menu:
+`%LOCALAPPDATA%\Programs\PokeTokenBar`, and creates a Start menu shortcut:
 
 ```powershell
 .\install.ps1
 ```
 
-After installation, launch PokeTokenBar from either shortcut. Re-run the same
-script whenever a newer local build should replace the installed executable.
-On the first install, an existing `.ptb-data\companion-state.json` from
-`run-dev.ps1` is copied into the Windows data directory when no installed state
-exists yet. Existing installed progress is never overwritten.
+After installation, launch PokeTokenBar from the Start menu or pin the running
+app to the taskbar. Re-run the same script whenever a newer local build should
+replace the installed executable. Existing progress in the canonical data
+directory is never overwritten.
 
 ## Build release artifacts
 

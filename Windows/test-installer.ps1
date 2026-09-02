@@ -21,9 +21,13 @@ $installedExecutable = Join-Path $installDirectory "PokeTokenBar.Windows.exe"
 $uninstaller = Join-Path $installDirectory "unins000.exe"
 $dataDirectory = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA "PokeTokenBar"))
 $backupDirectory = Join-Path $PSScriptRoot "artifacts\installer-validation-backup"
-$desktopShortcut = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)) "PokeTokenBar.lnk"
 $startMenuShortcut = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::Programs)) "PokeTokenBar\PokeTokenBar.lnk"
-$installerArguments = @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-")
+$installerArguments = @(
+    "/VERYSILENT",
+    "/SUPPRESSMSGBOXES",
+    "/NORESTART",
+    "/SP-",
+    "/MERGETASKS=!desktopicon")
 
 function Get-ProtectedDataHashes {
     $result = [ordered]@{}
@@ -81,9 +85,6 @@ try {
     if (-not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
         throw "Uninstaller was not found: $uninstaller"
     }
-    if (-not (Test-Path -LiteralPath $desktopShortcut -PathType Leaf)) {
-        throw "Desktop shortcut was not created: $desktopShortcut"
-    }
     if (-not (Test-Path -LiteralPath $startMenuShortcut -PathType Leaf)) {
         throw "Start menu shortcut was not created: $startMenuShortcut"
     }
@@ -111,7 +112,6 @@ try {
         InstalledExecutable = $installedExecutable
         FileVersion = (Get-Item -LiteralPath $installedExecutable).VersionInfo.FileVersion
         ProtectedFilesVerified = $originalHashes.Count
-        DesktopShortcut = $desktopShortcut
         StartMenuShortcut = $startMenuShortcut
         DataDirectoryPreserved = Test-Path -LiteralPath $dataDirectory
     } | Format-List
