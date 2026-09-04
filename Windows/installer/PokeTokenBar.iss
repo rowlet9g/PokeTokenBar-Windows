@@ -11,6 +11,7 @@
 
 #define MyAppName "PokeTokenBar"
 #define MyAppExeName "PokeTokenBar.Windows.exe"
+#define MyAppMutex "Local\io.github.chattymin.PokeTokenBar.Windows"
 
 [Setup]
 AppId={{23B554C2-59D9-4283-AEF1-9863587ABDFA}
@@ -20,6 +21,7 @@ AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher=rowlet9g
 AppPublisherURL=https://github.com/rowlet9g/PokeTokenBar-Windows
 AppSupportURL=https://github.com/rowlet9g/PokeTokenBar-Windows/issues
+AppMutex={#MyAppMutex}
 DefaultDirName={localappdata}\Programs\PokeTokenBar
 DefaultGroupName=PokeTokenBar
 DisableProgramGroupPage=yes
