@@ -20,7 +20,7 @@ available through Git history and the upstream project, not in the active tree.
 | Settings and startup | Complete | Refresh, topmost, notifications, floating pet, and login startup persist. |
 | Bag and shop | Complete | Wallet, inventory, confirmations, items, and paid egg rerolls are implemented. |
 | Save transfer | Complete | Versioned import/export, validation, rebasing, and recovery backups are implemented. |
-| Usage providers | Scoped complete | Codex, Gemini CLI, Cursor, and Copilot CLI are supported; niche providers are excluded until requested. |
+| Usage providers | Scoped complete | Codex, Antigravity CLI/IDE, legacy Gemini CLI, Cursor, and Copilot CLI are supported; niche providers are excluded until requested. |
 | Distribution | Partial | ZIP, checksums, installer, and tag releases exist; Authenticode signing remains. |
 | Update checker | Not ported | Choose a signed release channel before enabling updates. |
 | Localization | Not ported | The Windows UI is Korean-first with some English labels. |

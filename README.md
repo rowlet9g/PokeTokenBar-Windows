@@ -25,7 +25,7 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 ## 현재 구현된 기능
 
 - Windows 알림 영역(시스템 트레이) 아이콘과 둥근 WPF 팝업
-- Codex, Gemini CLI, Cursor, GitHub Copilot CLI 로컬 사용량 집계
+- Codex, Antigravity, 레거시 Gemini CLI, Cursor, GitHub Copilot CLI 로컬 사용량 집계
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
 - 알 부화, 실제 진화 계보 기반 성장, 분기 진화, 성격과 이로치
 - Gen 1–5 포켓몬 도감과 개체별 포획 기록
@@ -44,7 +44,8 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 | 도구 | 기본 검색 위치 | 형식 |
 | --- | --- | --- |
 | Codex | `%USERPROFILE%\.codex\sessions`, `archived_sessions` | JSONL |
-| Gemini CLI | `%USERPROFILE%\.gemini\tmp` | JSON / JSONL |
+| Gemini CLI (레거시) | `%USERPROFILE%\.gemini\tmp` | JSON / JSONL |
+| Antigravity CLI / IDE | `%USERPROFILE%\.gemini\antigravity*\conversations` | SQLite / protobuf |
 | Cursor | `%APPDATA%\Cursor\User\globalStorage` 및 Nightly 경로 | SQLite |
 | GitHub Copilot CLI | `%USERPROFILE%\.copilot` 또는 `COPILOT_HOME` | SQLite |
 
@@ -130,7 +131,7 @@ WPF 프로젝트가 독립적으로 소유합니다. 원작 구현을 확인해�
 - Installer의 실제 설치·업데이트·제거 스모크 테스트와 코드 서명
 - 서명된 배포 채널을 전제로 한 업데이트 확인
 - Windows UI 다국어 지원(현재 한국어 중심)
-- 필요성이 확인된 추가 사용량 공급자
+- 필요성이 확인된 추가 사용량 공급자와 기존 공급자의 저장 형식 변경 대응
 
 ## 원작과 라이선스
 

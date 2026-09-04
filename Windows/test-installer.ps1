@@ -1,5 +1,5 @@
 param(
-    [string]$InstallerPath = (Join-Path $PSScriptRoot "artifacts\release\0.1.0\PokeTokenBar-0.1.0-win-x64-setup.exe"),
+    [string]$InstallerPath = (Join-Path $PSScriptRoot "artifacts\release\0.2.0\PokeTokenBar-0.2.0-win-x64-setup.exe"),
     [switch]$LaunchAfter
 )
 

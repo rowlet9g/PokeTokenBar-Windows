@@ -103,6 +103,30 @@ internal static class WindowsSqlite
             return Marshal.PtrToStringUTF8(pointer, length);
         }
 
+        public byte[]? ColumnBlob(int index)
+        {
+            var length = sqlite3_column_bytes(_handle, index);
+            if (length < 0)
+            {
+                return null;
+            }
+
+            if (length == 0)
+            {
+                return [];
+            }
+
+            var pointer = sqlite3_column_blob(_handle, index);
+            if (pointer == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            var bytes = new byte[length];
+            Marshal.Copy(pointer, bytes, 0, length);
+            return bytes;
+        }
+
         public void Dispose()
         {
             if (_handle != IntPtr.Zero)
@@ -145,6 +169,9 @@ internal static class WindowsSqlite
 
     [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr sqlite3_column_text(IntPtr statement, int index);
+
+    [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr sqlite3_column_blob(IntPtr statement, int index);
 
     [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl)]
     private static extern int sqlite3_column_bytes(IntPtr statement, int index);

@@ -64,6 +64,7 @@ public partial class App : System.Windows.Application
         [
             new CodexUsageProvider(WindowsCodexPaths.CreateDefaultRoots()),
             new GeminiUsageProvider(WindowsGeminiPaths.CreateDefaultRoots()),
+            new AntigravityUsageProvider(WindowsAntigravityPaths.CreateDefaultRoots()),
             new CursorUsageProvider(WindowsCursorPaths.CreateDefaultRoots()),
             new CopilotUsageProvider(WindowsCopilotPaths.CreateDefaultRoots()),
         ]);
