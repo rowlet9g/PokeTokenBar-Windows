@@ -40,6 +40,10 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 처음 발견한 각 공급자의 누적 사용량은 기준값으로만 저장됩니다. 설치 전에 사용한
 토큰을 소급해 성장시키지 않으며, 그 뒤에 새로 증가한 토큰부터 포켓몬에게 반영됩니다.
 
+TOKENS의 TODAY는 Input / Output / Cache(쓰기·읽기)를 나누어 표시하며,
+WEEK와 MONTH는 공급자별 합계와 비율을 표시합니다. 선택 기간의 사용량이 0인
+공급자는 숨깁니다. HOME은 오늘 전체 합계와 포켓몬 성장을 보여 줍니다.
+
 ## 지원 도구와 로컬 데이터
 
 | 도구 | 기본 검색 위치 | 형식 |
@@ -72,18 +76,20 @@ PowerShell에서 저장소 루트를 연 뒤 다음 명령을 실행합니다.
 - 시작 메뉴에 `PokeTokenBar` 바로가기 생성
 - 기존 `%LOCALAPPDATA%\PokeTokenBar` 진행 상황 유지
 
-이후에는 PowerShell 명령 없이 시작 메뉴나 작업 표시줄 고정 아이콘으로 실행할 수
+이후에는 PowerShell 명령 없이 시작 메뉴에서 실행할 수
 있습니다. 새 로컬 빌드로 교체하려면 같은 설치 명령을 다시 실행하면 됩니다.
 
-> Installer와 GitHub Release 자동화는 저장소에 포함되어 있지만 아직 코드 서명되지
-> 않았습니다. 최초 정식 Release 전에는 개발 저장소의 로컬 설치 스크립트를 사용합니다.
+Installer와 Portable ZIP을 만드는 방법 및 태그 배포 절차는
+[`RELEASE.md`](RELEASE.md)에 있습니다. 배포 산출물에는 아직 코드 서명이 없습니다.
 
 ## 개발과 테스트
 
 ```powershell
 dotnet build .\Windows\PokeTokenBar.Windows.sln -c Release
-dotnet test .\Windows\PokeTokenBar.Windows.sln -c Release
+dotnet test .\Windows\PokeTokenBar.Windows.sln -c Release --no-build
 ```
+
+빌드와 테스트는 같은 출력 폴더를 사용하므로 순서대로 실행합니다.
 
 최신 로컬 빌드를 설치판에 반영하고 실행하려면 다음 스크립트를 사용합니다.
 
@@ -129,7 +135,7 @@ WPF 프로젝트가 독립적으로 소유합니다. 원작 구현을 확인해�
 
 ## 아직 남은 작업
 
-- Installer의 실제 설치·업데이트·제거 스모크 테스트와 코드 서명
+- Authenticode 코드 서명과 인증서·timestamp 서버 정책
 - 서명된 배포 채널을 전제로 한 업데이트 확인
 - Windows UI 다국어 지원(현재 한국어 중심)
 - 필요성이 확인된 추가 사용량 공급자와 기존 공급자의 저장 형식 변경 대응

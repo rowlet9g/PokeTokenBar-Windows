@@ -3,8 +3,11 @@ title = "PokeTokenBar gitleaks configuration"
 [extend]
 useDefault = true
 
+# CI scans Git history as well as current changes. This deleted Swift fixture
+# still exists in history; its plan-tier label is not a credential. Keep the
+# exception restricted to that exact path and assertion, not all test files.
 [allowlist]
-description = "Allow the known non-secret Claude plan-tier test fixture"
+description = "Historical Swift fixture: non-secret Claude plan-tier assertion"
 condition = "AND"
 regexTarget = "line"
 paths = ['''^Tests/PokeTokenBarTests/PokeTokenBarTests\.swift$''']

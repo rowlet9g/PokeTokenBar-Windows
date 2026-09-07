@@ -10,7 +10,7 @@ available through Git history and the upstream project, not in the active tree.
 | --- | --- | --- |
 | Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |
 | Today/week/month totals | Complete | Windows locale controls the week boundary. |
-| Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, today input/output/cache, and refresh/error status. Live Antigravity request verification remains manual. |
+| Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, today input/output/cache, and refresh/error status. A live Antigravity request was user-verified to increase both tokens and companion progress on 2026-09-07. |
 | Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
 | Pokédex and catch log | Complete | Only encountered forms are revealed. |
@@ -22,14 +22,24 @@ available through Git history and the upstream project, not in the active tree.
 | Bag and shop | Complete | Wallet, inventory, confirmations, items, and paid egg rerolls are implemented. |
 | Save transfer | Complete | Versioned import/export, validation, rebasing, and recovery backups are implemented. |
 | Usage providers | Scoped complete | Codex, Antigravity CLI/IDE, legacy Gemini CLI, Cursor, and Copilot CLI are supported; niche providers are excluded until requested. |
-| Distribution | Partial | ZIP, checksums, installer, and tag releases exist; Authenticode signing remains. |
+| Distribution | Partial | ZIP, checksums, installer, and tag-triggered release workflow are implemented; this does not imply a published release. Authenticode signing remains. |
 | Update checker | Not ported | Choose a signed release channel before enabling updates. |
 | Localization | Not ported | The Windows UI is Korean-first with some English labels. |
 | macOS-only integration | Excluded | AppKit, Keychain, Homebrew, and macOS login-item behavior are outside scope. |
 | Swift/macOS source retirement | Complete | Swift code, tests, build scripts, `.icns`, and obsolete docs were removed after fixture migration. |
 
-## Recommended order
+## Validation recorded on 2026-09-07
 
-1. Manually validate the interactive installer and unsigned SmartScreen behavior.
-2. Add Authenticode signing and an update channel.
-3. Decide whether Windows UI localization or more providers are worth adding.
+- TOKENS implementation: Release build passed with zero warnings/errors; 128 tests passed.
+- The user confirmed live Antigravity usage increases both the app's token count
+  and Pokémon progress. Today's detail display is implemented, not a separate pending step.
+- The installer handoff records successful install/update/uninstall/reinstall
+  checks with user-state SHA-256 preservation. Repeat the release checklist for
+  each new artifact; this is not a claim that every interactive installer screen
+  or SmartScreen prompt has been checked.
+
+## Remaining work
+
+1. Decide the release version and publish its matching tag when ready.
+2. Add Authenticode signing and choose a signed update channel before implementing updates.
+3. Decide whether UI localization or additional providers are needed.

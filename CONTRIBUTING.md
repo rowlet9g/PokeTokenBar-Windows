@@ -18,8 +18,14 @@ dotnet build .\Windows\PokeTokenBar.Windows.sln -c Release --no-restore
 dotnet test .\Windows\PokeTokenBar.Windows.sln -c Release --no-build
 ```
 
-For an isolated development state, use `.\Windows\run-dev.ps1`. Do not place
-personal state, logs, caches, credentials, or release certificates in Git.
+Run build and test sequentially; they share build outputs. Use
+`.\Windows\run-dev.ps1` to update and launch the installed app. It stops the
+running app and uses the same `%LOCALAPPDATA%\PokeTokenBar` progress as the
+installed release. It does not create isolated development state.
+
+Reserve `PTB_DATA_DIR` for isolated automated tests; do not set it for normal
+development or installed launches. Do not place personal state, logs, caches,
+credentials, or release certificates in Git.
 
 ## Project boundaries
 
