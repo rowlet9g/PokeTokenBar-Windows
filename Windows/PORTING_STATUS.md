@@ -10,6 +10,7 @@ available through Git history and the upstream project, not in the active tree.
 | --- | --- | --- |
 | Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |
 | Today/week/month totals | Complete | Windows locale controls the week boundary. |
+| Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, today input/output/cache, and refresh/error status. Live Antigravity request verification remains manual. |
 | Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
 | Pokédex and catch log | Complete | Only encountered forms are revealed. |

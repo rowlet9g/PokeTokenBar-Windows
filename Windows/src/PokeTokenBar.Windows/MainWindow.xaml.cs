@@ -216,6 +216,7 @@ public partial class MainWindow : Window
         WeekValueText.Text = TokenFormatter.Compact(_usageStore.WeekTotalTokens);
         MonthValueText.Text = TokenFormatter.Compact(_usageStore.MonthTotalTokens);
         RefreshButton.IsEnabled = !_usageStore.IsRefreshing;
+        ApplyTokensState();
 
         if (_usageStore.IsRefreshing)
         {
@@ -1378,11 +1379,13 @@ public partial class MainWindow : Window
     {
         HomeView.Visibility = tab == MainTab.Home ? Visibility.Visible : Visibility.Collapsed;
         PokedexView.Visibility = tab == MainTab.Pokedex ? Visibility.Visible : Visibility.Collapsed;
+        TokensView.Visibility = tab == MainTab.Tokens ? Visibility.Visible : Visibility.Collapsed;
         ShopView.Visibility = tab == MainTab.Shop ? Visibility.Visible : Visibility.Collapsed;
         BagView.Visibility = tab == MainTab.Bag ? Visibility.Visible : Visibility.Collapsed;
         SettingsView.Visibility = tab == MainTab.Settings ? Visibility.Visible : Visibility.Collapsed;
         SetTabStyle(HomeTabButton, tab == MainTab.Home);
         SetTabStyle(PokedexTabButton, tab == MainTab.Pokedex);
+        SetTabStyle(TokensTabButton, tab == MainTab.Tokens);
         SetTabStyle(ShopTabButton, tab == MainTab.Shop);
         SetTabStyle(BagTabButton, tab == MainTab.Bag);
         SetTabStyle(SettingsTabButton, tab == MainTab.Settings);
@@ -1398,6 +1401,7 @@ public partial class MainWindow : Window
     {
         Home,
         Pokedex,
+        Tokens,
         Shop,
         Bag,
         Settings,

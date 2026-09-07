@@ -310,7 +310,7 @@
                     Padding="3"
                     Background="#FF11141A"
                     CornerRadius="8">
-                <UniformGrid Columns="5">
+                <UniformGrid Columns="6">
                     <Button x:Name="HomeTabButton"
                             Height="28"
                             Click="HomeTabButton_OnClick"
@@ -326,9 +326,18 @@
                             Background="Transparent"
                             BorderThickness="0"
                             Foreground="#FF7D8797"
-                            FontSize="11"
+                            FontSize="10"
                             FontWeight="SemiBold"
                             Content="POKÉDEX" />
+                    <Button x:Name="TokensTabButton"
+                            Height="28"
+                            Click="TokensTabButton_OnClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FF7D8797"
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            Content="TOKENS" />
                     <Button x:Name="ShopTabButton"
                             Height="28"
                             Click="ShopTabButton_OnClick"
@@ -353,7 +362,7 @@
                             Background="Transparent"
                             BorderThickness="0"
                             Foreground="#FF7D8797"
-                            FontSize="11"
+                            FontSize="10"
                             FontWeight="SemiBold"
                             Content="SETTINGS" />
                 </UniformGrid>
@@ -557,6 +566,73 @@
                                    Text="알이 부화하면 첫 기록이 생깁니다" />
                     </StackPanel>
                 </Grid>
+            </Grid>
+
+            <Grid x:Name="TokensView" Grid.Row="2" Margin="0,10,0,0" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <UniformGrid Columns="3">
+                    <Button x:Name="TokensTodayButton" Content="TODAY" Tag="Today"
+                            Style="{StaticResource ModernActionButton}" Padding="0,7"
+                            Margin="0,0,3,0" Click="TokensPeriodButton_OnClick" />
+                    <Button x:Name="TokensWeekButton" Content="WEEK" Tag="Week"
+                            Style="{StaticResource ModernActionButton}" Padding="0,7"
+                            Margin="3,0" Click="TokensPeriodButton_OnClick" />
+                    <Button x:Name="TokensMonthButton" Content="MONTH" Tag="Month"
+                            Style="{StaticResource ModernActionButton}" Padding="0,7"
+                            Margin="3,0,0,0" Click="TokensPeriodButton_OnClick" />
+                </UniformGrid>
+                <StackPanel Grid.Row="1" Margin="2,12,2,10">
+                    <TextBlock x:Name="TokensPeriodText" Foreground="#FFAEB7C7" FontSize="11" />
+                    <TextBlock x:Name="TokensTotalText" Foreground="White" FontSize="25"
+                               FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock Text="공급자별 사용량 · 전체 대비 비율" Foreground="#FF7D8797" FontSize="10" />
+                </StackPanel>
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <TextBlock x:Name="TokensEmptyText" Margin="2,12" Foreground="#FFAEB7C7"
+                                   Text="선택한 기간에 기록된 사용량이 없습니다" TextWrapping="Wrap" />
+                        <ItemsControl x:Name="TokensProviderItems">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#FF171A21" CornerRadius="10" Padding="12" Margin="0,0,2,8">
+                                        <StackPanel>
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding ShareText}"
+                                                           Foreground="#FF7DD3FC" FontSize="11" Margin="8,0,0,0" />
+                                                <TextBlock Text="{Binding Name}" Foreground="White" FontSize="12"
+                                                           FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            </DockPanel>
+                                            <TextBlock Text="{Binding TotalText}" Foreground="#FFDCE4EF" FontSize="16" Margin="0,5,0,7" />
+                                            <ProgressBar Minimum="0" Maximum="100" Value="{Binding Share}" Height="5"
+                                                         Foreground="#FF7DD3FC" Background="#FF2B3440" BorderThickness="0">
+                                                <ProgressBar.Template>
+                                                    <ControlTemplate TargetType="ProgressBar">
+                                                        <Grid x:Name="PART_Track">
+                                                            <Border Background="{TemplateBinding Background}" CornerRadius="2" />
+                                                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left"
+                                                                    Background="{TemplateBinding Foreground}" CornerRadius="2" />
+                                                        </Grid>
+                                                    </ControlTemplate>
+                                                </ProgressBar.Template>
+                                            </ProgressBar>
+                                            <TextBlock Text="{Binding Detail}" Visibility="{Binding DetailVisibility}"
+                                                       Margin="0,8,0,0" Foreground="#FFAEB7C7" FontSize="10" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding UpdatedText}" Foreground="#FF7D8797" FontSize="10" Margin="0,5,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+                <TextBlock x:Name="TokensStatusText" Grid.Row="3" Margin="2,7,2,0" MaxHeight="48"
+                           Foreground="#FF7D8797" FontSize="10" TextWrapping="Wrap"
+                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
             </Grid>
 
             <ScrollViewer x:Name="ShopView"

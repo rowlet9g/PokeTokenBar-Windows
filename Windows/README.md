@@ -14,6 +14,8 @@ Current scope and remaining Windows work are tracked in
 
 ## Current milestone
 
+- TOKENS tab with today/week/month provider totals and shares, today's input/output/cache
+  breakdown, refresh status, and per-provider timestamps. Zero-usage providers are hidden.
 - Windows notification-area icon and popup shell.
 - A draggable borderless popup. Drag the title area to move it; the `—` button
   hides it to the notification area, and reopening preserves the session position.

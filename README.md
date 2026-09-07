@@ -27,6 +27,7 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 - Windows 알림 영역(시스템 트레이) 아이콘과 둥근 WPF 팝업
 - Codex, Antigravity, 레거시 Gemini CLI, Cursor, GitHub Copilot CLI 로컬 사용량 집계
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
+- TOKENS 탭: 기간별 공급자 합계·비율과 오늘의 Input / Output / Cache 상세
 - 알 부화, 실제 진화 계보 기반 성장, 분기 진화, 성격과 이로치
 - Gen 1–5 포켓몬 도감과 개체별 포획 기록
 - 부화·진화·졸업 애니메이션 및 Windows 트레이 알림
