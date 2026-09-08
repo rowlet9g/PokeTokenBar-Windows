@@ -52,6 +52,7 @@ public partial class MainWindow : Window
         _spriteStore = spriteStore;
         _applicationToken = applicationToken;
         InitializeComponent();
+        ShowTab(MainTab.Home);
         IsVisibleChanged += MainWindow_OnIsVisibleChanged;
         ApplySettings(settings);
         ApplyUsageState();
@@ -214,6 +215,11 @@ public partial class MainWindow : Window
 
     public void ApplyUsageState()
     {
+        var priced = _usageStore.Snapshots.Where(s => s.ReportsCost).ToArray();
+        TodayCostText.Text = priced.Length == 0 ? "" : $"${priced.Sum(s => s.Today?.TotalCost ?? 0):0.00}";
+        WeekCostText.Text = priced.Length == 0 ? "" : $"${priced.Sum(s => s.WeekTotal?.TotalCost ?? 0):0.00}";
+        MonthCostText.Text = priced.Length == 0 ? "" : $"${priced.Sum(s => s.MonthTotal?.TotalCost ?? 0):0.00}";
+        TodayCostText.ToolTip = "비용을 보고하는 도구의 합계 · 구독 요금과 다를 수 있습니다";
         var today = _usageStore.TodayTotalTokens;
         TokenValueText.Text = TokenFormatter.Compact(today);
         ExactTokenValueText.Text = TokenFormatter.Grouped(today);
@@ -364,7 +370,7 @@ public partial class MainWindow : Window
 
     public void ApplyCompanionState()
     {
-        ApplyEvolutionLine();
+        _ = ApplyEvolutionLineAsync();
         ApplyPokedexState();
         ApplyInventoryState();
         if (_companionStore.HasActivePokemon)
@@ -373,6 +379,9 @@ public partial class MainWindow : Window
             return;
         }
 
+        CompanionIdentityText.Text = "알을 품는 중";
+        RarityBadge.Visibility = Visibility.Collapsed;
+        CompanionMoodText.Text = "새로운 동료가 깨어나기를 기다리고 있어요.";
         EggVisual.Visibility = Visibility.Visible;
         PokemonImage.Visibility = Visibility.Collapsed;
         var progress = _companionStore.EggProgress;
@@ -414,51 +423,58 @@ public partial class MainWindow : Window
             return;
         }
 
-        PokemonImage.Source = CreateBitmap(bytes);
+        PokemonImage.Source = CropSprite(bytes);
     }
 
-    private void ApplyEvolutionLine()
+    private int _evolutionGeneration;
+    private async Task ApplyEvolutionLineAsync()
     {
+        var generation = ++_evolutionGeneration;
         var stages = _companionStore.CurrentLineStages;
         EvolutionLinePanel.Children.Clear();
-        EvolutionLinePanel.Visibility = stages.Count == 0
-            ? Visibility.Collapsed
-            : Visibility.Visible;
+        try { stages = await _companionStore.GetEvolutionPreviewAsync(_applicationToken); }
+        catch (OperationCanceledException) { return; }
+        catch { /* Keep realized stages when evolution data is unavailable. */ }
+        await Dispatcher.InvokeAsync(() => RenderEvolutionPreview(stages, generation));
+    }
 
-        for (var index = 0; index < stages.Count; index++)
+    private void RenderEvolutionPreview(IReadOnlyList<PokemonLineStage> stages, int generation)
+    {
+        if (generation != _evolutionGeneration) return;
+        foreach (var stage in stages)
         {
-            if (index > 0)
+            if (EvolutionLinePanel.Children.Count > 0)
+                EvolutionLinePanel.Children.Add(new TextBlock { Text = "→", Margin = new Thickness(8,0,8,0),
+                    VerticalAlignment = VerticalAlignment.Center, Foreground = Brush("#FF8F98A8") });
+            var column = new StackPanel { Width = 62, ToolTip = stage.Name };
+            var image = CreateSpriteImage(54);
+            if (stage.SpeciesId is null)
+                column.Children.Add(new TextBlock { Text = "?", FontSize = 30, Height = 54,
+                    TextAlignment = TextAlignment.Center, Foreground = Brush("#FF8F98A8") });
+            else
             {
-                EvolutionLinePanel.Children.Add(new TextBlock
-                {
-                    Margin = new Thickness(4, 0, 4, 0),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = Brush("#FF596273"),
-                    FontSize = 10,
-                    Text = "›",
-                });
+                image.Opacity = stage.Status == PokemonLineStageStatus.HiddenFuture ? 0.3 : 1;
+                column.Children.Add(image);
             }
-
-            var stage = stages[index];
-            var isCurrent = stage.Status == PokemonLineStageStatus.Current;
-            EvolutionLinePanel.Children.Add(new Border
-            {
-                Padding = new Thickness(7, 3, 7, 3),
-                Background = Brush(isCurrent ? "#FF263E4B" : "#FF252A34"),
-                BorderBrush = Brush(isCurrent ? "#FF7DD3FC" : "#FF343A46"),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(8),
-                Child = new TextBlock
-                {
-                    Foreground = Brush(stage.Status == PokemonLineStageStatus.HiddenFuture
-                        ? "#FF7D8797"
-                        : isCurrent ? "#FF7DD3FC" : "#FFAEB7C7"),
-                    FontSize = 9,
-                    FontWeight = isCurrent ? FontWeights.SemiBold : FontWeights.Normal,
-                    Text = stage.Name,
-                },
-            });
+            column.Children.Add(new TextBlock { Text = stage.Status == PokemonLineStageStatus.Current ? "●" : " ",
+                TextAlignment = TextAlignment.Center, FontSize = 10, Foreground = Brush("#FF7DD3FC") });
+            EvolutionLinePanel.Children.Add(column);
+            if (stage.SpeciesId is { } id) _ = LoadPreviewSpriteAsync(image, id, stage.IsShiny, generation);
         }
+    }
+
+    private async Task LoadPreviewSpriteAsync(Image image, int id, bool shiny, int generation)
+    {
+        try
+        {
+            var bytes = await _spriteStore.GetSpriteAsync(id, shiny, _applicationToken);
+            if (bytes is not null && generation == _evolutionGeneration && !_applicationToken.IsCancellationRequested)
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (generation == _evolutionGeneration) image.Source = CropSprite(bytes);
+                });
+        }
+        catch { /* Preview images are optional when offline. */ }
     }
 
     private void ApplyPokedexState()
@@ -514,7 +530,7 @@ public partial class MainWindow : Window
         {
             Margin = new Thickness(0, 1, 0, 0),
             HorizontalAlignment = WpfHorizontalAlignment.Center,
-            Foreground = MediaBrushes.White,
+            Foreground = Brush("#FF202124"),
             FontSize = 11,
             FontWeight = FontWeights.SemiBold,
             MaxWidth = 88,
@@ -761,7 +777,7 @@ public partial class MainWindow : Window
         var copy = new StackPanel();
         copy.Children.Add(new TextBlock
         {
-            Foreground = MediaBrushes.White,
+            Foreground = Brush("#FF202124"),
             FontSize = 12,
             FontWeight = FontWeights.SemiBold,
             Text = ItemName(kind),
@@ -799,7 +815,7 @@ public partial class MainWindow : Window
         header.Children.Add(count);
         header.Children.Add(new TextBlock
         {
-            Foreground = MediaBrushes.White,
+            Foreground = Brush("#FF202124"),
             FontSize = 12,
             FontWeight = FontWeights.SemiBold,
             Text = $"{ItemEmoji(item.Kind)}  {ItemName(item.Kind)}",
@@ -875,7 +891,7 @@ public partial class MainWindow : Window
         var copy = new StackPanel();
         copy.Children.Add(new TextBlock
         {
-            Foreground = MediaBrushes.White,
+            Foreground = Brush("#FF202124"),
             FontSize = 12,
             FontWeight = FontWeights.SemiBold,
             Text = FreshEggName(tier),
@@ -993,7 +1009,10 @@ public partial class MainWindow : Window
                     continue;
                 }
 
-                target.Image.Source = CreateBitmap(bytes);
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (generation == _pokedexGeneration) target.Image.Source = CreateBitmap(bytes);
+                });
             }
         }
         catch (OperationCanceledException) when (_applicationToken.IsCancellationRequested)
@@ -1008,6 +1027,26 @@ public partial class MainWindow : Window
 
     private sealed record SpriteTarget(int SpeciesId, bool IsShiny, Image Image);
 
+    private static BitmapSource CropSprite(byte[] bytes)
+    {
+        var source = new FormatConvertedBitmap(CreateBitmap(bytes), PixelFormats.Bgra32, null, 0);
+        var stride = source.PixelWidth * 4;
+        var pixels = new byte[stride * source.PixelHeight];
+        source.CopyPixels(pixels, stride, 0);
+        int left = source.PixelWidth, top = source.PixelHeight, right = -1, bottom = -1;
+        for (var y = 0; y < source.PixelHeight; y++)
+        for (var x = 0; x < source.PixelWidth; x++)
+        {
+            if (pixels[y * stride + x * 4 + 3] == 0) continue;
+            left = Math.Min(left, x); right = Math.Max(right, x);
+            top = Math.Min(top, y); bottom = Math.Max(bottom, y);
+        }
+        if (right < left) return source;
+        var cropped = new CroppedBitmap(source, new Int32Rect(left, top, right-left+1, bottom-top+1));
+        cropped.Freeze();
+        return cropped;
+    }
+
     private static BitmapImage CreateBitmap(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes, writable: false);
@@ -1021,7 +1060,28 @@ public partial class MainWindow : Window
     }
 
     private static SolidColorBrush Brush(string value) =>
-        new((MediaColor)MediaColorConverter.ConvertFromString(value));
+        new((MediaColor)MediaColorConverter.ConvertFromString(value switch
+        {
+            "#FF171A21" => "#FFF9FAFB",
+            "#FF202A33" => "#FFEAF3FF",
+            "#FF263E4B" => "#FFEAF3FF",
+            "#FF252A34" => "#FFF0F1F3",
+            "#FF344250" => "#FFE0ECFA",
+            "#FF244D63" => "#FFD9E9FF",
+            "#FF20242C" => "#FFF0F1F3",
+            "#FF11141A" => "#FFE5E5EA",
+            "#FF343A46" => "#FFD9DADD",
+            "#FF465160" => "#FFC7C7CC",
+            "#FF2B3440" => "#FFE5E5EA",
+            "#FF7D8797" => "#FF737780",
+            "#FF8F98A8" => "#FF81858C",
+            "#FFAEB7C7" => "#FF575B63",
+            "#FFDCE4EF" => "#FF30333A",
+            "#FFF3F6FA" => "#FF202124",
+            "#FF7DD3FC" => "#FF007AFF",
+            "#FFFFFFFF" => "#FF202124",
+            _ => value,
+        }));
 
     private static string RarityName(PokemonRarity rarity) => rarity switch
     {
@@ -1036,7 +1096,7 @@ public partial class MainWindow : Window
     {
         PokemonRarity.Common => Brush("#FF94A3B8"),
         PokemonRarity.Uncommon => Brush("#FF34D399"),
-        PokemonRarity.Rare => Brush("#FFA78BFA"),
+        PokemonRarity.Rare => Brush("#FF007AFF"),
         PokemonRarity.Legendary => Brush("#FFF59E0B"),
         _ => Brush("#FF94A3B8"),
     };
@@ -1112,19 +1172,22 @@ public partial class MainWindow : Window
         var percent = (int)Math.Round(progress * 100);
         CompanionProgressBar.Value = progress;
         var shiny = _companionStore.IsCurrentPokemonShiny;
-        var accent = shiny
-            ? MediaColor.FromRgb(250, 204, 21)
-            : MediaColor.FromRgb(125, 211, 252);
-        CompanionProgressBar.Foreground = new SolidColorBrush(accent);
-        CompanionTitleText.Foreground = new SolidColorBrush(accent);
-        CompanionTitleText.Text = $"{(shiny ? "★ " : string.Empty)}{_companionStore.CurrentPokemonName} · {percent}%";
-
-        var destination = _companionStore.CurrentStage < _companionStore.TotalForms
-            ? "진화"
-            : "졸업";
-        CompanionProgressText.Text =
-            $"{_companionStore.CurrentStage}/{_companionStore.TotalForms}단계 · "
-            + $"{TokenFormatter.Compact(_companionStore.TokensToNextStage)} 토큰 후 {destination}";
+        CompanionProgressBar.Foreground = Brush("#FFFF9500");
+        CompanionTitleText.Foreground = Brush("#FF202124");
+        CompanionTitleText.Text = $"{(shiny ? "★ " : string.Empty)}{_companionStore.CurrentPokemonName}";
+        var nature = _companionStore.CurrentPokemonNature;
+        CompanionIdentityText.Text = $"진화 단계 {_companionStore.CurrentStage} / {_companionStore.TotalForms}"
+            + (nature is { } n ? $" · {NatureName(n).Replace("한 성격", "").Replace(" 성격", "")}" : "");
+        RarityBadge.Visibility = _companionStore.CurrentPokemonRarity is null ? Visibility.Collapsed : Visibility.Visible;
+        if (_companionStore.CurrentPokemonRarity is { } rarity)
+        {
+            RarityText.Text = RarityName(rarity);
+            RarityBadge.Background = RarityBrush(rarity);
+        }
+        var destination = _companionStore.CurrentStage < _companionStore.TotalForms ? "다음 진화" : "졸업";
+        CompanionProgressText.Text = $"{destination}까지 {TokenFormatter.Compact(_companionStore.TokensToNextStage)}";
+        CompanionMoodText.Text = _usageStore.TodayTotalTokens > 0
+            ? "오늘의 작업 흔적이 쌓이고 있어요." : "다음 작업을 기다리며 쉬고 있어요.";
     }
 
     public void ShowNearNotificationArea(bool hideOnDeactivate = true)
@@ -1140,6 +1203,7 @@ public partial class MainWindow : Window
         {
             KeepInsideNearestWorkArea();
         }
+        ShowTab(MainTab.Home);
         Show();
         Activate();
     }
@@ -1519,8 +1583,8 @@ public partial class MainWindow : Window
 
     private static void SetTabStyle(System.Windows.Controls.Button button, bool selected)
     {
-        button.Background = Brush(selected ? "#FF2B3440" : "#00171A21");
-        button.Foreground = Brush(selected ? "#FFFFFFFF" : "#FF7D8797");
+        button.Background = Brush(selected ? "#FF007AFF" : "#00171A21");
+        button.Foreground = selected ? MediaBrushes.White : Brush("#FF7D8797");
     }
 
     private enum MainTab

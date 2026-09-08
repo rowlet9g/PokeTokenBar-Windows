@@ -44,7 +44,7 @@ available through Git history and the upstream project, not in the active tree.
 1. Finish official-limit resilience: retry backoff for HTTP 429 and authentication failures,
    account-change handling during failed requests, and actual Windows credential discovery validation.
 2. Connect official limits to upstream-style warnings and companion state, then candy rewards.
-3. Align HOME/provider selection and settings with upstream, then address localization.
+3. Continue HOME provider selection and settings parity, then address localization and system theme support.
 4. Validate the seven new local adapters against real tool sessions.
 5. Decide the release version and publish its matching tag when ready; signing and updates remain pending.
 
@@ -79,3 +79,19 @@ available through Git history and the upstream project, not in the active tree.
 - An explicit `CLAUDE_CONFIG_DIR` no longer falls back to a different default account.
 - HOME shows each snapshot's original fetch timestamp and optional plan metadata.
 - HTTP responses were simulated; live OAuth requests and visual UI validation remain pending.
+
+## Home layout parity validated on 2026-09-08
+
+- Compared upstream `PopoverView.swift`, `CompanionView.swift`, and `CompanionStore.lineNodes`
+  with the supplied Mac screenshot. Primary navigation is Home/Shop/Bag/Collection;
+  usage details and settings are separate utility buttons. Reopening returns to Home.
+- Light popup layout places the sprite beside name, rarity, stage, nature and growth;
+  evolution previews precede today's compact/exact tokens and weekly/monthly totals and costs.
+- Only uniquely determined future evolution nodes are previewed. A branch remains unknown;
+  previewing a form does not add it to realized history or the Pokédex.
+- HOME scrolls when limit rows exceed the available height. Existing shop, bag, collection,
+  settings and usage-detail views remain accessible with matching light colors.
+- Release build: zero warnings/errors; 163 tests passed. An isolated WPF fixture rendered
+  all six views, including the Charmander preview. User progress was not replaced.
+- Full parity is still pending: provider selection/details on Home, complete status behaviors,
+  full settings/localization and automatic light/dark appearance are separate remaining work.

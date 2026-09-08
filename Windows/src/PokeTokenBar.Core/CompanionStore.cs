@@ -526,6 +526,20 @@ public sealed class CompanionStore
         }
     }
 
+    public async Task<IReadOnlyList<PokemonLineStage>> GetEvolutionPreviewAsync(CancellationToken token = default)
+    {
+        int? baseId;
+        IReadOnlyList<PokemonLineStage> stages;
+        lock (_stateLock)
+        {
+            baseId = _state.ActivePokemon?.BaseId;
+            stages = CurrentLineStages;
+        }
+        if (baseId is null || _pokemonProvider is null) return stages;
+        var line = await _pokemonProvider.GetEvolutionLineAsync(baseId.Value, token).ConfigureAwait(false);
+        return EvolutionPreview.Build(stages, line);
+    }
+
     public IReadOnlyList<PokemonLineStage> CurrentLineStages
     {
         get

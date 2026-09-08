@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="PokeTokenBar"
-        Width="380"
-        Height="500"
+        Width="420"
+        Height="580"
         ResizeMode="NoResize"
         WindowStyle="None"
         ShowInTaskbar="False"
@@ -23,8 +23,8 @@
                     <ControlTemplate TargetType="CheckBox">
                         <Grid Width="42" Height="22">
                             <Border x:Name="Track"
-                                    Background="#FF2B3440"
-                                    BorderBrush="#FF465160"
+                                    Background="#FFE5E5EA"
+                                    BorderBrush="#FFC7C7CC"
                                     BorderThickness="1"
                                     CornerRadius="11" />
                             <Ellipse x:Name="Knob"
@@ -32,15 +32,15 @@
                                      Height="16"
                                      Margin="3"
                                      HorizontalAlignment="Left"
-                                     Fill="#FFAEB7C7" />
+                                     Fill="#FF575B63" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Track" Property="BorderBrush" Value="#FF7DD3FC" />
+                                <Setter TargetName="Track" Property="BorderBrush" Value="#FF007AFF" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Track" Property="Background" Value="#FF2683AA" />
-                                <Setter TargetName="Track" Property="BorderBrush" Value="#FF7DD3FC" />
+                                <Setter TargetName="Track" Property="BorderBrush" Value="#FF007AFF" />
                                 <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
                                 <Setter TargetName="Knob" Property="Fill" Value="White" />
                             </Trigger>
@@ -55,7 +55,7 @@
 
         <Style x:Key="ModernComboBoxItem" TargetType="ComboBoxItem">
             <Setter Property="Padding" Value="11,7" />
-            <Setter Property="Foreground" Value="#FFDCE4EF" />
+            <Setter Property="Foreground" Value="#FF30333A" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
@@ -70,12 +70,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#FF2B3440" />
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#FFE5E5EA" />
                                 <Setter Property="Foreground" Value="White" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#FF244D63" />
-                                <Setter Property="Foreground" Value="#FF7DD3FC" />
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#FFD9E9FF" />
+                                <Setter Property="Foreground" Value="#FF007AFF" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -84,9 +84,9 @@
         </Style>
 
         <Style x:Key="ModernComboBox" TargetType="ComboBox">
-            <Setter Property="Foreground" Value="#FFF3F6FA" />
-            <Setter Property="Background" Value="#FF171A21" />
-            <Setter Property="BorderBrush" Value="#FF465160" />
+            <Setter Property="Foreground" Value="#FF202124" />
+            <Setter Property="Background" Value="#FFF9FAFB" />
+            <Setter Property="BorderBrush" Value="#FFC7C7CC" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Cursor" Value="Hand" />
@@ -98,14 +98,14 @@
                             <ToggleButton x:Name="DropDownToggle"
                                           Background="Transparent"
                                           BorderThickness="0"
-                                          Foreground="#FFF3F6FA"
+                                          Foreground="#FF202124"
                                           Focusable="False"
                                           IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <Border x:Name="ComboBorder"
-                                                Background="#FF171A21"
-                                                BorderBrush="#FF465160"
+                                                Background="#FFF9FAFB"
+                                                BorderBrush="#FFC7C7CC"
                                                 BorderThickness="1"
                                                 CornerRadius="8">
                                             <Grid>
@@ -119,7 +119,7 @@
                                                       HorizontalAlignment="Right"
                                                       VerticalAlignment="Center"
                                                       Data="M 0,0 L 4.5,4 L 9,0"
-                                                      Stroke="#FF8F98A8"
+                                                      Stroke="#FF81858C"
                                                       StrokeThickness="1.5"
                                                       StrokeStartLineCap="Round"
                                                       StrokeEndLineCap="Round" />
@@ -127,11 +127,11 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#FF7DD3FC" />
+                                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#FF007AFF" />
                                             </Trigger>
                                             <Trigger Property="IsChecked" Value="True">
-                                                <Setter TargetName="ComboBorder" Property="Background" Value="#FF202A34" />
-                                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#FF7DD3FC" />
+                                                <Setter TargetName="ComboBorder" Property="Background" Value="#FFEAF3FF" />
+                                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#FF007AFF" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -145,8 +145,8 @@
                                 <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                         Margin="0,4,0,0"
                                         Padding="2"
-                                        Background="#FF171A21"
-                                        BorderBrush="#FF465160"
+                                        Background="#FFF9FAFB"
+                                        BorderBrush="#FFC7C7CC"
                                         BorderThickness="1"
                                         CornerRadius="8">
                                     <ScrollViewer MaxHeight="220">
@@ -166,9 +166,9 @@
         </Style>
 
         <Style x:Key="ModernActionButton" TargetType="Button">
-            <Setter Property="Foreground" Value="#FFF3F6FA" />
-            <Setter Property="Background" Value="#FF2B3440" />
-            <Setter Property="BorderBrush" Value="#FF465160" />
+            <Setter Property="Foreground" Value="#FF202124" />
+            <Setter Property="Background" Value="#FFE5E5EA" />
+            <Setter Property="BorderBrush" Value="#FFC7C7CC" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FontSize" Value="11" />
@@ -187,11 +187,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ActionBorder" Property="Background" Value="#FF344250" />
-                                <Setter TargetName="ActionBorder" Property="BorderBrush" Value="#FF7DD3FC" />
+                                <Setter TargetName="ActionBorder" Property="Background" Value="#FFE0ECFA" />
+                                <Setter TargetName="ActionBorder" Property="BorderBrush" Value="#FF007AFF" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ActionBorder" Property="Background" Value="#FF244D63" />
+                                <Setter TargetName="ActionBorder" Property="Background" Value="#FFD9E9FF" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45" />
@@ -203,7 +203,7 @@
         </Style>
 
         <Style x:Key="ModernScrollThumb" TargetType="Thumb">
-            <Setter Property="Background" Value="#FF465160" />
+            <Setter Property="Background" Value="#FFC7C7CC" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Thumb">
@@ -216,7 +216,7 @@
                                 <Setter TargetName="ThumbBorder" Property="Background" Value="#FF647386" />
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="ThumbBorder" Property="Background" Value="#FF7DD3FC" />
+                                <Setter TargetName="ThumbBorder" Property="Background" Value="#FF007AFF" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -255,9 +255,9 @@
         <Style TargetType="ScrollBar"
                BasedOn="{StaticResource ModernVerticalScrollBar}" />
     </Window.Resources>
-    <Border Padding="22"
-            Background="#FF171A21"
-            BorderBrush="#FF343A46"
+    <Border Padding="14"
+            Background="#FFF9FAFB"
+            BorderBrush="#FFD9DADD"
             BorderThickness="1"
             CornerRadius="18">
         <Grid>
@@ -267,111 +267,28 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <DockPanel Grid.Row="0">
-                <StackPanel DockPanel.Dock="Right"
-                            Orientation="Horizontal">
-                    <Button x:Name="RefreshButton"
-                            Width="30"
-                            Height="30"
-                            Margin="0,0,4,0"
-                            Click="RefreshButton_OnClick"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="#FFAEB7C7"
-                            FontSize="18"
-                            ToolTip="Refresh local AI usage"
-                            Content="&#x21BB;" />
-                    <Button Width="30"
-                            Height="30"
-                            Click="HideButton_OnClick"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="#FFAEB7C7"
-                            FontSize="18"
-                            ToolTip="Hide to notification area"
-                            Content="&#x2014;" />
+            <DockPanel Grid.Row="0" Margin="0,0,0,10" MouseLeftButtonDown="HeaderDragRegion_OnMouseLeftButtonDown">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button x:Name="TokensTabButton" Content="사용량 상세" Click="TokensTabButton_OnClick" Padding="7,4" Style="{StaticResource ModernActionButton}" />
+                    <Button x:Name="SettingsTabButton" Content="⚙" ToolTip="설정" Click="SettingsTabButton_OnClick" Padding="9,4" Margin="4,0" Style="{StaticResource ModernActionButton}" />
+                    <Button x:Name="RefreshButton" Content="↻" ToolTip="새로고침" Click="RefreshButton_OnClick" Padding="9,4" Style="{StaticResource ModernActionButton}" />
+                    <Button Content="—" ToolTip="트레이로 숨기기" Click="HideButton_OnClick" Padding="8,4" Style="{StaticResource ModernActionButton}" />
                 </StackPanel>
-                <StackPanel Cursor="SizeAll"
-                            MouseLeftButtonDown="HeaderDragRegion_OnMouseLeftButtonDown"
-                            ToolTip="Drag to move PokeTokenBar">
-                    <TextBlock Foreground="White"
-                               FontSize="22"
-                               FontWeight="SemiBold"
-                               Text="PokeTokenBar" />
-                    <TextBlock Margin="0,4,0,0"
-                               Foreground="#FF7DD3FC"
-                               FontSize="12"
-                               Text="Windows port · Local AI usage" />
-                </StackPanel>
+                <TextBlock Text="PokeTokenBar" FontSize="12" VerticalAlignment="Center" Foreground="#FF575B63" />
             </DockPanel>
-
-            <Border Grid.Row="1"
-                    Margin="0,12,0,6"
-                    Padding="3"
-                    Background="#FF11141A"
-                    CornerRadius="8">
-                <UniformGrid Columns="6">
-                    <Button x:Name="HomeTabButton"
-                            Height="28"
-                            Click="HomeTabButton_OnClick"
-                            Background="#FF2B3440"
-                            BorderThickness="0"
-                            Foreground="White"
-                            FontSize="11"
-                            FontWeight="SemiBold"
-                            Content="HOME" />
-                    <Button x:Name="PokedexTabButton"
-                            Height="28"
-                            Click="PokedexTabButton_OnClick"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="#FF7D8797"
-                            FontSize="10"
-                            FontWeight="SemiBold"
-                            Content="POKÉDEX" />
-                    <Button x:Name="TokensTabButton"
-                            Height="28"
-                            Click="TokensTabButton_OnClick"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="#FF7D8797"
-                            FontSize="10"
-                            FontWeight="SemiBold"
-                            Content="TOKENS" />
-                    <Button x:Name="ShopTabButton"
-                            Height="28"
-                            Click="ShopTabButton_OnClick"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="#FF7D8797"
-                            FontSize="10"
-                            FontWeight="SemiBold"
-                            Content="SHOP" />
-                    <Button x:Name="BagTabButton"
-                            Height="28"
-                            Click="BagTabButton_OnClick"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="#FF7D8797"
-                            FontSize="10"
-                            FontWeight="SemiBold"
-                            Content="BAG" />
-                    <Button x:Name="SettingsTabButton"
-                            Height="28"
-                            Click="SettingsTabButton_OnClick"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="#FF7D8797"
-                            FontSize="10"
-                            FontWeight="SemiBold"
-                            Content="SETTINGS" />
+            <Border Grid.Row="1" Background="#FFE5E5EA" CornerRadius="8" Padding="2" Margin="0,0,0,14">
+                <UniformGrid Columns="4">
+                    <Button x:Name="HomeTabButton" Content="홈" Click="HomeTabButton_OnClick" Style="{StaticResource ModernActionButton}" Height="30" BorderThickness="0" />
+                    <Button x:Name="ShopTabButton" Content="상점" Click="ShopTabButton_OnClick" Style="{StaticResource ModernActionButton}" BorderThickness="0" />
+                    <Button x:Name="BagTabButton" Content="가방" Click="BagTabButton_OnClick" Style="{StaticResource ModernActionButton}" BorderThickness="0" />
+                    <Button x:Name="PokedexTabButton" Content="컬렉션" Click="PokedexTabButton_OnClick" Style="{StaticResource ModernActionButton}" BorderThickness="0" />
                 </UniformGrid>
             </Border>
 
-            <StackPanel x:Name="HomeView"
-                        Grid.Row="2"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
+            <ScrollViewer x:Name="HomeView" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+              <StackPanel Margin="0,0,5,6">
+                <Grid>
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <Grid x:Name="CompanionVisualContainer"
                       Width="96"
                       Height="96"
@@ -405,100 +322,43 @@
                            Visibility="Collapsed"
                            RenderOptions.BitmapScalingMode="NearestNeighbor" />
                 </Grid>
-                <TextBlock x:Name="CompanionTitleText"
-                           Margin="0,5,0,0"
-                           HorizontalAlignment="Center"
-                           Foreground="#FFFF806B"
-                           FontSize="12"
-                           FontWeight="SemiBold"
-                           Text="새 알 · 0%" />
-                <ProgressBar x:Name="CompanionProgressBar"
-                             Width="180"
-                             Height="6"
-                             Margin="0,6,0,0"
-                             Background="#FF343A46"
-                             Foreground="#FFFF5A3C"
-                             Maximum="1"
-                             Value="0" />
-                <TextBlock x:Name="CompanionProgressText"
-                           Margin="0,5,0,0"
-                           HorizontalAlignment="Center"
-                           Foreground="#FF8F98A8"
-                           FontSize="10"
-                           Text="첫 사용량 동기화 후 부화를 시작합니다" />
-                <StackPanel x:Name="EvolutionLinePanel"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Center"
-                            Orientation="Horizontal"
-                            Visibility="Collapsed" />
-                <TextBlock x:Name="TokenValueText"
-                           Margin="0,10,0,0"
-                           HorizontalAlignment="Center"
-                           Foreground="White"
-                           FontFamily="Consolas"
-                           FontSize="34"
-                           FontWeight="Bold"
-                           Text="0" />
-                <TextBlock x:Name="ExactTokenValueText"
-                           Margin="0,4,0,0"
-                           HorizontalAlignment="Center"
-                           Foreground="#FF7DD3FC"
-                           FontFamily="Consolas"
-                           FontSize="12"
-                           Text="0" />
-                <TextBlock x:Name="StatusText"
-                           Margin="0,8,0,0"
-                           HorizontalAlignment="Center"
-                           Foreground="#FFAEB7C7"
-                           Text="로컬 사용량 연결 준비 중" />
-                <StackPanel x:Name="RateLimitPanel"
-                            Width="250"
-                            Margin="0,14,0,0"
-                            Visibility="Collapsed">
-                    <DockPanel Margin="2,0,2,7">
-                        <TextBlock x:Name="RateLimitStatusText"
-                                   DockPanel.Dock="Right"
-                                   Foreground="#FF7D8797"
-                                   FontSize="9"
-                                   Text="Codex 공식 한도 준비 중" />
-                        <TextBlock Foreground="#FFDCE4EF"
-                                   FontSize="11"
-                                   FontWeight="SemiBold"
-                                   Text="공식 사용량 한도" />
-                    </DockPanel>
-                    <StackPanel x:Name="RateLimitItemsPanel" />
+                  <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <WrapPanel VerticalAlignment="Center">
+                      <TextBlock x:Name="CompanionTitleText" FontSize="17" FontWeight="SemiBold" Foreground="#FF202124"/>
+                      <Border x:Name="RarityBadge" CornerRadius="8" Padding="6,2" Margin="6,0,0,0" Background="#FF007AFF"><TextBlock x:Name="RarityText" Foreground="White" FontSize="10"/></Border>
+                    </WrapPanel>
+                    <TextBlock x:Name="CompanionIdentityText" Margin="0,5,0,0" Foreground="#FF575B63" FontSize="11" TextWrapping="Wrap"/>
+                    <ProgressBar x:Name="CompanionProgressBar" Height="7" Margin="0,8,0,0" Maximum="1" Foreground="#FFFF9500" Background="#FFD9DADD" BorderThickness="0"/>
+                    <TextBlock x:Name="CompanionProgressText" Margin="0,7,0,0" Foreground="#FF81858C" FontSize="11" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="CompanionMoodText" Margin="0,6,0,0" Foreground="#FF575B63" FontSize="11" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </Grid>
+                <StackPanel x:Name="EvolutionLinePanel" Orientation="Horizontal" Margin="0,14,0,8"/>
+                <Border Height="1" Background="#FFD9DADD" Margin="0,10,0,14"/>
+                <TextBlock Text="오늘 사용한 토큰" Foreground="#FF81858C" FontSize="12"/>
+                <DockPanel Margin="0,6,0,0">
+                  <TextBlock x:Name="TodayCostText" DockPanel.Dock="Right" Foreground="#FF575B63" FontSize="14" VerticalAlignment="Bottom" Margin="6,0,0,6"/>
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="TokenValueText" Foreground="#FF202124" FontSize="32" FontWeight="Bold"/>
+                    <TextBlock x:Name="ExactTokenValueText" Foreground="#FF575B63" FontSize="12" Margin="10,0,0,6" VerticalAlignment="Bottom"/>
+                  </StackPanel>
+                </DockPanel>
+                <WrapPanel Margin="0,8,0,0">
+                  <TextBlock Text="이번 주  " Foreground="#FF81858C"/>
+                  <TextBlock x:Name="WeekValueText" Foreground="#FF202124" FontWeight="SemiBold"/>
+                  <TextBlock x:Name="WeekCostText" Foreground="#FF575B63" Margin="5,0,14,0"/>
+                  <TextBlock Text="이번 달  " Foreground="#FF81858C"/>
+                  <TextBlock x:Name="MonthValueText" Foreground="#FF202124" FontWeight="SemiBold"/>
+                  <TextBlock x:Name="MonthCostText" Foreground="#FF575B63" Margin="5,0,0,0"/>
+                </WrapPanel>
+                <TextBlock x:Name="StatusText" Margin="0,12,0,0" Foreground="#FF81858C" FontSize="10" TextWrapping="Wrap"/>
+                <StackPanel x:Name="RateLimitPanel" Margin="0,14,0,0" Visibility="Collapsed">
+                  <TextBlock Text="공식 사용량 한도" Foreground="#FF202124" FontWeight="SemiBold"/>
+                  <TextBlock x:Name="RateLimitStatusText" Foreground="#FF81858C" FontSize="10" Margin="0,4,0,8" TextWrapping="Wrap"/>
+                  <StackPanel x:Name="RateLimitItemsPanel"/>
                 </StackPanel>
-                <StackPanel Margin="0,18,0,0"
-                            HorizontalAlignment="Center"
-                            Orientation="Horizontal">
-                    <StackPanel Margin="0,0,24,0">
-                        <TextBlock HorizontalAlignment="Center"
-                                   Foreground="#FF7D8797"
-                                   FontSize="11"
-                                   Text="THIS WEEK" />
-                        <TextBlock x:Name="WeekValueText"
-                                   Margin="0,3,0,0"
-                                   HorizontalAlignment="Center"
-                                   Foreground="White"
-                                   FontFamily="Consolas"
-                                   FontSize="16"
-                                   Text="0" />
-                    </StackPanel>
-                    <StackPanel>
-                        <TextBlock HorizontalAlignment="Center"
-                                   Foreground="#FF7D8797"
-                                   FontSize="11"
-                                   Text="THIS MONTH" />
-                        <TextBlock x:Name="MonthValueText"
-                                   Margin="0,3,0,0"
-                                   HorizontalAlignment="Center"
-                                   Foreground="White"
-                                   FontFamily="Consolas"
-                                   FontSize="16"
-                                   Text="0" />
-                    </StackPanel>
-                </StackPanel>
-            </StackPanel>
+              </StackPanel>
+            </ScrollViewer>
 
             <Grid x:Name="PokedexView"
                   Grid.Row="2"
@@ -513,16 +373,16 @@
                     <TextBlock x:Name="PokedexCountText"
                                DockPanel.Dock="Right"
                                VerticalAlignment="Bottom"
-                               Foreground="#FF7DD3FC"
+                               Foreground="#FF007AFF"
                                FontSize="11"
                                Text="0종 · 0마리" />
                     <StackPanel>
-                        <TextBlock Foreground="White"
+                        <TextBlock Foreground="#FF202124"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Text="포켓몬 도감" />
                         <TextBlock Margin="0,2,0,0"
-                                   Foreground="#FF7D8797"
+                                   Foreground="#FF737780"
                                    FontSize="10"
                                    Text="직접 만난 모습만 기록됩니다" />
                     </StackPanel>
@@ -530,15 +390,15 @@
                 <Border Grid.Row="1"
                         Margin="0,0,0,8"
                         Padding="3"
-                        Background="#FF11141A"
+                        Background="#FFE5E5EA"
                         CornerRadius="7">
                     <UniformGrid Columns="2">
                         <Button x:Name="SpeciesModeButton"
                                 Height="25"
                                 Click="SpeciesModeButton_OnClick"
-                                Background="#FF2B3440"
+                                Background="#FFE5E5EA"
                                 BorderThickness="0"
-                                Foreground="White"
+                                Foreground="#FF202124"
                                 FontSize="10"
                                 FontWeight="SemiBold"
                                 Content="종별 도감" />
@@ -547,7 +407,7 @@
                                 Click="CatchLogModeButton_OnClick"
                                 Background="Transparent"
                                 BorderThickness="0"
-                                Foreground="#FF7D8797"
+                                Foreground="#FF737780"
                                 FontSize="10"
                                 FontWeight="SemiBold"
                                 Content="포획 기록" />
@@ -570,15 +430,15 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
                         <TextBlock HorizontalAlignment="Center"
-                                   Foreground="#FF7DD3FC"
+                                   Foreground="#FF007AFF"
                                    FontSize="32"
                                    Text="?" />
                         <TextBlock Margin="0,6,0,0"
-                                   Foreground="#FFAEB7C7"
+                                   Foreground="#FF575B63"
                                    FontSize="12"
                                    Text="아직 만난 포켓몬이 없습니다" />
                         <TextBlock Margin="0,3,0,0"
-                                   Foreground="#FF7D8797"
+                                   Foreground="#FF737780"
                                    FontSize="10"
                                    Text="알이 부화하면 첫 기록이 생깁니다" />
                     </StackPanel>
@@ -604,29 +464,29 @@
                             Margin="3,0,0,0" Click="TokensPeriodButton_OnClick" />
                 </UniformGrid>
                 <StackPanel Grid.Row="1" Margin="2,12,2,10">
-                    <TextBlock x:Name="TokensPeriodText" Foreground="#FFAEB7C7" FontSize="11" />
-                    <TextBlock x:Name="TokensTotalText" Foreground="White" FontSize="25"
+                    <TextBlock x:Name="TokensPeriodText" Foreground="#FF575B63" FontSize="11" />
+                    <TextBlock x:Name="TokensTotalText" Foreground="#FF202124" FontSize="25"
                                FontWeight="SemiBold" TextWrapping="Wrap" />
-                    <TextBlock Text="공급자별 사용량 · 전체 대비 비율" Foreground="#FF7D8797" FontSize="10" />
+                    <TextBlock Text="공급자별 사용량 · 전체 대비 비율" Foreground="#FF737780" FontSize="10" />
                 </StackPanel>
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
-                        <TextBlock x:Name="TokensEmptyText" Margin="2,12" Foreground="#FFAEB7C7"
+                        <TextBlock x:Name="TokensEmptyText" Margin="2,12" Foreground="#FF575B63"
                                    Text="선택한 기간에 기록된 사용량이 없습니다" TextWrapping="Wrap" />
                         <ItemsControl x:Name="TokensProviderItems">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#FF171A21" CornerRadius="10" Padding="12" Margin="0,0,2,8">
+                                    <Border Background="#FFF9FAFB" CornerRadius="10" Padding="12" Margin="0,0,2,8">
                                         <StackPanel>
                                             <DockPanel>
                                                 <TextBlock DockPanel.Dock="Right" Text="{Binding ShareText}"
-                                                           Foreground="#FF7DD3FC" FontSize="11" Margin="8,0,0,0" />
-                                                <TextBlock Text="{Binding Name}" Foreground="White" FontSize="12"
+                                                           Foreground="#FF007AFF" FontSize="11" Margin="8,0,0,0" />
+                                                <TextBlock Text="{Binding Name}" Foreground="#FF202124" FontSize="12"
                                                            FontWeight="SemiBold" TextWrapping="Wrap" />
                                             </DockPanel>
-                                            <TextBlock Text="{Binding TotalText}" Foreground="#FFDCE4EF" FontSize="16" Margin="0,5,0,7" />
+                                            <TextBlock Text="{Binding TotalText}" Foreground="#FF30333A" FontSize="16" Margin="0,5,0,7" />
                                             <ProgressBar Minimum="0" Maximum="100" Value="{Binding Share}" Height="5"
-                                                         Foreground="#FF7DD3FC" Background="#FF2B3440" BorderThickness="0">
+                                                         Foreground="#FF007AFF" Background="#FFE5E5EA" BorderThickness="0">
                                                 <ProgressBar.Template>
                                                     <ControlTemplate TargetType="ProgressBar">
                                                         <Grid x:Name="PART_Track">
@@ -638,8 +498,8 @@
                                                 </ProgressBar.Template>
                                             </ProgressBar>
                                             <TextBlock Text="{Binding Detail}" Visibility="{Binding DetailVisibility}"
-                                                       Margin="0,8,0,0" Foreground="#FFAEB7C7" FontSize="10" TextWrapping="Wrap" />
-                                            <TextBlock Text="{Binding UpdatedText}" Foreground="#FF7D8797" FontSize="10" Margin="0,5,0,0" />
+                                                       Margin="0,8,0,0" Foreground="#FF575B63" FontSize="10" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding UpdatedText}" Foreground="#FF737780" FontSize="10" Margin="0,5,0,0" />
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
@@ -648,7 +508,7 @@
                     </StackPanel>
                 </ScrollViewer>
                 <TextBlock x:Name="TokensStatusText" Grid.Row="3" Margin="2,7,2,0" MaxHeight="48"
-                           Foreground="#FF7D8797" FontSize="10" TextWrapping="Wrap"
+                           Foreground="#FF737780" FontSize="10" TextWrapping="Wrap"
                            TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
             </Grid>
 
@@ -659,23 +519,23 @@
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Collapsed">
                 <StackPanel Margin="2,0,2,4">
-                    <TextBlock Foreground="White"
+                    <TextBlock Foreground="#FF202124"
                                FontSize="18"
                                FontWeight="SemiBold"
                                Text="포켓몬 상점" />
                     <Border Margin="0,8,0,10"
                             Padding="12"
-                            Background="#FF20242C"
-                            BorderBrush="#FF343A46"
+                            Background="#FFF0F1F3"
+                            BorderBrush="#FFD9DADD"
                             BorderThickness="1"
                             CornerRadius="10">
                         <StackPanel>
-                            <TextBlock Foreground="#FF8F98A8"
+                            <TextBlock Foreground="#FF81858C"
                                        FontSize="9"
                                        Text="사용 가능한 토큰" />
                             <TextBlock x:Name="ShopWalletText"
                                        Margin="0,2,0,0"
-                                       Foreground="White"
+                                       Foreground="#FF202124"
                                        FontFamily="Consolas"
                                        FontSize="22"
                                        FontWeight="Bold"
@@ -697,7 +557,7 @@
                             Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock x:Name="ShopConfirmationText"
-                                       Foreground="White"
+                                       Foreground="#FF202124"
                                        FontSize="10"
                                        TextWrapping="Wrap" />
                             <StackPanel Margin="0,8,0,0"
@@ -717,7 +577,7 @@
                         </StackPanel>
                     </Border>
                     <TextBlock x:Name="ShopStatusText"
-                               Foreground="#FF7DD3FC"
+                               Foreground="#FF007AFF"
                                FontSize="9" />
                 </StackPanel>
             </ScrollViewer>
@@ -729,12 +589,12 @@
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Collapsed">
                 <StackPanel Margin="2,0,2,4">
-                    <TextBlock Foreground="White"
+                    <TextBlock Foreground="#FF202124"
                                FontSize="18"
                                FontWeight="SemiBold"
                                Text="가방" />
                     <TextBlock Margin="0,3,0,10"
-                               Foreground="#FF7D8797"
+                               Foreground="#FF737780"
                                FontSize="10"
                                Text="보유 아이템과 현재 적용 효과" />
                     <StackPanel x:Name="BagItemsPanel" />
@@ -745,7 +605,7 @@
                                    FontSize="36"
                                    Text="🎒" />
                         <TextBlock Margin="0,8,0,0"
-                                   Foreground="#FFAEB7C7"
+                                   Foreground="#FF575B63"
                                    FontSize="12"
                                    Text="아직 보유한 아이템이 없습니다" />
                     </StackPanel>
@@ -759,7 +619,7 @@
                             Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock x:Name="BagConfirmationText"
-                                       Foreground="White"
+                                       Foreground="#FF202124"
                                        FontSize="10"
                                        TextWrapping="Wrap" />
                             <StackPanel Margin="0,8,0,0"
@@ -778,7 +638,7 @@
                         </StackPanel>
                     </Border>
                     <TextBlock x:Name="BagStatusText"
-                               Foreground="#FF7DD3FC"
+                               Foreground="#FF007AFF"
                                FontSize="9" />
                 </StackPanel>
             </ScrollViewer>
@@ -790,18 +650,18 @@
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Collapsed">
                 <StackPanel Margin="2,0,2,4">
-                    <TextBlock Foreground="White"
+                    <TextBlock Foreground="#FF202124"
                                FontSize="18"
                                FontWeight="SemiBold"
                                Text="Windows 설정" />
                     <TextBlock Margin="0,3,0,12"
-                               Foreground="#FF7D8797"
+                               Foreground="#FF737780"
                                FontSize="10"
                                Text="변경 사항은 즉시 저장되고 적용됩니다" />
 
                     <Border Padding="14"
-                            Background="#FF20242C"
-                            BorderBrush="#FF343A46"
+                            Background="#FFF0F1F3"
+                            BorderBrush="#FFD9DADD"
                             BorderThickness="1"
                             CornerRadius="10">
                         <StackPanel>
@@ -812,18 +672,18 @@
                                           VerticalAlignment="Center"
                                           Click="SettingsControls_OnChanged" />
                                 <StackPanel>
-                                    <TextBlock Foreground="White"
+                                    <TextBlock Foreground="#FF202124"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Text="포켓몬 알림" />
                                     <TextBlock Margin="0,2,18,0"
-                                               Foreground="#FF8F98A8"
+                                               Foreground="#FF81858C"
                                                FontSize="9"
                                                Text="부화·진화·육성 완료 알림" />
                                 </StackPanel>
                             </DockPanel>
 
-                            <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
+                            <Border Height="1" Margin="0,0,0,14" Background="#FFD9DADD" />
 
                             <DockPanel Margin="0,0,0,14">
                                 <CheckBox x:Name="AlwaysOnTopCheckBox"
@@ -832,18 +692,18 @@
                                           VerticalAlignment="Center"
                                           Click="SettingsControls_OnChanged" />
                                 <StackPanel>
-                                    <TextBlock Foreground="White"
+                                    <TextBlock Foreground="#FF202124"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Text="항상 위에 표시" />
                                     <TextBlock Margin="0,2,18,0"
-                                               Foreground="#FF8F98A8"
+                                               Foreground="#FF81858C"
                                                FontSize="9"
                                                Text="다른 창 위에 팝업을 유지합니다" />
                                 </StackPanel>
                             </DockPanel>
 
-                            <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
+                            <Border Height="1" Margin="0,0,0,14" Background="#FFD9DADD" />
 
                             <DockPanel Margin="0,0,0,14">
                                 <CheckBox x:Name="LaunchAtLoginCheckBox"
@@ -852,18 +712,18 @@
                                           VerticalAlignment="Center"
                                           Click="SettingsControls_OnChanged" />
                                 <StackPanel>
-                                    <TextBlock Foreground="White"
+                                    <TextBlock Foreground="#FF202124"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Text="로그인 시 자동 실행" />
                                     <TextBlock Margin="0,2,18,0"
-                                               Foreground="#FF8F98A8"
+                                               Foreground="#FF81858C"
                                                FontSize="9"
                                                Text="Windows 로그인 후 트레이에서 시작합니다" />
                                 </StackPanel>
                             </DockPanel>
 
-                            <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
+                            <Border Height="1" Margin="0,0,0,14" Background="#FFD9DADD" />
 
                             <DockPanel>
                                 <ComboBox x:Name="RefreshIntervalComboBox"
@@ -880,12 +740,12 @@
                                     <ComboBoxItem Tag="30" Content="30분" />
                                 </ComboBox>
                                 <StackPanel>
-                                    <TextBlock Foreground="White"
+                                    <TextBlock Foreground="#FF202124"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Text="자동 새로고침" />
                                     <TextBlock Margin="0,2,18,0"
-                                               Foreground="#FF8F98A8"
+                                               Foreground="#FF81858C"
                                                FontSize="9"
                                                Text="로컬 로그 확인 주기" />
                                 </StackPanel>
@@ -895,8 +755,8 @@
 
                     <Border Margin="0,10,0,0"
                             Padding="14"
-                            Background="#FF20242C"
-                            BorderBrush="#FF343A46"
+                            Background="#FFF0F1F3"
+                            BorderBrush="#FFD9DADD"
                             BorderThickness="1"
                             CornerRadius="10">
                         <StackPanel>
@@ -907,18 +767,18 @@
                                           VerticalAlignment="Center"
                                           Click="SettingsControls_OnChanged" />
                                 <StackPanel>
-                                    <TextBlock Foreground="White"
+                                    <TextBlock Foreground="#FF202124"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Text="플로팅 펫 표시" />
                                     <TextBlock Margin="0,2,18,0"
-                                               Foreground="#FF8F98A8"
+                                               Foreground="#FF81858C"
                                                FontSize="9"
                                                Text="바탕화면 위에 동료를 띄웁니다 · 드래그로 이동" />
                                 </StackPanel>
                             </DockPanel>
 
-                            <Border Height="1" Margin="0,0,0,14" Background="#FF343A46" />
+                            <Border Height="1" Margin="0,0,0,14" Background="#FFD9DADD" />
 
                             <DockPanel>
                                 <ComboBox x:Name="FloatingPetSizeComboBox"
@@ -934,12 +794,12 @@
                                     <ComboBoxItem Tag="160" Content="아주 크게" />
                                 </ComboBox>
                                 <StackPanel>
-                                    <TextBlock Foreground="White"
+                                    <TextBlock Foreground="#FF202124"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Text="플로팅 펫 크기" />
                                     <TextBlock Margin="0,2,18,0"
-                                               Foreground="#FF8F98A8"
+                                               Foreground="#FF81858C"
                                                FontSize="9"
                                                Text="우클릭하면 열기·끄기 메뉴가 나타납니다" />
                                 </StackPanel>
@@ -949,17 +809,17 @@
 
                     <Border Margin="0,10,0,0"
                             Padding="14"
-                            Background="#FF20242C"
-                            BorderBrush="#FF343A46"
+                            Background="#FFF0F1F3"
+                            BorderBrush="#FFD9DADD"
                             BorderThickness="1"
                             CornerRadius="10">
                         <StackPanel>
-                            <TextBlock Foreground="White"
+                            <TextBlock Foreground="#FF202124"
                                        FontSize="12"
                                        FontWeight="SemiBold"
                                        Text="세이브 이전" />
                             <TextBlock Margin="0,2,0,10"
-                                       Foreground="#FF8F98A8"
+                                       Foreground="#FF81858C"
                                        FontSize="9"
                                        Text="진행 상황을 파일로 백업하거나 다른 PC에서 가져옵니다" />
                             <UniformGrid Columns="2">
@@ -979,7 +839,7 @@
 
                     <TextBlock x:Name="SettingsStatusText"
                                Margin="2,10,2,0"
-                               Foreground="#FF7DD3FC"
+                               Foreground="#FF007AFF"
                                FontSize="10"
                                Text="설정을 불러왔습니다" />
                 </StackPanel>
@@ -1008,14 +868,14 @@
                     <TextBlock x:Name="MilestoneTitleText"
                                Margin="0,10,0,0"
                                HorizontalAlignment="Center"
-                               Foreground="White"
+                               Foreground="#FF202124"
                                FontSize="22"
                                FontWeight="Bold"
                                Text="진화 성공!" />
                     <TextBlock x:Name="MilestoneDetailText"
                                Margin="0,6,0,0"
                                HorizontalAlignment="Center"
-                               Foreground="#FF7DD3FC"
+                               Foreground="#FF007AFF"
                                FontSize="13"
                                Text="새로운 모습" />
                 </StackPanel>
