@@ -23,17 +23,14 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 
 ## 현재 구현된 기능
 
-- Windows 알림 영역(시스템 트레이) 아이콘과 둥근 WPF 팝업
+- Windows 알림 영역(시스템 트레이) 아이콘과 WPF 팝업
 - Codex, Antigravity, 레거시 Gemini CLI, Cursor, GitHub Copilot CLI 로컬 사용량 집계
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
 - TOKENS 탭: 기간별 공급자 합계·비율과 오늘의 Input / Output / Cache 상세
-- 알 부화, 실제 진화 계보 기반 성장, 분기 진화, 성격과 이로치
-- Gen 1–5 포켓몬 도감과 개체별 포획 기록
-- 부화·진화·졸업 애니메이션 및 Windows 트레이 알림
+- 알 부화, 실제 진화 계보 기반 성장, 분기 진화, 성격과 색이 다른 포켓몬 여부
+- 1–5세대 포켓몬 도감과 개체별 포획 기록
+- 부화·1진화·2진화 애니메이션 및 Windows 트레이 알림
 - 클릭으로 본창을 열고 닫을 수 있는 드래그 가능한 플로팅 펫
-- 토큰 지갑, 상점, 가방, 이상한 사탕, 민트, 이로치 부적, 등급별 알
-- 알림, 항상 위, 새로고침 간격, Windows 로그인 시 자동 실행 설정
-- 버전이 지정된 JSON 세이브 내보내기/가져오기와 복구 백업
 - 단일 실행 인스턴스와 사용자별 데이터·캐시·로그 저장
 
 처음 발견한 각 공급자의 누적 사용량은 기준값으로만 저장됩니다. 설치 전에 사용한
@@ -63,41 +60,9 @@ WEEK와 MONTH는 공급자별 합계와 비율을 표시합니다. 선택 기간
 - Windows 10 이상, x64
 - 소스에서 빌드하거나 설치 스크립트를 실행할 때 [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
-PowerShell에서 저장소 루트를 연 뒤 다음 명령을 실행합니다.
+### How to...
 
-```powershell
-.\Windows\install.ps1
-```
 
-스크립트는 self-contained `win-x64` 실행 파일을 만들고 다음 작업을 수행합니다.
-
-- `%LOCALAPPDATA%\Programs\PokeTokenBar`에 설치
-- 시작 메뉴에 `PokeTokenBar` 바로가기 생성
-- 기존 `%LOCALAPPDATA%\PokeTokenBar` 진행 상황 유지
-
-이후에는 PowerShell 명령 없이 시작 메뉴에서 실행할 수
-있습니다. 새 로컬 빌드로 교체하려면 같은 설치 명령을 다시 실행하면 됩니다.
-
-Installer와 Portable ZIP을 만드는 방법 및 태그 배포 절차는
-[`RELEASE.md`](RELEASE.md)에 있습니다. 배포 산출물에는 아직 코드 서명이 없습니다.
-
-## 개발과 테스트
-
-```powershell
-dotnet build .\Windows\PokeTokenBar.Windows.sln -c Release
-dotnet test .\Windows\PokeTokenBar.Windows.sln -c Release --no-build
-```
-
-빌드와 테스트는 같은 출력 폴더를 사용하므로 순서대로 실행합니다.
-
-최신 로컬 빌드를 설치판에 반영하고 실행하려면 다음 스크립트를 사용합니다.
-
-```powershell
-.\Windows\run-dev.ps1
-```
-
-이 명령도 설치판과 동일한 `%LOCALAPPDATA%\PokeTokenBar`를 사용합니다. 포켓몬 진행
-상태는 이 폴더 한 곳만 정본으로 관리되며 로컬 빌드와 배포판이 같은 상태를 이어갑니다.
 
 ## 데이터와 네트워크
 
@@ -109,6 +74,7 @@ dotnet test .\Windows\PokeTokenBar.Windows.sln -c Release --no-build
 포켓몬 이미지와 종 데이터는 실행 파일에 포함되지 않습니다. 처음 만나는 포켓몬의
 정보나 아직 캐시되지 않은 이미지를 받을 때는 인터넷 연결이 필요합니다. 토큰 사용량,
 프롬프트, 응답 내용 및 프로젝트 경로는 PokéAPI로 전송하지 않습니다.
+
 
 ## 프로젝트 구조
 
@@ -125,21 +91,8 @@ Windows/
 자세한 Windows 구현 내용은 [`Windows/README.md`](Windows/README.md), 기능별 진행
 상태는 [`Windows/PORTING_STATUS.md`](Windows/PORTING_STATUS.md)에서 확인할 수 있습니다.
 
-## macOS 원작과 Windows 포팅
 
-이 저장소에서 macOS 전용 Swift 소스, 테스트, 빌드·배포 스크립트는 포팅 감사를 마친
-뒤 제거되었습니다. Windows 앱의 동작과 회귀 테스트는 이제 `Windows` 아래의 C#과
-WPF 프로젝트가 독립적으로 소유합니다. 원작 구현을 확인해야 할 때는 Git 이력 또는
-[chattymin/PokeTokenBar](https://github.com/chattymin/PokeTokenBar)를 참조합니다.
-
-## 아직 남은 작업
-
-- Authenticode 코드 서명과 인증서·timestamp 서버 정책
-- 서명된 배포 채널을 전제로 한 업데이트 확인
-- Windows UI 다국어 지원(현재 한국어 중심)
-- 필요성이 확인된 추가 사용량 공급자와 기존 공급자의 저장 형식 변경 대응
-
-## 원작과 라이선스
+## LICENSE
 
 이 포팅은 [chattymin/PokeTokenBar](https://github.com/chattymin/PokeTokenBar)를
 기반으로 합니다. 원작과 이 저장소의 자체 소스 코드는 [`LICENSE`](LICENSE)의 MIT
