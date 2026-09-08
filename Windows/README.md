@@ -6,7 +6,7 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 
 ## Architecture
 
-- `src/PokeTokenBar.Core`: usage models, Codex/Gemini parsing, aggregation,
+- `src/PokeTokenBar.Core`: usage models, local token metadata parsing, aggregation,
   Pokémon progression, wallet, persistence, and save transfer.
 - `src/PokeTokenBar.Platform.Windows`: Windows paths, SQLite-backed providers,
   tray, single-instance activation, and login startup registration.
@@ -26,6 +26,11 @@ cost only, so their UI does not promise an input/output/cache breakdown.
 Zero-usage providers are hidden for the selected period. Refresh status and each
 provider's fetch time are displayed. A failed provider can retain its previous
 snapshot, with an error notice indicating that older values may be included.
+
+Twelve local providers are registered. Kiro CLI uses text-length estimates and
+is labelled accordingly in TOKENS; its estimates also contribute to growth.
+See [local provider accounting](../docs/reference/local-providers.md) for formats,
+path overrides, and live-validation limitations.
 
 `CompanionStore` records a per-provider baseline on first discovery, then uses
 new daily increments for growth. Statistics periods do not reset Pokémon

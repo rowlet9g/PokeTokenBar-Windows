@@ -89,6 +89,17 @@ internal static class WindowsSqlite
 
         public bool Step() => sqlite3_step(_handle) == SqliteRow;
 
+        public bool StepChecked()
+        {
+            var result = sqlite3_step(_handle);
+            return result switch
+            {
+                SqliteRow => true,
+                101 => false,
+                _ => throw new IOException($"SQLite read failed (code {result})."),
+            };
+        }
+
         public long ColumnInt64(int index) => sqlite3_column_int64(_handle, index);
 
         public string? ColumnText(int index)

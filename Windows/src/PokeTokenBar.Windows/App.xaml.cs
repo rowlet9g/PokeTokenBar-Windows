@@ -60,14 +60,26 @@ public partial class App : System.Windows.Application
             TryRepairStartupRegistration();
         }
 
-        _usageStore = new UsageStore(
-        [
+        var providers = new List<IUsageProvider>
+        {
             new CodexUsageProvider(WindowsCodexPaths.CreateDefaultRoots()),
             new GeminiUsageProvider(WindowsGeminiPaths.CreateDefaultRoots()),
             new AntigravityUsageProvider(WindowsAntigravityPaths.CreateDefaultRoots()),
             new CursorUsageProvider(WindowsCursorPaths.CreateDefaultRoots()),
             new CopilotUsageProvider(WindowsCopilotPaths.CreateDefaultRoots()),
-        ]);
+        };
+        foreach (var providerId in WindowsLocalToolPaths.ProviderIds)
+        {
+            var reader = new LocalToolUsageReader(providerId);
+            var displayName = providerId switch
+            {
+                "claude_code" => "Claude Code", "opencode" => "OpenCode", "hermes" => "Hermes Agent",
+                "grok" => "Grok CLI", "kiro" => "Kiro CLI (추정)", "pi" => "Pi Agent", _ => "omp",
+            };
+            providers.Add(new LocalToolUsageProvider(providerId, displayName,
+                (since, token) => reader.ReadEntries(WindowsLocalToolPaths.CreateRoots(providerId), since, token)));
+        }
+        _usageStore = new UsageStore(providers);
         _usageStore.Changed += UsageStore_OnChanged;
         _httpClient = new HttpClient
         {

@@ -25,7 +25,7 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 ## Details
 
 - Windows 알림 영역(시스템 트레이) 아이콘과 WPF 팝업
-- Codex, Antigravity, 레거시 Gemini CLI, Cursor, GitHub Copilot CLI 로컬 사용량 집계
+- Claude Code, Codex, Gemini CLI(레거시), Antigravity, OpenCode, Hermes Agent, Cursor, Grok CLI, Copilot CLI, Kiro CLI, Pi Agent, omp 로컬 사용량 집계
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
 - TOKENS 탭: 기간별 공급자 합계·비율과 오늘의 Input / Output / Cache 상세
 - 알 부화, 실제 진화 계보 기반 성장, 분기 진화, 성격과 색이 다른 포켓몬 여부
@@ -51,9 +51,24 @@ WEEK와 MONTH는 공급자별 합계와 비율을 표시합니다. 선택 기간
 | Antigravity CLI / IDE | `%USERPROFILE%\.gemini\antigravity*\conversations` | SQLite / protobuf |
 | Cursor | `%APPDATA%\Cursor\User\globalStorage` 및 Nightly 경로 | SQLite |
 | GitHub Copilot CLI | `%USERPROFILE%\.copilot` 또는 `COPILOT_HOME` | SQLite |
+| Claude Code | `%USERPROFILE%\.claude\projects`, `.config\claude\projects` | JSONL |
+| OpenCode | `%USERPROFILE%\.local\share\opencode` | SQLite / JSON |
+| Hermes Agent | `%USERPROFILE%\.hermes\state.db` | SQLite |
+| Grok CLI | `%USERPROFILE%\.grok\sessions` | JSONL |
+| Kiro CLI (추정) | `%USERPROFILE%\.kiro\sessions`, `.local\share\kiro-cli`, `%APPDATA%\kiro-cli` | SQLite / JSONL |
+| Pi Agent | `%USERPROFILE%\.pi\agent\sessions` | JSONL |
+| omp | `%USERPROFILE%\.omp\agent\sessions` | JSONL |
 
-사용량 파서는 토큰 메타데이터만 집계합니다. 
-사용자 Session 내의 대화 내역이나 프롬프트 등은 일체 수집하지 않습니다.
+위 목록은 **로컬 도구의 기록** 지원 목록이며, Claude/Grok 웹사이트나 모바일 앱의
+대화 사용량은 포함하지 않습니다. Gemini CLI의 기존 로컬 기록 지원은 유지합니다.
+
+Kiro CLI는 원본과 같이 텍스트의 UTF-8 바이트 길이를 이용한 **추정치**이며, 실제
+토큰 사용량과 다를 수 있습니다. 추정치도 전체 합계와 포켓몬 성장에 반영됩니다.
+나머지 공급자는 기록에 있는 토큰 메타데이터를 집계합니다. Kiro 추정 과정에서는
+대화 텍스트를 로컬에서 읽지만, 대화 원문을 별도로 저장하거나 외부로 전송하지 않습니다.
+
+추가 검색 경로, 집계 방식과 검증 범위는 [로컬 공급자 참고](docs/reference/local-providers.md)를
+참고하세요. 새 공급자 7종은 샘플 기록으로 검증했으며, 각 도구의 실제 사용 검증은 남아 있습니다.
 
 
 ## 설치

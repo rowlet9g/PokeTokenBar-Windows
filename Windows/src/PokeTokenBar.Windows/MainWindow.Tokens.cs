@@ -53,10 +53,11 @@ public partial class MainWindow
                 : $"Input {TokenFormatter.Grouped(today.InputTokens)} · Output {TokenFormatter.Grouped(today.OutputTokens)}"
                   + $"\nCache {TokenFormatter.Grouped(UsageMath.SaturatingAdd(today.CacheCreationTokens, today.CacheReadTokens))}"
                   + $" (쓰기 {TokenFormatter.Grouped(today.CacheCreationTokens)} / 읽기 {TokenFormatter.Grouped(today.CacheReadTokens)})";
+            if (snapshot.ProviderId == "kiro") detail += "\n텍스트 바이트 기반 추정치 · 실제 사용량과 다를 수 있음";
             return new TokenProviderCard(
                 snapshot.ProviderId == "gemini" ? "Gemini CLI (Legacy)" : snapshot.DisplayName,
                 TokenFormatter.Grouped(row.Total), share, $"{share:0.0}%", detail,
-                today is null ? Visibility.Collapsed : Visibility.Visible,
+                today is null && snapshot.ProviderId != "kiro" ? Visibility.Collapsed : Visibility.Visible,
                 $"{snapshot.FetchedAt.LocalDateTime:MM/dd HH:mm:ss} 갱신");
         }).ToArray();
 

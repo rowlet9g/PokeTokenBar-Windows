@@ -21,7 +21,7 @@ available through Git history and the upstream project, not in the active tree.
 | Settings and startup | Complete | Refresh, topmost, notifications, floating pet, and login startup persist. |
 | Bag and shop | Complete | Wallet, inventory, confirmations, items, and paid egg rerolls are implemented. |
 | Save transfer | Complete | Versioned import/export, validation, rebasing, and recovery backups are implemented. |
-| Usage providers | Scoped complete | Codex, Antigravity CLI/IDE, legacy Gemini CLI, Cursor, and Copilot CLI are supported; niche providers are excluded until requested. |
+| Usage providers | Implemented; new adapters need live validation | Twelve local providers: existing five plus Claude Code, OpenCode, Hermes Agent, Grok CLI, Kiro CLI (estimated), Pi Agent, and omp. See the local-provider reference for accounting limitations. |
 | Distribution | Partial | ZIP, checksums, installer, and tag-triggered release workflow are implemented; this does not imply a published release. Authenticode signing remains. |
 | Update checker | Not ported | Choose a signed release channel before enabling updates. |
 | Localization | Not ported | The Windows UI is Korean-first with some English labels. |
@@ -42,4 +42,12 @@ available through Git history and the upstream project, not in the active tree.
 
 1. Decide the release version and publish its matching tag when ready.
 2. Add Authenticode signing and choose a signed update channel before implementing updates.
-3. Decide whether UI localization or additional providers are needed.
+3. Validate the seven new adapters against real tool sessions before releasing the provider expansion; decide whether UI localization is needed.
+
+## Provider expansion validation recorded on 2026-09-08
+
+- Release build passed with zero warnings/errors; 149 tests passed.
+- Synthetic JSONL/JSON and Windows SQLite fixtures cover the seven new adapters,
+  duplicate/replayed records, cache refresh, partial records, and database failures.
+- Existing Gemini CLI parsing remains enabled. Kiro is explicitly estimated.
+- These checks do not establish live compatibility with every installed tool version.
