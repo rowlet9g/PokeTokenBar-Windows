@@ -159,11 +159,18 @@ public sealed class PokemonDexEntry
 
     public DateTimeOffset CaughtAt { get; set; }
 
+    // A released entry came from abandoning the active companion for a fresh egg.
+    // Keep it in the dex so buying an egg never erases discovered species.
+    public DateTimeOffset? ReleasedAt { get; set; }
+
     public bool IsShiny { get; set; }
 
     public PokemonNature Nature { get; set; }
 
     public Dictionary<int, string> Names { get; set; } = [];
+
+    [JsonIgnore]
+    public bool IsReleased => ReleasedAt is not null;
 }
 
 public enum PokemonLineStageStatus
@@ -189,7 +196,8 @@ public sealed record PokemonCollectionEntry(
     DateTimeOffset? CaughtAt,
     bool IsShiny,
     PokemonNature Nature,
-    bool IsRaising);
+    bool IsRaising,
+    bool IsReleased = false);
 
 public sealed record PokemonDexSpecies(
     int SpeciesId,

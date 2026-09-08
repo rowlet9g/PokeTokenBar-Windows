@@ -480,6 +480,10 @@ public partial class MainWindow : Window
         {
             badges.Children.Add(CreateBadge("육성 중", Brush("#FF7DD3FC")));
         }
+        if (entry.IsReleased)
+        {
+            badges.Children.Add(CreateBadge("놓아줌", Brush("#FFA78BFA")));
+        }
         if (entry.IsShiny)
         {
             badges.Children.Add(new TextBlock
@@ -536,7 +540,11 @@ public partial class MainWindow : Window
             Margin = new Thickness(0, 5, 0, 0),
             Foreground = Brush("#FF697386"),
             FontSize = 9,
-            Text = entry.IsRaising ? "현재 함께 성장하는 중" : RelativeCaughtAt(entry.CaughtAt),
+            Text = entry.IsRaising
+                ? "현재 함께 성장하는 중"
+                : entry.IsReleased
+                    ? $"놓아준 기록 · {RelativeCaughtAt(entry.CaughtAt)}"
+                    : RelativeCaughtAt(entry.CaughtAt),
         });
 
         return new Border

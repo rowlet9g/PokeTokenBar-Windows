@@ -113,7 +113,7 @@ public sealed class CompanionItemTests
     }
 
     [Fact]
-    public void Buying_a_guaranteed_egg_discards_active_without_graduating_it()
+    public void Buying_a_guaranteed_egg_keeps_the_released_active_in_the_dex()
     {
         using var temporary = TemporaryDirectory.Create();
         var store = CreateStore(
@@ -124,11 +124,39 @@ public sealed class CompanionItemTests
         Assert.True(store.BuyFreshEgg(FreshEggTier.Uncommon));
 
         Assert.False(store.HasActivePokemon);
-        Assert.Equal(0, store.DexCount);
+        Assert.Equal(1, store.DexCount);
+        var released = Assert.Single(store.CollectionEntries);
+        Assert.True(released.IsReleased);
+        Assert.Equal(new[] { 602 }, released.ChainOrder);
+        Assert.Equal(602, released.FinalSpeciesId);
+        Assert.Equal("저리어", released.FinalName);
         Assert.Equal(0, store.EggUsage);
         Assert.Equal(PokemonRarity.Uncommon, store.EggGuarantee);
         Assert.Equal(2_500_000_000, store.SpentTokens);
         Assert.Equal(3_000_000_000, store.UsedSinceInstall);
+
+        var restored = new CompanionStore(temporary.StatePath);
+        Assert.Equal(1, restored.DexCount);
+        Assert.True(Assert.Single(restored.CollectionEntries).IsReleased);
+    }
+
+    [Fact]
+    public void Buying_a_fresh_egg_records_only_the_forms_already_reached()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var store = CreateStore(
+            temporary,
+            used: 3_000_000_000,
+            active: ActivePokemon(stageIndex: 1, pathIds: [602, 603]));
+
+        Assert.True(store.BuyFreshEgg(FreshEggTier.Basic));
+
+        var released = Assert.Single(store.CollectionEntries);
+        Assert.True(released.IsReleased);
+        Assert.Equal(new[] { 602, 603 }, released.ChainOrder);
+        Assert.Equal(603, released.FinalSpeciesId);
+        Assert.DoesNotContain(604, released.ChainOrder);
+        Assert.Equal(new[] { 602, 603 }, store.DexSpecies.Select(item => item.SpeciesId));
     }
 
     [Fact]
@@ -195,23 +223,31 @@ public sealed class CompanionItemTests
 
     private static PokemonMonState ActivePokemon(
         long usedAtStage = 0,
-        PokemonNature nature = PokemonNature.Naive) => new()
+        PokemonNature nature = PokemonNature.Naive,
+        int stageIndex = 0,
+        IReadOnlyList<int>? pathIds = null)
     {
-        BaseId = 602,
-        PathIds = [602],
-        PlannedPathIds = [602, 603, 604],
-        StageIndex = 0,
-        UsedAtStage = usedAtStage,
-        Rarity = PokemonRarity.Common,
-        TotalForms = 3,
-        Nature = nature,
-        Names = new Dictionary<int, string>
+        var reachedPath = pathIds?.ToList() ?? [602];
+        var names = new Dictionary<int, string>
         {
             [602] = "저리어",
             [603] = "저리릴",
             [604] = "저리더프",
-        },
-    };
+        };
+
+        return new()
+        {
+            BaseId = 602,
+            PathIds = reachedPath,
+            PlannedPathIds = [602, 603, 604],
+            StageIndex = stageIndex,
+            UsedAtStage = usedAtStage,
+            Rarity = PokemonRarity.Common,
+            TotalForms = 3,
+            Nature = nature,
+            Names = names,
+        };
+    }
 
     private sealed class ConstantRandomSource(long value) : IRandomSource
     {

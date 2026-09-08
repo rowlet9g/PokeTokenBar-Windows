@@ -427,6 +427,7 @@ public sealed class CompanionStore
             _state.SpentTokens = SaturatingTokenAdd(
                 _state.SpentTokens,
                 CompanionItemRules.FreshEggPrice(tier));
+            _state.Dex.Add(CreateReleasedDexEntry(_state.ActivePokemon));
             _state.ActivePokemon = null;
             _state.EggUsage = 0;
             _state.PendingHatchId = null;
@@ -594,7 +595,8 @@ public sealed class CompanionStore
                         entry.CaughtAt,
                         entry.IsShiny,
                         entry.Nature,
-                        false)));
+                        false,
+                        entry.IsReleased)));
                 return entries;
             }
         }
@@ -1086,6 +1088,34 @@ public sealed class CompanionStore
         _state.ActivePokemon = null;
         _state.EggUsage = 0;
         _state.PendingHatchId = null;
+    }
+
+    private static PokemonDexEntry CreateReleasedDexEntry(PokemonMonState active)
+    {
+        var reached = active.PathIds
+            .Take(Math.Clamp(active.StageIndex + 1, 1, Math.Max(1, active.PathIds.Count)))
+            .ToList();
+        if (reached.Count == 0)
+        {
+            reached.Add(active.BaseId);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var reachedSet = reached.ToHashSet();
+        return new PokemonDexEntry
+        {
+            BaseId = active.BaseId,
+            FinalId = reached[^1],
+            ChainOrder = reached,
+            Rarity = active.Rarity,
+            CaughtAt = now,
+            ReleasedAt = now,
+            IsShiny = active.IsShiny,
+            Nature = active.Nature,
+            Names = active.Names
+                .Where(pair => reachedSet.Contains(pair.Key))
+                .ToDictionary(pair => pair.Key, pair => pair.Value),
+        };
     }
 
     private static long PhaseThreshold(PokemonMonState active) =>
