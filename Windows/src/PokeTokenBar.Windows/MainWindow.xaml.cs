@@ -22,6 +22,7 @@ namespace PokeTokenBar.Windows;
 public partial class MainWindow : Window
 {
     private readonly UsageStore _usageStore;
+    private readonly RateLimitStore _rateLimitStore;
     private readonly CompanionStore _companionStore;
     private readonly PokemonSpriteStore _spriteStore;
     private readonly CancellationToken _applicationToken;
@@ -39,12 +40,14 @@ public partial class MainWindow : Window
 
     public MainWindow(
         UsageStore usageStore,
+        RateLimitStore rateLimitStore,
         CompanionStore companionStore,
         PokemonSpriteStore spriteStore,
         AppSettings settings,
         CancellationToken applicationToken)
     {
         _usageStore = usageStore;
+        _rateLimitStore = rateLimitStore;
         _companionStore = companionStore;
         _spriteStore = spriteStore;
         _applicationToken = applicationToken;
@@ -52,6 +55,7 @@ public partial class MainWindow : Window
         IsVisibleChanged += MainWindow_OnIsVisibleChanged;
         ApplySettings(settings);
         ApplyUsageState();
+        ApplyRateLimitState();
         ApplyCompanionState();
     }
 
@@ -217,6 +221,7 @@ public partial class MainWindow : Window
         MonthValueText.Text = TokenFormatter.Compact(_usageStore.MonthTotalTokens);
         RefreshButton.IsEnabled = !_usageStore.IsRefreshing;
         ApplyTokensState();
+        ApplyRateLimitState();
 
         if (_usageStore.IsRefreshing)
         {
@@ -242,6 +247,112 @@ public partial class MainWindow : Window
         StatusText.Text = _usageStore.LastUpdated is { } updated
             ? $"{providers} · {updated.LocalDateTime:HH:mm:ss} 갱신"
             : providers;
+    }
+
+    public void ApplyRateLimitState()
+    {
+        var windows = _rateLimitStore.Snapshots
+            .SelectMany(snapshot => snapshot.Windows.Select(window => (snapshot, window)))
+            .OrderByDescending(item => item.window.ClampedUsedPercent)
+            .ThenBy(item => item.snapshot.DisplayName, StringComparer.Ordinal)
+            .ToArray();
+        RateLimitItemsPanel.Children.Clear();
+        foreach (var item in windows)
+        {
+            RateLimitItemsPanel.Children.Add(CreateRateLimitRow(item.snapshot, item.window));
+        }
+
+        RateLimitPanel.Visibility = windows.Length == 0
+            && _rateLimitStore.LastErrorDescription is null
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        RateLimitStatusText.Foreground = Brush(
+            _rateLimitStore.LastErrorDescription is null ? "#FF7D8797" : "#FFFF806B");
+        RateLimitStatusText.Text = _rateLimitStore.IsRefreshing
+            ? "공식 한도를 확인하는 중"
+            : _rateLimitStore.LastErrorDescription is { } error
+                ? $"한도 갱신 실패 · 이전 수치를 표시합니다 · {error}"
+                : _rateLimitStore.LastUpdated is { } updated
+                    ? $"{updated.LocalDateTime:HH:mm:ss} 갱신"
+                    : "Codex 공식 한도 준비 중";
+    }
+
+    private static Border CreateRateLimitRow(
+        ProviderRateLimitSnapshot snapshot,
+        RateLimitWindow window)
+    {
+        var percent = window.ClampedUsedPercent;
+        var accent = percent >= 95
+            ? "#FFFF806B"
+            : percent >= 80 ? "#FFFACC15" : "#FF7DD3FC";
+        var header = new DockPanel();
+        var nameText = new TextBlock
+        {
+            Foreground = Brush("#FFDCE4EF"),
+            FontSize = 10,
+            FontWeight = FontWeights.SemiBold,
+            Text = $"{snapshot.DisplayName} · {window.DisplayName}",
+        };
+        DockPanel.SetDock(nameText, Dock.Left);
+        header.Children.Add(nameText);
+        header.Children.Add(new TextBlock
+        {
+            Foreground = Brush(accent),
+            FontSize = 10,
+            Text = $"{percent:0.#}% 사용",
+            HorizontalAlignment = WpfHorizontalAlignment.Right,
+        });
+
+        var panel = new StackPanel();
+        panel.Children.Add(header);
+        panel.Children.Add(new System.Windows.Controls.ProgressBar
+        {
+            Height = 5,
+            Margin = new Thickness(0, 5, 0, 0),
+            Minimum = 0,
+            Maximum = 100,
+            Value = percent,
+            Foreground = Brush(accent),
+            Background = Brush("#FF343A46"),
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Margin = new Thickness(0, 4, 0, 0),
+            Foreground = Brush("#FF7D8797"),
+            FontSize = 9,
+            Text = window.ResetsAt is { } reset
+                ? $"남음 {window.RemainingPercent:0.#}% · {ResetText(reset)}"
+                : $"남음 {window.RemainingPercent:0.#}%",
+        });
+
+        return new Border
+        {
+            Margin = new Thickness(0, 0, 0, 8),
+            Padding = new Thickness(9, 7, 9, 7),
+            Background = Brush("#FF20242C"),
+            BorderBrush = Brush("#FF343A46"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            Child = panel,
+        };
+    }
+
+    private static string ResetText(DateTimeOffset reset)
+    {
+        var remaining = reset - DateTimeOffset.Now;
+        if (remaining <= TimeSpan.Zero)
+        {
+            return "곧 초기화";
+        }
+
+        if (remaining.TotalHours >= 24)
+        {
+            return $"{remaining.Days}일 {remaining.Hours}시간 후 초기화";
+        }
+
+        return remaining.TotalHours >= 1
+            ? $"{remaining.Hours}시간 {remaining.Minutes}분 후 초기화"
+            : $"{Math.Max(1, remaining.Minutes)}분 후 초기화";
     }
 
     public void ApplyCompanionState()

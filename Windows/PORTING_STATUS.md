@@ -11,6 +11,7 @@ available through Git history and the upstream project, not in the active tree.
 | Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |
 | Today/week/month totals | Complete | Windows locale controls the week boundary. |
 | Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, today input/output/cache, and refresh/error status. A live Antigravity request was user-verified to increase both tokens and companion progress on 2026-09-07. |
+| Official usage limits | Partial | Codex app-server 5-hour/weekly buckets are read and shown on HOME; Claude and Antigravity official limit adapters remain next parity work. |
 | Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
 | Pokédex and catch log | Complete | Only encountered forms are revealed. |
@@ -46,8 +47,16 @@ available through Git history and the upstream project, not in the active tree.
 
 ## Provider expansion validation recorded on 2026-09-08
 
-- Release build passed with zero warnings/errors; 149 tests passed.
+- Release build passed with zero warnings/errors; 152 tests passed.
 - Synthetic JSONL/JSON and Windows SQLite fixtures cover the seven new adapters,
   duplicate/replayed records, cache refresh, partial records, and database failures.
 - Existing Gemini CLI parsing remains enabled. Kiro is explicitly estimated.
 - These checks do not establish live compatibility with every installed tool version.
+
+## Official limit slice validated on 2026-09-08
+
+- Codex app-server JSON-RPC parsing covers primary, secondary, multi-bucket,
+  duplicate-bucket, plan, and reset fields.
+- Rate-limit refresh preserves the previous snapshot when a later request fails.
+- HOME renders Codex 5-hour/weekly utilization and reset countdowns when a Codex
+  executable is available on Windows.

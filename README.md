@@ -27,6 +27,7 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 - Windows 알림 영역(시스템 트레이) 아이콘과 WPF 팝업
 - Claude Code, Codex, Gemini CLI(레거시), Antigravity, OpenCode, Hermes Agent, Cursor, Grok CLI, Copilot CLI, Kiro CLI, Pi Agent, omp 로컬 사용량 집계
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
+- Codex 공식 5시간·주간 사용량 한도와 reset countdown 표시(Windows에 Codex 실행 파일이 있는 경우)
 - TOKENS 탭: 기간별 공급자 합계·비율과 오늘의 Input / Output / Cache 상세
 - 알 부화, 실제 진화 계보 기반 성장, 분기 진화, 성격과 색이 다른 포켓몬 여부
 - 1–5세대 포켓몬 도감과 개체별 포획 기록

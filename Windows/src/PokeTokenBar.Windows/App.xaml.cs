@@ -19,6 +19,7 @@ public partial class App : System.Windows.Application
     private FloatingPetWindow? _floatingPet;
     private Icon? _appIcon;
     private UsageStore? _usageStore;
+    private RateLimitStore? _rateLimitStore;
     private CompanionStore? _companionStore;
     private CompanionMilestoneTracker? _milestoneTracker;
     private AppSettingsStore? _settingsStore;
@@ -81,6 +82,9 @@ public partial class App : System.Windows.Application
         }
         _usageStore = new UsageStore(providers);
         _usageStore.Changed += UsageStore_OnChanged;
+        _rateLimitStore = new RateLimitStore(
+            [new CodexRateLimitsProvider()]);
+        _rateLimitStore.Changed += RateLimitStore_OnChanged;
         _httpClient = new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(15),
@@ -106,6 +110,7 @@ public partial class App : System.Windows.Application
         _appIcon = LoadAppIcon();
         _popover = new MainWindow(
             _usageStore,
+            _rateLimitStore,
             _companionStore,
             _spriteStore,
             _settings,
@@ -176,6 +181,11 @@ public partial class App : System.Windows.Application
             _usageStore.Changed -= UsageStore_OnChanged;
         }
 
+        if (_rateLimitStore is not null)
+        {
+            _rateLimitStore.Changed -= RateLimitStore_OnChanged;
+        }
+
         if (_companionStore is not null)
         {
             _companionStore.Changed -= CompanionStore_OnChanged;
@@ -183,6 +193,7 @@ public partial class App : System.Windows.Application
 
         _trayIcon?.Dispose();
         _usageStore?.Dispose();
+        _rateLimitStore?.Dispose();
         _httpClient?.Dispose();
         _appIcon?.Dispose();
         _singleInstance?.Dispose();
@@ -306,7 +317,10 @@ public partial class App : System.Windows.Application
 
         try
         {
-            await _usageStore.RefreshAsync(_refreshCancellation.Token);
+            var usageRefresh = _usageStore.RefreshAsync(_refreshCancellation.Token);
+            var limitRefresh = _rateLimitStore?.RefreshAsync(_refreshCancellation.Token)
+                ?? Task.CompletedTask;
+            await Task.WhenAll(usageRefresh, limitRefresh);
             ApplyUsageState();
             if (_companionStore is not null)
             {
@@ -328,6 +342,18 @@ public partial class App : System.Windows.Application
         else
         {
             Dispatcher.BeginInvoke(new Action(ApplyUsageState));
+        }
+    }
+
+    private void RateLimitStore_OnChanged(object? sender, EventArgs e)
+    {
+        if (Dispatcher.CheckAccess())
+        {
+            _popover?.ApplyRateLimitState();
+        }
+        else
+        {
+            Dispatcher.BeginInvoke(new Action(() => _popover?.ApplyRateLimitState()));
         }
     }
 
