@@ -66,6 +66,75 @@ public sealed class RateLimitStoreTests
     }
 
     [Fact]
+    public void Antigravity_credentials_accept_direct_and_nested_google_tokens()
+    {
+        const string direct = """
+            { "token": "google-access-fixture" }
+            """;
+        const string nested = """
+            {
+              "token": {
+                "access_token": "google-access-fixture",
+                "refresh_token": "google-refresh-fixture",
+                "expiry": "2030-01-01T00:00:00Z"
+              }
+            }
+            """;
+
+        var directMetadata = AntigravityRateLimitsProvider.ParseCredentialMetadata(direct);
+        var nestedMetadata = AntigravityRateLimitsProvider.ParseCredentialMetadata(nested);
+
+        Assert.True(directMetadata.HasAccessToken);
+        Assert.True(nestedMetadata.HasAccessToken);
+        Assert.False(nestedMetadata.IsExpired);
+        Assert.Equal(DateTimeOffset.Parse("2030-01-01T00:00:00Z"), nestedMetadata.ExpiresAt);
+        Assert.DoesNotContain("google-access-fixture", nestedMetadata.ToString());
+        Assert.False(AntigravityRateLimitsProvider.ParseCredentialMetadata(
+            "{\"token\":\"\"}").HasAccessToken);
+    }
+
+    [Fact]
+    public void Antigravity_parser_maps_group_windows_and_remaining_fraction()
+    {
+        const string json = """
+            {
+              "groups": [
+                {
+                  "displayName": "Gemini Models",
+                  "buckets": [
+                    { "bucketId": "gemini-weekly", "window": "weekly",
+                      "resetTime": "2026-09-14T12:00:00Z", "remainingFraction": 0.94 },
+                    { "bucketId": "gemini-5h", "window": "5h",
+                      "resetTime": "2026-09-08T12:00:00Z", "remainingFraction": 0.85 }
+                  ]
+                },
+                {
+                  "displayName": "Claude and GPT models",
+                  "buckets": [
+                    { "bucketId": "3p-5h", "window": "5h",
+                      "resetTime": "2026-09-08T12:00:00Z", "remainingFraction": 0.50 }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var parsed = AntigravityRateLimitParser.Parse(
+            json,
+            new DateTimeOffset(2026, 9, 8, 6, 0, 0, TimeSpan.Zero));
+
+        Assert.NotNull(parsed);
+        Assert.Equal(3, parsed!.Windows.Count);
+        Assert.Equal("Gemini 주간", parsed.Windows[0].DisplayName);
+        Assert.Equal(6, parsed.Windows[0].UsedPercent, 5);
+        Assert.Equal("Gemini 5시간 세션", parsed.Windows[1].DisplayName);
+        Assert.Equal(15, parsed.Windows[1].UsedPercent, 5);
+        Assert.Equal("외부 모델 5시간 세션", parsed.Windows[2].DisplayName);
+        Assert.Equal(50, parsed.Windows[2].UsedPercent, 5);
+        Assert.Equal(50, parsed.MaxUsedPercent);
+    }
+
+    [Fact]
     public void Codex_parser_maps_windows_and_deduplicates_the_primary_bucket()
     {
         const string json = """

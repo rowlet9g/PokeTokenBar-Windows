@@ -88,7 +88,11 @@ public partial class App : System.Windows.Application
         };
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("PokeTokenBar-Windows/0.1");
         _rateLimitStore = new RateLimitStore(
-            [new CodexRateLimitsProvider(), new ClaudeRateLimitsProvider(_httpClient)]);
+            [
+                new CodexRateLimitsProvider(),
+                new ClaudeRateLimitsProvider(_httpClient),
+                new AntigravityRateLimitsProvider(_httpClient),
+            ]);
         _rateLimitStore.Changed += RateLimitStore_OnChanged;
         var pokemonProvider = new PokeApiClient(
             _httpClient,

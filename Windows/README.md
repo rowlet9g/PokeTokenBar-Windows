@@ -9,8 +9,8 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 - `src/PokeTokenBar.Core`: usage models, local token metadata parsing, aggregation,
   official rate-limit models, Pokémon progression, wallet, persistence, and save transfer.
 - `src/PokeTokenBar.Platform.Windows`: Windows paths, SQLite-backed providers,
-  Codex app-server and Claude Code OAuth rate limits, tray, single-instance activation,
-  and login startup registration.
+  Codex app-server, Claude Code OAuth, and Antigravity Cloud Code rate limits,
+  tray, single-instance activation, and login startup registration.
 - `src/PokeTokenBar.Windows`: WPF views and application lifetime. `App.xaml.cs`
   connects providers, refresh events, companion state, tray, and floating pet.
 - `tests/PokeTokenBar.Core.Tests`: parsing, aggregation, progression, persistence,
@@ -35,9 +35,13 @@ credentials are read from `CLAUDE_CONFIG_DIR\.credentials.json`,
 `%USERPROFILE%\.claude\.credentials.json`, or
 `%USERPROFILE%\.config\claude\.credentials.json`; the OAuth token is used only
 in memory for the HTTPS request and is never written to PokeTokenBar logs or state.
-Reset countdowns are calculated from the provider response. If a request fails,
-the last successful limit snapshot remains visible with an error status; Antigravity
-official limits are still pending in the Windows parity work.
+Antigravity official quota is read from the Cloud Code `retrieveUserQuotaSummary`
+endpoint, trying `CLOUD_CODE_URL` (when set), the daily endpoint, and the primary
+endpoint. Its token file is read from `PTB_ANTIGRAVITY_TOKEN_FILE`,
+`ANTIGRAVITY_TOKEN_FILE`, `%USERPROFILE%\.gemini\jetski-standalone-oauth-token`,
+or `%USERPROFILE%\.gemini\antigravity\jetski-standalone-oauth-token`.
+Reset countdowns are calculated from each provider response. If a request fails,
+the last successful limit snapshot remains visible with an error status.
 
 Twelve local providers are registered. Kiro CLI uses text-length estimates and
 is labelled accordingly in TOKENS; its estimates also contribute to growth.

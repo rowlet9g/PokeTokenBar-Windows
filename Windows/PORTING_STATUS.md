@@ -11,7 +11,7 @@ available through Git history and the upstream project, not in the active tree.
 | Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |
 | Today/week/month totals | Complete | Windows locale controls the week boundary. |
 | Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, today input/output/cache, and refresh/error status. A live Antigravity request was user-verified to increase both tokens and companion progress on 2026-09-07. |
-| Official usage limits | Partial | Codex app-server and Claude Code OAuth 5-hour/weekly buckets are read and shown on HOME; Antigravity official limits remain next parity work. |
+| Official usage limits | Partial | Codex app-server, Claude Code OAuth, and Antigravity Cloud Code 5-hour/weekly buckets are read and shown on HOME; other providers' official APIs remain outside this slice. |
 | Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
 | Pokédex and catch log | Complete | Only encountered forms are revealed. |
@@ -63,3 +63,5 @@ available through Git history and the upstream project, not in the active tree.
 - Rate-limit refresh preserves the previous snapshot when a later request fails.
 - HOME renders Codex and Claude Code utilization and reset countdowns when the
   corresponding local executable or OAuth credential is available on Windows.
+- HOME renders Antigravity Gemini and third-party 5-hour/weekly quota buckets
+  from the Cloud Code quota summary when its local OAuth token is available.
