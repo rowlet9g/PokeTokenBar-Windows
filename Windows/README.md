@@ -31,8 +31,9 @@ snapshot, with an error notice indicating that older values may be included.
 HOME also shows Codex's official 5-hour and weekly utilization when the local
 Codex executable can answer `account/rateLimits/read`, and Claude Code's official
 5-hour/weekly windows when its OAuth credential file is available. Claude Code
-credentials are read from `CLAUDE_CONFIG_DIR\.credentials.json`,
-`%USERPROFILE%\.claude\.credentials.json`, or
+credentials are read exclusively from `CLAUDE_CONFIG_DIR\.credentials.json` when
+that directory is configured; otherwise they are read from
+`%USERPROFILE%\.claude\.credentials.json` or
 `%USERPROFILE%\.config\claude\.credentials.json`; the OAuth token is used only
 in memory for the HTTPS request and is never written to PokeTokenBar logs or state.
 Antigravity official quota is read from the Cloud Code `retrieveUserQuotaSummary`
@@ -41,7 +42,10 @@ endpoint. Its token file is read from `PTB_ANTIGRAVITY_TOKEN_FILE`,
 `ANTIGRAVITY_TOKEN_FILE`, `%USERPROFILE%\.gemini\jetski-standalone-oauth-token`,
 or `%USERPROFILE%\.gemini\antigravity\jetski-standalone-oauth-token`.
 Reset countdowns are calculated from each provider response. If a request fails,
-the last successful limit snapshot remains visible with an error status.
+the last successful limit snapshot remains visible with an error status and its
+original fetch time. A provider returning no current credentials or visible limits
+clears its old snapshot, so logging out does not leave an old account's values
+displayed as freshly updated. HOME also displays plan metadata when available.
 
 Twelve local providers are registered. Kiro CLI uses text-length estimates and
 is labelled accordingly in TOKENS; its estimates also contribute to growth.

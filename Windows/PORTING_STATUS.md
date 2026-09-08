@@ -41,9 +41,12 @@ available through Git history and the upstream project, not in the active tree.
 
 ## Remaining work
 
-1. Decide the release version and publish its matching tag when ready.
-2. Add Authenticode signing and choose a signed update channel before implementing updates.
-3. Validate the seven new adapters against real tool sessions before releasing the provider expansion; decide whether UI localization is needed.
+1. Finish official-limit resilience: retry backoff for HTTP 429 and authentication failures,
+   account-change handling during failed requests, and actual Windows credential discovery validation.
+2. Connect official limits to upstream-style warnings and companion state, then candy rewards.
+3. Align HOME/provider selection and settings with upstream, then address localization.
+4. Validate the seven new local adapters against real tool sessions.
+5. Decide the release version and publish its matching tag when ready; signing and updates remain pending.
 
 ## Provider expansion validation recorded on 2026-09-08
 
@@ -65,3 +68,14 @@ available through Git history and the upstream project, not in the active tree.
   corresponding local executable or OAuth credential is available on Windows.
 - HOME renders Antigravity Gemini and third-party 5-hour/weekly quota buckets
   from the Cloud Code quota summary when its local OAuth token is available.
+
+## Account lifecycle correction validated on 2026-09-08
+
+- Full Release solution build passed with zero warnings/errors; 161 tests passed.
+  This also completes the previously blocked Claude/Antigravity fixture test run.
+- Missing/logged-out/expired Claude credentials remove the previous limit snapshot.
+  Antigravity token-file removal does the same. Simulated transient server errors
+  preserve the previous value with an error; subsequent login loads the new value.
+- An explicit `CLAUDE_CONFIG_DIR` no longer falls back to a different default account.
+- HOME shows each snapshot's original fetch timestamp and optional plan metadata.
+- HTTP responses were simulated; live OAuth requests and visual UI validation remain pending.

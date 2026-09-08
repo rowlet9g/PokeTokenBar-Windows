@@ -96,7 +96,8 @@ public sealed class ClaudeRateLimitsProvider : IRateLimitProvider
         var configured = environment("CLAUDE_CONFIG_DIR");
         if (!string.IsNullOrWhiteSpace(configured))
         {
-            paths.Add(Path.Combine(configured, ".credentials.json"));
+            // An explicit config directory selects an account, not an extra search root.
+            return [Path.Combine(configured, ".credentials.json")];
         }
 
         paths.Add(Path.Combine(userProfile, ".claude", ".credentials.json"));

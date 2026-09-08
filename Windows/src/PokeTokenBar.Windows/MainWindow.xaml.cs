@@ -271,10 +271,10 @@ public partial class MainWindow : Window
         RateLimitStatusText.Text = _rateLimitStore.IsRefreshing
             ? "공식 한도를 확인하는 중"
             : _rateLimitStore.LastErrorDescription is { } error
-                ? $"한도 갱신 실패 · 이전 수치를 표시합니다 · {error}"
+                ? $"한도 갱신 실패 · {error}"
                 : _rateLimitStore.LastUpdated is { } updated
                     ? $"{updated.LocalDateTime:HH:mm:ss} 갱신"
-                    : "Codex 공식 한도 준비 중";
+                    : "공식 한도 준비 중";
     }
 
     private static Border CreateRateLimitRow(
@@ -305,6 +305,13 @@ public partial class MainWindow : Window
 
         var panel = new StackPanel();
         panel.Children.Add(header);
+        panel.Children.Add(new TextBlock
+        {
+            Foreground = Brush("#FF7D8797"),
+            FontSize = 9,
+            Text = $"{snapshot.FetchedAt.LocalDateTime:MM-dd HH:mm:ss} 기준"
+                + (snapshot.PlanType is { } plan ? $" · {plan}" : string.Empty),
+        });
         panel.Children.Add(new System.Windows.Controls.ProgressBar
         {
             Height = 5,

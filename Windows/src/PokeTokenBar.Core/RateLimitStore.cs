@@ -154,10 +154,6 @@ public sealed class RateLimitStore : IDisposable
                     {
                         next.Add(outcome.Snapshot);
                     }
-                    else if (previous.TryGetValue(outcome.ProviderId, out var unavailable))
-                    {
-                        next.Add(unavailable);
-                    }
                 }
 
                 _snapshots = next.ToArray();

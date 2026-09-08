@@ -30,6 +30,8 @@ public interface IRateLimitProvider
 
     string DisplayName { get; }
 
+    // Null means no current account/visible limit: remove any previous snapshot.
+    // Throw for transient failures to preserve the last value with an error notice.
     Task<ProviderRateLimitSnapshot?> FetchAsync(
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
