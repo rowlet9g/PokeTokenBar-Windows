@@ -62,25 +62,10 @@ WEEK와 MONTH는 공급자별 합계와 비율을 표시합니다. 선택 기간
 ### 요구 사항
 
 - Windows 10 이상, x64
-- 소스에서 빌드하거나 설치 스크립트를 실행할 때 [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
-PowerShell에서 저장소 루트를 연 뒤 다음 명령을 실행합니다.
+### How to...
 
-```powershell
-.\Windows\install.ps1
-```
-
-스크립트는 self-contained `win-x64` 실행 파일을 만들고 다음 작업을 수행합니다.
-
-- `%LOCALAPPDATA%\Programs\PokeTokenBar`에 설치
-- 시작 메뉴에 `PokeTokenBar` 바로가기 생성
-- 기존 `%LOCALAPPDATA%\PokeTokenBar` 진행 상황 유지
-
-이후에는 PowerShell 명령 없이 시작 메뉴에서 실행할 수
-있습니다. 새 로컬 빌드로 교체하려면 같은 설치 명령을 다시 실행하면 됩니다.
-
-Installer와 Portable ZIP을 만드는 방법 및 태그 배포 절차는
-[`RELEASE.md`](RELEASE.md)에 있습니다. 배포 산출물에는 아직 코드 서명이 없습니다.
+[최신 릴리스 다운로드](https://github.com/rowlet9g/PokeTokenBar-Windows/releases/latest)
 
 ## 개발과 테스트
 
