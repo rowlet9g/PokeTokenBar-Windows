@@ -87,4 +87,4 @@ jobs:
           $version = "${{ steps.version.outputs.version }}"
           $assets = Get-ChildItem -LiteralPath "Windows/artifacts/release/$version" -File |
             Select-Object -ExpandProperty FullName
-          gh release create "${{ github.ref_name }}" @assets --verify-tag --title "PokeTokenBar $version" --generate-notes
+          gh release create "${{ github.ref_name }}" @assets --verify-tag --title "PokeTokenBar $version" --notes-file RELEASE_NOTES.md
