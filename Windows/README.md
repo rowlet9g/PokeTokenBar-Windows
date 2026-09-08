@@ -9,7 +9,8 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 - `src/PokeTokenBar.Core`: usage models, local token metadata parsing, aggregation,
   official rate-limit models, Pokémon progression, wallet, persistence, and save transfer.
 - `src/PokeTokenBar.Platform.Windows`: Windows paths, SQLite-backed providers,
-  Codex app-server rate limits, tray, single-instance activation, and login startup registration.
+  Codex app-server and Claude Code OAuth rate limits, tray, single-instance activation,
+  and login startup registration.
 - `src/PokeTokenBar.Windows`: WPF views and application lifetime. `App.xaml.cs`
   connects providers, refresh events, companion state, tray, and floating pet.
 - `tests/PokeTokenBar.Core.Tests`: parsing, aggregation, progression, persistence,
@@ -28,10 +29,15 @@ provider's fetch time are displayed. A failed provider can retain its previous
 snapshot, with an error notice indicating that older values may be included.
 
 HOME also shows Codex's official 5-hour and weekly utilization when the local
-Codex executable can answer `account/rateLimits/read`. Reset countdowns are
-calculated from the returned Unix timestamps. If the request fails, the last
-successful limit snapshot remains visible with an error status; Claude and
-Antigravity official limits are still pending in the Windows parity work.
+Codex executable can answer `account/rateLimits/read`, and Claude Code's official
+5-hour/weekly windows when its OAuth credential file is available. Claude Code
+credentials are read from `CLAUDE_CONFIG_DIR\.credentials.json`,
+`%USERPROFILE%\.claude\.credentials.json`, or
+`%USERPROFILE%\.config\claude\.credentials.json`; the OAuth token is used only
+in memory for the HTTPS request and is never written to PokeTokenBar logs or state.
+Reset countdowns are calculated from the provider response. If a request fails,
+the last successful limit snapshot remains visible with an error status; Antigravity
+official limits are still pending in the Windows parity work.
 
 Twelve local providers are registered. Kiro CLI uses text-length estimates and
 is labelled accordingly in TOKENS; its estimates also contribute to growth.

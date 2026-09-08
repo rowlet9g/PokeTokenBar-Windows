@@ -6,6 +6,66 @@ namespace PokeTokenBar.Core.Tests;
 public sealed class RateLimitStoreTests
 {
     [Fact]
+    public void Claude_credentials_read_nested_oauth_metadata_without_exposing_the_token()
+    {
+        const string json = """
+            {
+              "claudeAiOauth": {
+                "accessToken": "oauth-secret-fixture",
+                "expiresAt": 1893456000000,
+                "subscriptionType": "max",
+                "rateLimitTier": "default_claude_max_20x"
+              }
+            }
+            """;
+
+        var metadata = ClaudeRateLimitsProvider.ParseCredentialMetadata(json);
+
+        Assert.True(metadata.HasAccessToken);
+        Assert.Equal("max", metadata.SubscriptionType);
+        Assert.Equal("default_claude_max_20x", metadata.RateLimitTier);
+        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1893456000000), metadata.ExpiresAt);
+        Assert.DoesNotContain("oauth-secret-fixture", metadata.ToString());
+        Assert.False(ClaudeRateLimitsProvider.ParseCredentialMetadata(
+            "{\"claudeAiOauth\":{\"accessToken\":\"\",\"expiresAt\":1893456000000}}").HasAccessToken);
+    }
+
+    [Fact]
+    public void Claude_parser_maps_legacy_and_scoped_windows_without_duplicates()
+    {
+        const string json = """
+            {
+              "five_hour": { "utilization": 12.5, "resets_at": "2026-09-08T12:00:00Z" },
+              "seven_day": { "utilization": 33.3, "resets_at": "2026-09-14T12:00:00Z" },
+              "seven_day_opus": { "utilization": 44.4, "resets_at": "2026-09-14T12:00:00Z" },
+              "limits": [
+                { "kind": "session", "group": "all", "percent": 12.5, "resets_at": "2026-09-08T12:00:00Z" },
+                { "kind": "weekly_all", "group": "all", "percent": 33.3, "resets_at": "2026-09-14T12:00:00Z" },
+                { "kind": "weekly_scoped", "group": "sonnet", "percent": 55.5,
+                  "resets_at": "2026-09-14T12:00:00Z", "scope": { "model": { "display_name": "Claude Sonnet 4" } } },
+                { "kind": "weekly_scoped", "group": "opus", "percent": 99,
+                  "resets_at": "2026-09-14T12:00:00Z", "is_active": false }
+              ]
+            }
+            """;
+
+        var fetchedAt = new DateTimeOffset(2026, 9, 8, 6, 0, 0, TimeSpan.Zero);
+        var parsed = ClaudeRateLimitParser.Parse(json, fetchedAt, "max", "default_claude_max_20x");
+
+        Assert.NotNull(parsed);
+        Assert.Equal("Max 20x", parsed!.PlanType);
+        Assert.Equal(fetchedAt, parsed.FetchedAt);
+        Assert.Equal(4, parsed.Windows.Count);
+        Assert.Equal("5시간 세션", parsed.Windows[0].DisplayName);
+        Assert.Equal(12.5, parsed.Windows[0].UsedPercent);
+        Assert.Equal("주간", parsed.Windows[1].DisplayName);
+        Assert.Equal("주간 (Opus)", parsed.Windows[2].DisplayName);
+        Assert.Equal("주간 (Claude Sonnet 4)", parsed.Windows[3].DisplayName);
+        Assert.Equal(55.5, parsed.Windows[3].UsedPercent);
+        Assert.Equal(55.5, parsed.MaxUsedPercent);
+    }
+
+    [Fact]
     public void Codex_parser_maps_windows_and_deduplicates_the_primary_bucket()
     {
         const string json = """
