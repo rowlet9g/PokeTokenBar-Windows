@@ -4,7 +4,7 @@
 
 # PokeTokenBar for Windows
 
-**AI 코딩 도구에서 사용한 토큰으로 포켓몬을 키우는 Windows 트레이 앱**
+**AI agent token usage로 포켓몬을 키워 봅시다.**
 
 ![Windows](https://img.shields.io/badge/Windows-10%2B-0078d4?logo=windows)
 ![.NET](https://img.shields.io/badge/.NET-10-512bd4?logo=dotnet)
@@ -15,8 +15,7 @@
 
 > 이 저장소는 Swift와 AppKit으로 작성된 macOS용
 > [원본 PokeTokenBar](https://github.com/chattymin/PokeTokenBar)를 Windows 전용으로
-> 포팅하는 프로젝트입니다. 현재 Windows 앱은 Swift 코드를 실행하지 않으며,
-> C#/.NET과 WPF로 독립 구현되어 있습니다.
+> 포팅하는 프로젝트입니다. 현재 Windows 앱은 C#/.NET과 WPF로 독립 구현되어 있습니다.
 
 PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오늘·이번 주·이번 달
 토큰을 집계합니다. 새로 사용한 토큰은 포켓몬 알의 부화와 성장에 반영되며,
