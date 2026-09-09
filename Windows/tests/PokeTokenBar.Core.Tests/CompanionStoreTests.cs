@@ -296,6 +296,7 @@ public sealed class CompanionStoreTests
         {
             ["codex"] = PokemonBalance.EggHatchThreshold + firstPhase + 123,
         });
+        await first.EnsureHatchedAsync();
 
         var restarted = new CompanionStore(StatePath(temporary), provider);
 
