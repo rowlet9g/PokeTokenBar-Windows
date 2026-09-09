@@ -88,7 +88,8 @@ Kiro CLI는 원본과 같이 텍스트의 UTF-8 바이트 길이를 이용한 **
 
 ## 데이터와 네트워크
 
-- 설치본 데이터: `%LOCALAPPDATA%\PokeTokenBar`
+- 사용자 데이터: `%USERPROFILE%\.poketokenbar` (v0.5.2부터 실행 환경과 관계없이 공유)
+- 기존 `%LOCALAPPDATA%\PokeTokenBar` 데이터는 첫 실행 시 자동 복사하며 원본을 보존합니다. 이전에 실패하면 진행을 초기화하지 않고 실행을 중단합니다.
 - 설치 위치: `%LOCALAPPDATA%\Programs\PokeTokenBar`
 - 포켓몬 종·진화 정보: [PokéAPI](https://pokeapi.co/)에서 런타임에 가져와 로컬 캐시
 - 포켓몬 스프라이트: PokeAPI sprites 저장소에서 런타임에 가져와 로컬 캐시

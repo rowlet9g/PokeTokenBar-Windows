@@ -45,7 +45,17 @@ public partial class App : System.Windows.Application
         }
 
         var paths = WindowsAppPaths.CreateDefault();
-        paths.EnsureDirectories();
+        try
+        {
+            paths.EnsureDirectories();
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
+        {
+            System.Windows.MessageBox.Show("저장소를 준비하지 못했습니다. 기존 진행은 변경하지 않았습니다.\n\n" + error.Message,
+                "PokeTokenBar 저장소 오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
         _logsDirectory = paths.LogsDirectory;
         _settingsStore = new AppSettingsStore(Path.Combine(paths.DataDirectory, "settings.json"));
         _settings = _settingsStore.Current;

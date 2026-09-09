@@ -6,6 +6,22 @@ available through Git history and the upstream project, not in the active tree.
 
 ## Feature matrix
 
+### Save isolation fix: 0.5.2 (2026-09-09)
+
+- Confirmed that AppData access from a Codex-launched process resolved to the
+  Codex package's LocalCache, while ordinary Windows execution used real AppData.
+  Earlier same-context persistence/installer checks did not detect this split.
+- Default data now lives in `%USERPROFILE%\.poketokenbar`. First-run migration
+  copies the legacy directory atomically and retains it; redirected legacy paths
+  are rejected, and existing new data is never replaced by a later legacy import.
+- Release build and 170 tests passed, including migration failure/retry tests.
+- On the affected PC, the 0.5.2 installer was applied twice in ordinary Windows
+  execution. Both legacy and new state hashes remained unchanged during installation.
+- Ordinary installed execution, Codex-launched portable execution, and ordinary
+  installed execution again all loaded species #603 from the same new directory.
+- These checks cover process restarts and installer replacement, not a forced PC
+  power cut. Already-divergent historical saves require deliberate recovery.
+
 | Area | Windows status | Decision / next work |
 | --- | --- | --- |
 | Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |

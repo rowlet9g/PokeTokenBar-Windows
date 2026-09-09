@@ -2,5 +2,5 @@ $ErrorActionPreference = "Stop"
 
 & (Join-Path $PSScriptRoot "install.ps1") -Launch
 
-$dataDirectory = Join-Path $env:LOCALAPPDATA "PokeTokenBar"
-Write-Host "PokeTokenBar started with canonical data: $dataDirectory"
+$dataDirectory = Join-Path ([Environment]::GetFolderPath('UserProfile')) ".poketokenbar"
+Write-Host "PokeTokenBar data directory: $dataDirectory"

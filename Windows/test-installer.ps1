@@ -19,7 +19,7 @@ $installDirectory = [IO.Path]::GetFullPath(
     (Join-Path $env:LOCALAPPDATA "Programs\PokeTokenBar"))
 $installedExecutable = Join-Path $installDirectory "PokeTokenBar.Windows.exe"
 $uninstaller = Join-Path $installDirectory "unins000.exe"
-$dataDirectory = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA "PokeTokenBar"))
+$dataDirectory = [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('UserProfile')) ".poketokenbar"))
 $backupDirectory = Join-Path $PSScriptRoot "artifacts\installer-validation-backup"
 $startMenuShortcut = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::Programs)) "PokeTokenBar\PokeTokenBar.lnk"
 $installerArguments = @(
