@@ -1,4 +1,4 @@
-# PokeTokenBar for Windows 0.5.0
+# PokeTokenBar for Windows 0.5.1
 
 ## 변경 사항
 
@@ -9,11 +9,12 @@
 - Windows의 Codex 배치 실행 파일 인용 오류를 수정하고 초기화 응답 이후 한도를 요청합니다.
 - 로그아웃·자격증명 만료 시 이전 한도를 지우며, Claude 설정 폴더가 지정되면 다른 계정으로 전환하지 않습니다.
 - 새 알 구매 시 놓아준 포켓몬의 기록을 보존합니다.
+- 진화 직후 파일 저장이 일시적으로 실패해도 재시도하며, 앱 종료 시 진행 상태를 한 번 더 저장합니다.
 
 ## 설치와 업데이트
 
-- Installer: `PokeTokenBar-0.5.0-win-x64-setup.exe`
-- Portable: `PokeTokenBar-0.5.0-win-x64.zip`
+- Installer: `PokeTokenBar-0.5.1-win-x64-setup.exe`
+- Portable: `PokeTokenBar-0.5.1-win-x64.zip`
 - Windows 10 이상 x64용이며 .NET 런타임을 포함합니다.
 - 실행 중인 PokeTokenBar를 종료하고 기존 버전 위에 새 Installer를 설치하세요.
 - 같은 Windows 사용자 계정의 `%LOCALAPPDATA%\PokeTokenBar` 진행 상황과 설정은 유지됩니다.
