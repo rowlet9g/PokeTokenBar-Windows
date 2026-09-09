@@ -166,6 +166,7 @@ public partial class App : System.Windows.Application
         }
 
         _refreshCancellation.Cancel();
+        _companionStore?.Persist();
         if (_popover is not null)
         {
             _popover.RefreshRequested -= Popover_OnRefreshRequested;

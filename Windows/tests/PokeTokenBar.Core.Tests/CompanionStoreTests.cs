@@ -282,6 +282,30 @@ public sealed class CompanionStoreTests
     }
 
     [Fact]
+    public async Task Evolved_path_survives_a_restart()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var provider = FakePokemonProvider.BulbasaurLine();
+        var first = new CompanionStore(
+            StatePath(temporary),
+            provider,
+            new ConstantRandomSource(1));
+        var firstPhase = PokemonBalance.PhaseThreshold(PokemonRarity.Common, 3, 0);
+        Update(first, new Dictionary<string, long> { ["codex"] = 0 });
+        Update(first, new Dictionary<string, long>
+        {
+            ["codex"] = PokemonBalance.EggHatchThreshold + firstPhase + 123,
+        });
+
+        var restarted = new CompanionStore(StatePath(temporary), provider);
+
+        Assert.Equal(2, restarted.CurrentSpeciesId);
+        Assert.Equal("이상해풀", restarted.CurrentPokemonName);
+        Assert.Equal(new[] { 1, 2 }, restarted.CurrentEvolutionPath);
+        Assert.Equal(123, restarted.ActiveUsedAtStage);
+    }
+
+    [Fact]
     public async Task Branch_is_chosen_once_and_the_saved_route_drives_evolution()
     {
         using var temporary = TemporaryDirectory.Create();

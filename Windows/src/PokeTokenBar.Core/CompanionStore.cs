@@ -50,6 +50,19 @@ public sealed class CompanionStore
         }
     }
 
+    /// <summary>
+    /// Retries persistence for the current in-memory state. This is used during
+    /// shutdown so a transient file-lock failure cannot discard the latest
+    /// evolution that was already applied in memory.
+    /// </summary>
+    public void Persist()
+    {
+        lock (_stateLock)
+        {
+            TrySaveState();
+        }
+    }
+
     public async Task ImportStateAsync(
         CompanionState imported,
         IReadOnlyDictionary<string, long> todayTokensByProvider,
@@ -1201,47 +1214,59 @@ public sealed class CompanionStore
             return;
         }
 
-        var temporaryPath = $"{_filePath}.tmp-{Guid.NewGuid():N}";
-        try
+        string? lastError = null;
+        for (var attempt = 1; attempt <= 3; attempt++)
         {
-            using (var stream = new FileStream(
-                       temporaryPath,
-                       FileMode.CreateNew,
-                       FileAccess.Write,
-                       FileShare.None,
-                       4096,
-                       FileOptions.WriteThrough))
-            {
-                JsonSerializer.Serialize(stream, _state, JsonOptions);
-                stream.Flush(flushToDisk: true);
-            }
-
-            File.Move(temporaryPath, _filePath, overwrite: true);
-            _lastPersistenceError = null;
-        }
-        catch (IOException error)
-        {
-            _lastPersistenceError = error.Message;
-        }
-        catch (UnauthorizedAccessException error)
-        {
-            _lastPersistenceError = error.Message;
-        }
-        finally
-        {
+            var temporaryPath = $"{_filePath}.tmp-{Guid.NewGuid():N}";
             try
             {
-                File.Delete(temporaryPath);
+                using (var stream = new FileStream(
+                           temporaryPath,
+                           FileMode.CreateNew,
+                           FileAccess.Write,
+                           FileShare.None,
+                           4096,
+                           FileOptions.WriteThrough))
+                {
+                    JsonSerializer.Serialize(stream, _state, JsonOptions);
+                    stream.Flush(flushToDisk: true);
+                }
+
+                File.Move(temporaryPath, _filePath, overwrite: true);
+                _lastPersistenceError = null;
+                return;
             }
-            catch (IOException)
+            catch (IOException error)
             {
-                // The completed move already removed the temporary path.
+                lastError = error.Message;
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException error)
             {
-                // A stale temporary file is preferable to losing in-memory progress.
+                lastError = error.Message;
+            }
+            finally
+            {
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch (IOException)
+                {
+                    // A stale temporary file is preferable to losing in-memory progress.
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // A stale temporary file is preferable to losing in-memory progress.
+                }
+            }
+
+            if (attempt < 3)
+            {
+                Thread.Sleep(50 * attempt);
             }
         }
+
+        _lastPersistenceError = lastError;
     }
 
     private void DisablePersistenceAfterLoadFailure(string errorDescription)
