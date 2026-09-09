@@ -89,6 +89,9 @@ public sealed class CodexRateLimitsProvider : IRateLimitProvider
             throw new InvalidOperationException($"Codex 실행에 실패했습니다: {binary}");
         }
 
+        // Drain stderr without exposing local configuration or authentication diagnostics.
+        process.ErrorDataReceived += (_, _) => { };
+        process.BeginErrorReadLine();
         try
         {
             var initialize = JsonSerializer.Serialize(new
@@ -109,8 +112,6 @@ public sealed class CodexRateLimitsProvider : IRateLimitProvider
             var initialized = "{\"method\":\"initialized\",\"params\":{}}";
             var request = "{\"method\":\"account/rateLimits/read\",\"id\":1,\"params\":{}}";
             await process.StandardInput.WriteLineAsync(initialize).ConfigureAwait(false);
-            await process.StandardInput.WriteLineAsync(initialized).ConfigureAwait(false);
-            await process.StandardInput.WriteLineAsync(request).ConfigureAwait(false);
             await process.StandardInput.FlushAsync().ConfigureAwait(false);
 
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -127,7 +128,7 @@ public sealed class CodexRateLimitsProvider : IRateLimitProvider
                 var root = document.RootElement;
                 if (!root.TryGetProperty("id", out var id)
                     || id.ValueKind != JsonValueKind.Number
-                    || id.GetInt32() != 1)
+                    || (id.GetInt32() != 0 && id.GetInt32() != 1))
                 {
                     continue;
                 }
@@ -136,6 +137,14 @@ public sealed class CodexRateLimitsProvider : IRateLimitProvider
                 {
                     throw new InvalidOperationException(
                         $"Codex rate limit 요청 실패: {error}");
+                }
+
+                if (id.GetInt32() == 0)
+                {
+                    await process.StandardInput.WriteLineAsync(initialized).ConfigureAwait(false);
+                    await process.StandardInput.WriteLineAsync(request).ConfigureAwait(false);
+                    await process.StandardInput.FlushAsync().ConfigureAwait(false);
+                    continue;
                 }
 
                 if (!root.TryGetProperty("result", out var result))
@@ -163,7 +172,7 @@ public sealed class CodexRateLimitsProvider : IRateLimitProvider
         }
     }
 
-    private static ProcessStartInfo CreateStartInfo(string binary)
+    internal static ProcessStartInfo CreateStartInfo(string binary)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -173,13 +182,13 @@ public sealed class CodexRateLimitsProvider : IRateLimitProvider
             RedirectStandardError = true,
             CreateNoWindow = true,
         };
-        if (binary.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase))
+        if (binary.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase)
+            || binary.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
         {
             startInfo.FileName = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
-            startInfo.ArgumentList.Add("/d");
-            startInfo.ArgumentList.Add("/s");
-            startInfo.ArgumentList.Add("/c");
-            startInfo.ArgumentList.Add($"\"{binary}\" app-server --stdio");
+            // cmd.exe does not understand the backslash quoting used by ArgumentList.
+            // /s /c removes the outer quotes, preserving the quoted batch file path.
+            startInfo.Arguments = $"/d /s /c \"\"{binary}\" app-server --stdio\"";
         }
         else
         {

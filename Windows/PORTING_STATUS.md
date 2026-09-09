@@ -95,3 +95,10 @@ available through Git history and the upstream project, not in the active tree.
   all six views, including the Charmander preview. User progress was not replaced.
 - Full parity is still pending: provider selection/details on Home, complete status behaviors,
   full settings/localization and automatic light/dark appearance are separate remaining work.
+
+## Release 0.5.0 validation (2026-09-09)
+
+- Fixed Windows cmd/bat quoting and wait for Codex initialize response before querying limits.
+- Actual user Codex account returned three official limit windows.
+- Release build: zero warnings/errors; 165 tests passed, including batch launch paths with spaces.
+- Installer keeps the same AppId and user data directory; existing saves remain separate from program files.
