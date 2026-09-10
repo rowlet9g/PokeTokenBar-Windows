@@ -12,7 +12,7 @@ Portable ZIP만 만들려면 다음 명령을 사용합니다.
 .\Windows\publish-release.ps1 -SkipInstaller
 ```
 
-Inno Setup 7이 설치되어 있다면 Installer까지 함께 만들어집니다.
+Inno Setup 6 또는 7이 설치되어 있다면 Installer까지 함께 만들어집니다.
 
 ```powershell
 .\Windows\publish-release.ps1 -RequireInstaller

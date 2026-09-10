@@ -25,7 +25,7 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 ## Details
 
 - Windows 알림 영역(시스템 트레이) 아이콘과 WPF 팝업
-- Claude Code, Codex, Gemini CLI(레거시), Antigravity, OpenCode, Hermes Agent, Cursor, Grok CLI, Copilot CLI, Kiro CLI, Pi Agent, omp 로컬 사용량 집계
+- Claude Code, Codex, Gemini CLI(레거시), Antigravity, OpenCode, Hermes Agent, Cursor, Grok CLI, Copilot CLI, Kiro CLI, Pi Agent, omp 로컬 사용량 및 Higgsfield 크레딧 집계
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
 - Codex·Claude Code·Antigravity 공식 5시간·주간 사용량 한도와 reset countdown 표시
   (각 도구의 로컬 실행 파일 또는 OAuth 자격증명이 Windows에 있는 경우)
@@ -62,6 +62,7 @@ WEEK와 MONTH는 공급자별 합계와 비율을 표시합니다. 선택 기간
 | Kiro CLI (추정) | `%USERPROFILE%\.kiro\sessions`, `.local\share\kiro-cli`, `%APPDATA%\kiro-cli` | SQLite / JSONL |
 | Pi Agent | `%USERPROFILE%\.pi\agent\sessions` | JSONL |
 | omp | `%USERPROFILE%\.omp\agent\sessions` | JSONL |
+| Higgsfield | 공식 `higgsfield account transactions` | CLI 계정 거래 내역 |
 
 위 목록은 **로컬 도구의 기록** 지원 목록이며, Claude/Grok 웹사이트나 모바일 앱의
 대화 사용량은 포함하지 않습니다. Gemini CLI의 기존 로컬 기록 지원은 유지합니다.
@@ -70,6 +71,16 @@ Kiro CLI는 원본과 같이 텍스트의 UTF-8 바이트 길이를 이용한 **
 토큰 사용량과 다를 수 있습니다. 추정치도 전체 합계와 포켓몬 성장에 반영됩니다.
 나머지 공급자는 기록에 있는 토큰 메타데이터를 집계합니다. Kiro 추정 과정에서는
 대화 텍스트를 로컬에서 읽지만, 대화 원문을 별도로 저장하거나 외부로 전송하지 않습니다.
+
+Higgsfield는 토큰 로그 대신 공식 CLI의 계정 거래 내역을 읽습니다. 먼저
+[`@higgsfield/cli`](https://github.com/higgsfield-ai/cli)를
+`npm install -g @higgsfield/cli`로 설치하고
+`higgsfield auth login`으로 같은 계정에 로그인해야 합니다. 실제 `spend` 거래만
+성장에 반영하고 `refund`는 이후 사용량에서 먼저 상계하며, 충전·구독 지급은 제외합니다.
+TOKENS에는 크레딧 원값과 잔액을 따로 표시하고 성장에는 **1 credit = 650,000 토큰**을
+적용합니다. 기존 토큰 공급자와 마찬가지로 처음 발견한 누적분은 기준값으로만 저장됩니다.
+CLI 실행 파일을 자동으로 찾지 못하면 `PTB_HIGGSFIELD_CLI`에 `hf.exe` 또는
+`higgsfield.exe`의 전체 경로를 지정할 수 있습니다.
 
 추가 검색 경로, 집계 방식과 검증 범위는 [로컬 공급자 참고](docs/reference/local-providers.md)를
 참고하세요. 새 공급자 7종은 샘플 기록으로 검증했으며, 각 도구의 실제 사용 검증은 남아 있습니다.

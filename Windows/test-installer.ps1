@@ -51,7 +51,7 @@ function Assert-DataHashes([System.Collections.IDictionary]$Expected, [string]$S
 }
 
 function Invoke-CheckedProcess([string]$FilePath, [string[]]$ArgumentList) {
-    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -Wait -PassThru
+    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -Wait -PassThru -WindowStyle Hidden
     if ($process.ExitCode -ne 0) {
         throw "$FilePath failed with exit code $($process.ExitCode)"
     }

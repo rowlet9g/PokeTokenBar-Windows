@@ -1,22 +1,33 @@
-# PokeTokenBar for Windows 0.5.2
+# PokeTokenBar for Windows 0.5.3
 
-## 수정 사항
+## 추가 사항
 
-- Codex 같은 패키지 앱에서 실행할 때 AppData가 별도 저장소로 연결되어, 일반 실행과 다른 포켓몬 진행을 읽는 문제를 수정했습니다.
-- 사용자 데이터를 `%USERPROFILE%\.poketokenbar`로 통일했습니다. 설치본과 Portable이 같은 Windows 사용자 계정에서 같은 진행을 사용합니다.
-- 첫 실행 시 기존 `%LOCALAPPDATA%\PokeTokenBar`를 새 위치로 복사하며, 기존 파일을 보존합니다. 새 위치가 만들어진 뒤에는 옛 진행을 다시 가져오지 않습니다.
-- 이전 중 실패하거나 기존 경로가 가상화되어 다른 위치를 가리키면 실행을 중단하고 오류를 표시합니다. 일부만 복사된 저장소로 새 게임을 시작하지 않습니다.
+- Higgsfield 공식 CLI 계정의 크레딧 사용량을 TODAY, WEEK, MONTH에 표시합니다.
+- Higgsfield 1 credit을 650,000 포켓몬 성장 토큰으로 환산합니다.
+- 실제 `spend` 거래만 성장에 반영합니다. `refund`는 이후 사용량에서 먼저 상계하고,
+  크레딧 구매·구독 지급은 성장에서 제외합니다.
+- TOKENS 화면에서 성장 인정 크레딧, 환산율, 현재 잔액과 플랜을 확인할 수 있습니다.
+
+## 사용 준비
+
+- 공식 [`@higgsfield/cli`](https://github.com/higgsfield-ai/cli)를
+  `npm install -g @higgsfield/cli`로 설치하고
+  `higgsfield auth login`으로 로그인해야 합니다.
+- CLI를 자동으로 찾지 못하면 `PTB_HIGGSFIELD_CLI` 환경 변수에 공식 실행 파일의
+  전체 경로를 지정하세요.
+- 처음 발견한 기존 사용량은 다른 공급자처럼 기준값으로만 저장하며 소급 성장시키지 않습니다.
 
 ## 설치와 업데이트
 
-- 실행 중인 앱을 종료하고 `PokeTokenBar-0.5.2-win-x64-setup.exe`를 기존 버전 위에 설치한 뒤 시작 메뉴에서 실행하세요.
-- Portable: `PokeTokenBar-0.5.2-win-x64.zip`
+- 실행 중인 앱을 종료하고 `PokeTokenBar-0.5.3-win-x64-setup.exe`를 기존 버전 위에 설치하세요.
+- Portable: `PokeTokenBar-0.5.3-win-x64.zip`
 - Windows 10 이상 x64용이며 .NET 런타임을 포함합니다.
-- 기존 AppData 원본과 새 사용자 데이터는 업데이트·제거 시 모두 보존됩니다.
-- 이전 버전에서 이미 서로 다른 저장본이 만들어졌다면 이를 자동 합산하지 않습니다. 필요한 기록은 설정의 세이브 내보내기·가져오기로 옮길 수 있습니다.
+- 기존 `%USERPROFILE%\.poketokenbar` 진행 상황은 업데이트·제거 중 보존됩니다.
 - SHA256SUMS.txt와 release-manifest.json을 함께 제공합니다.
 
 ## 검증과 제한
 
-- Release 빌드와 170개 회귀 테스트를 통과했습니다. 이전 도중 실패·재시도, 원본 보존, 가상화 경로 거부, 새 저장본의 우선 사용을 검증했습니다.
+- Release 빌드 0경고·0오류, 회귀 테스트 177개 통과를 확인했습니다.
+- 공식 CLI 응답 형식, 소수 크레딧, 페이지 이동, 중복 거래와 환불 상계를 검증했습니다.
+- 실제 Higgsfield 계정으로 로그인한 Windows 환경의 라이브 검증은 남아 있습니다.
 - 코드 서명과 앱 내 자동 업데이트는 아직 제공하지 않습니다.

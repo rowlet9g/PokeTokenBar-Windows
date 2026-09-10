@@ -31,10 +31,20 @@ public sealed record ProviderSnapshot(
     PeriodUsage? WeekTotal,
     PeriodUsage? MonthTotal,
     DateTimeOffset FetchedAt,
-    bool ReportsCost = true)
+    bool ReportsCost = true,
+    NativeUsage? NativeUsage = null)
 {
     public long TodayTotalTokens => Today?.TotalTokens ?? 0;
 }
+
+public sealed record NativeUsage(
+    string Unit,
+    decimal Today,
+    decimal Week,
+    decimal Month,
+    decimal? Balance = null,
+    string? Plan = null,
+    long? GrowthTokensPerUnit = null);
 
 public sealed record UsageEntry(
     string Id,

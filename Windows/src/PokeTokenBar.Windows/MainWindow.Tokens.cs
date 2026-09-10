@@ -49,15 +49,17 @@ public partial class MainWindow
             var snapshot = row.Snapshot;
             var today = _tokenPeriod == TokenPeriod.Today ? snapshot.Today : null;
             var share = total > 0 ? (double)row.Total / total * 100 : 0;
-            var detail = today is null ? string.Empty
-                : $"Input {TokenFormatter.Grouped(today.InputTokens)} · Output {TokenFormatter.Grouped(today.OutputTokens)}"
-                  + $"\nCache {TokenFormatter.Grouped(UsageMath.SaturatingAdd(today.CacheCreationTokens, today.CacheReadTokens))}"
-                  + $" (쓰기 {TokenFormatter.Grouped(today.CacheCreationTokens)} / 읽기 {TokenFormatter.Grouped(today.CacheReadTokens)})";
+            var detail = snapshot.NativeUsage is { } native
+                ? NativeUsageDetail(native, _tokenPeriod)
+                : today is null ? string.Empty
+                    : $"Input {TokenFormatter.Grouped(today.InputTokens)} · Output {TokenFormatter.Grouped(today.OutputTokens)}"
+                      + $"\nCache {TokenFormatter.Grouped(UsageMath.SaturatingAdd(today.CacheCreationTokens, today.CacheReadTokens))}"
+                      + $" (쓰기 {TokenFormatter.Grouped(today.CacheCreationTokens)} / 읽기 {TokenFormatter.Grouped(today.CacheReadTokens)})";
             if (snapshot.ProviderId == "kiro") detail += "\n텍스트 바이트 기반 추정치 · 실제 사용량과 다를 수 있음";
             return new TokenProviderCard(
                 snapshot.ProviderId == "gemini" ? "Gemini CLI (Legacy)" : snapshot.DisplayName,
                 TokenFormatter.Grouped(row.Total), share, $"{share:0.0}%", detail,
-                today is null && snapshot.ProviderId != "kiro" ? Visibility.Collapsed : Visibility.Visible,
+                string.IsNullOrEmpty(detail) ? Visibility.Collapsed : Visibility.Visible,
                 $"{snapshot.FetchedAt.LocalDateTime:MM/dd HH:mm:ss} 갱신");
         }).ToArray();
 
@@ -69,6 +71,30 @@ public partial class MainWindow
                 : _usageStore.LastUpdated is { } updated
                     ? $"{updated.LocalDateTime:HH:mm:ss} 갱신 · 사용량이 0인 공급자는 숨김"
                     : "로컬 사용량 연결 준비 중";
+    }
+
+    private static string NativeUsageDetail(NativeUsage usage, TokenPeriod period)
+    {
+        var credits = period switch
+        {
+            TokenPeriod.Week => usage.Week,
+            TokenPeriod.Month => usage.Month,
+            _ => usage.Today,
+        };
+        var detail = $"성장 인정 {credits:0.##} {usage.Unit}"
+            + (usage.GrowthTokensPerUnit is { } rate
+                ? $" · 1 {usage.Unit} = {TokenFormatter.Grouped(rate)} 토큰"
+                : string.Empty);
+        if (period == TokenPeriod.Today && usage.Balance is { } balance)
+        {
+            detail += $"\n남은 잔액 {balance:0.##} {usage.Unit}";
+            if (!string.IsNullOrWhiteSpace(usage.Plan))
+            {
+                detail += $" · {usage.Plan}";
+            }
+        }
+
+        return detail;
     }
 
     private enum TokenPeriod { Today, Week, Month }

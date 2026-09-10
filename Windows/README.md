@@ -47,10 +47,17 @@ original fetch time. A provider returning no current credentials or visible limi
 clears its old snapshot, so logging out does not leave an old account's values
 displayed as freshly updated. HOME also displays plan metadata when available.
 
-Twelve local providers are registered. Kiro CLI uses text-length estimates and
+Twelve local token providers are registered. Kiro CLI uses text-length estimates and
 is labelled accordingly in TOKENS; its estimates also contribute to growth.
 See [local provider accounting](../docs/reference/local-providers.md) for formats,
 path overrides, and live-validation limitations.
+
+Higgsfield is an additional credit provider. It invokes the official CLI's account
+status and cursor-paginated transaction commands, counts spend transactions, and
+uses refunds as debt against later spend. Purchases and subscription grants do not
+grow the companion. TOKENS preserves the native credit amount and balance while the
+shared growth total uses 650,000 tokens per credit. `PTB_HIGGSFIELD_CLI` can point to
+an official Higgsfield executable when automatic discovery is unavailable.
 
 `CompanionStore` records a per-provider baseline on first discovery, then uses
 new daily increments for growth. Statistics periods do not reset Pokémon
@@ -58,9 +65,10 @@ progress. Parsing and UI changes must preserve that accounting boundary.
 
 ## Data and execution
 
-`%LOCALAPPDATA%\PokeTokenBar` is the canonical store for installed and local
+`%USERPROFILE%\.poketokenbar` is the canonical store for installed and local
 builds. It contains `companion-state.json`, `settings.json`, caches, and logs.
-Installation, update, and uninstall preserve this directory. Save export/import
+The first 0.5.2+ launch copies a legacy `%LOCALAPPDATA%\PokeTokenBar` store without
+removing it. Installation, update, and uninstall preserve both locations. Save export/import
 in Settings transfers progress between PCs; there is no automatic cloud sync.
 
 Reserve `PTB_DATA_DIR` for isolated automated tests. Normal development uses the

@@ -104,6 +104,7 @@ function Find-InnoCompiler {
 
     $candidates = @(
         (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 7\ISCC.exe"),
+        (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"),
         (Join-Path $env:ProgramFiles "Inno Setup 7\ISCC.exe"),
         (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 7\ISCC.exe"),
         (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe")
@@ -117,7 +118,7 @@ if (-not $SkipInstaller) {
     $innoCompiler = Find-InnoCompiler
     if ([string]::IsNullOrWhiteSpace($innoCompiler)) {
         if ($RequireInstaller) {
-            throw "Inno Setup compiler was not found. Install Inno Setup 7 or set ISCC_PATH."
+            throw "Inno Setup compiler was not found. Install Inno Setup 6 or 7, or set ISCC_PATH."
         }
 
         Write-Warning "Inno Setup compiler was not found; the portable archive was created without an installer."
@@ -130,8 +131,8 @@ if (-not $SkipInstaller) {
             $env:PTB_PUBLISH_DIR = $publishDirectory
             $installerBaseName = "PokeTokenBar-$Version-win-x64-setup"
             & $innoCompiler `
-                "--output-dir=$releaseDirectory" `
-                "--output-filename=$installerBaseName" `
+                "/O$releaseDirectory" `
+                "/F$installerBaseName" `
                 $installerScript
             if ($LASTEXITCODE -ne 0) {
                 throw "Inno Setup compilation failed with exit code $LASTEXITCODE"
