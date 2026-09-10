@@ -52,6 +52,8 @@ public partial class MainWindow : Window
         _spriteStore = spriteStore;
         _applicationToken = applicationToken;
         InitializeComponent();
+        HeaderVersionText.Text = $"v{ProductVersion}";
+        Title = $"PokeTokenBar v{ProductVersion}";
         ShowTab(MainTab.Home);
         IsVisibleChanged += MainWindow_OnIsVisibleChanged;
         ApplySettings(settings);
@@ -1473,10 +1475,9 @@ public partial class MainWindow : Window
 
         try
         {
-            var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "unknown";
             var bytes = SaveTransfer.Encode(
                 _companionStore.ExportStateSnapshot(),
-                version,
+                ProductVersion,
                 Environment.MachineName,
                 now);
             File.WriteAllBytes(dialog.FileName, bytes);
@@ -1487,6 +1488,9 @@ public partial class MainWindow : Window
             ShowSettingsStatus($"내보내기 실패 · {error.Message}", isError: true);
         }
     }
+
+    private static string ProductVersion =>
+        typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "unknown";
 
     private async void ImportSaveButton_OnClick(object sender, RoutedEventArgs e)
     {

@@ -25,6 +25,7 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 ## Details
 
 - Windows 알림 영역(시스템 트레이) 아이콘과 WPF 팝업
+- 좌측 상단 제목에서 현재 설치 버전 확인
 - Claude Code, Codex, Gemini CLI(레거시), Antigravity, OpenCode, Hermes Agent, Cursor, Grok CLI, Copilot CLI, Kiro CLI, Pi Agent, omp 로컬 사용량 및 Higgsfield 크레딧 집계
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
 - Codex·Claude Code·Antigravity 공식 5시간·주간 사용량 한도와 reset countdown 표시

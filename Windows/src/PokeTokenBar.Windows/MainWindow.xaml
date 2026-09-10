@@ -274,7 +274,11 @@
                     <Button x:Name="RefreshButton" Content="↻" ToolTip="새로고침" Click="RefreshButton_OnClick" Padding="9,4" Style="{StaticResource ModernActionButton}" />
                     <Button Content="—" ToolTip="트레이로 숨기기" Click="HideButton_OnClick" Padding="8,4" Style="{StaticResource ModernActionButton}" />
                 </StackPanel>
-                <TextBlock Text="PokeTokenBar" FontSize="12" VerticalAlignment="Center" Foreground="#FF575B63" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="PokeTokenBar" FontSize="12" Foreground="#FF575B63" />
+                    <TextBlock x:Name="HeaderVersionText" Margin="4,0,0,0" FontSize="10"
+                               VerticalAlignment="Center" Foreground="#FF9A9EA6" />
+                </StackPanel>
             </DockPanel>
             <Border Grid.Row="1" Background="#FFE5E5EA" CornerRadius="8" Padding="2" Margin="0,0,0,14">
                 <UniformGrid Columns="4">
