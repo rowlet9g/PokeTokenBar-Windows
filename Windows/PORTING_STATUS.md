@@ -38,7 +38,7 @@ available through Git history and the upstream project, not in the active tree.
 | Settings and startup | Complete | Refresh, topmost, notifications, floating pet, and login startup persist. |
 | Bag and shop | Complete | Wallet, inventory, confirmations, items, and paid egg rerolls are implemented. |
 | Save transfer | Complete | Versioned import/export, validation, rebasing, and recovery backups are implemented. |
-| Usage providers | Implemented; new adapters need live validation | Twelve local token providers plus Higgsfield credit transactions. Higgsfield spend/refund accounting converts 1 credit to 650,000 growth tokens. See the root README and local-provider reference for limitations. |
+| Usage providers | Implemented; new adapters need live validation | Twelve local providers: existing five plus Claude Code, OpenCode, Hermes Agent, Grok CLI, Kiro CLI (estimated), Pi Agent, and omp. See the local-provider reference for accounting limitations. |
 | Distribution | Partial | ZIP, checksums, installer, and tag-triggered release workflow are implemented; this does not imply a published release. Authenticode signing remains. |
 | Update checker | Not ported | Choose a signed release channel before enabling updates. |
 | Localization | Not ported | The Windows UI is Korean-first with some English labels. |
@@ -63,20 +63,6 @@ available through Git history and the upstream project, not in the active tree.
 3. Continue HOME provider selection and settings parity, then address localization and system theme support.
 4. Validate the seven new local adapters against real tool sessions.
 5. Decide the release version and publish its matching tag when ready; signing and updates remain pending.
-
-## Higgsfield credit accounting validated on 2026-09-10
-
-- The official CLI account status and cursor-paginated transaction shapes are parsed.
-- Spend transactions earn growth at 650,000 tokens per credit. Refunds create debt
-  that later spend must offset, so refreshes cannot double-count refunded growth.
-- Purchases and subscription grants are excluded. Native period credits, current
-  balance, plan, and converted growth are kept separately for TOKENS display.
-- Release build passed with zero warnings/errors and all 177 tests passed. Fixtures
-  cover decimal credits, refunds across days, pagination, and duplicate transactions.
-- The 0.5.3 installer completed clean install, in-place update, uninstall, and
-  reinstall. Both protected user files retained their SHA-256 hashes, and the
-  installed 0.5.3.0 application launched from the normal per-user location.
-- Live authenticated Higgsfield CLI validation remains pending on a real account.
 
 ## Provider expansion validation recorded on 2026-09-08
 
