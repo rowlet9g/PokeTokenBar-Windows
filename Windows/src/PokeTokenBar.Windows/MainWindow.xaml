@@ -737,11 +737,11 @@
                                           Height="26"
                                           VerticalAlignment="Center"
                                           SelectionChanged="SettingsControls_OnChanged">
-                                    <ComboBoxItem Tag="1" Content="1분" />
-                                    <ComboBoxItem Tag="2" Content="2분" />
-                                    <ComboBoxItem Tag="5" Content="5분" />
-                                    <ComboBoxItem Tag="10" Content="10분" />
-                                    <ComboBoxItem Tag="30" Content="30분" />
+                                    <ComboBoxItem Tag="30" Content="30초" />
+                                    <ComboBoxItem Tag="60" Content="1분" />
+                                    <ComboBoxItem Tag="120" Content="2분" />
+                                    <ComboBoxItem Tag="300" Content="5분" />
+                                    <ComboBoxItem Tag="600" Content="10분" />
                                 </ComboBox>
                                 <StackPanel>
                                     <TextBlock Foreground="#FF202124"

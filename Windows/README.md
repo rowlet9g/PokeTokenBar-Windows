@@ -52,6 +52,9 @@ is labelled accordingly in TOKENS; its estimates also contribute to growth.
 See [local provider accounting](../docs/reference/local-providers.md) for formats,
 path overrides, and live-validation limitations.
 
+Usage refresh defaults to 30 seconds. Settings offers 30 seconds, 1 minute,
+2 minutes, 5 minutes, and 10 minutes. Concurrent refresh requests are serialized.
+
 `CompanionStore` records a per-provider baseline on first discovery, then uses
 new daily increments for growth. Statistics periods do not reset Pokémon
 progress. Parsing and UI changes must preserve that accounting boundary.

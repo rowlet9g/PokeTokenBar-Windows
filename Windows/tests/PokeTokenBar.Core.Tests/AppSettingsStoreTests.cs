@@ -10,7 +10,7 @@ public sealed class AppSettingsStoreTests
         using var temporary = TemporaryDirectory.Create();
         var store = new AppSettingsStore(Path.Combine(temporary.Path, "settings.json"));
 
-        Assert.Equal(2, store.Current.RefreshIntervalMinutes);
+        Assert.Equal(30, store.Current.RefreshIntervalSeconds);
         Assert.True(store.Current.NotificationsEnabled);
         Assert.True(store.Current.AlwaysOnTop);
         Assert.False(store.Current.LaunchAtLogin);
@@ -26,7 +26,7 @@ public sealed class AppSettingsStoreTests
         var store = new AppSettingsStore(path);
         store.Save(new AppSettings
         {
-            RefreshIntervalMinutes = 10,
+            RefreshIntervalSeconds = 120,
             NotificationsEnabled = false,
             AlwaysOnTop = false,
             LaunchAtLogin = true,
@@ -38,7 +38,7 @@ public sealed class AppSettingsStoreTests
 
         var restored = new AppSettingsStore(path).Current;
 
-        Assert.Equal(10, restored.RefreshIntervalMinutes);
+        Assert.Equal(120, restored.RefreshIntervalSeconds);
         Assert.False(restored.NotificationsEnabled);
         Assert.False(restored.AlwaysOnTop);
         Assert.True(restored.LaunchAtLogin);
@@ -49,18 +49,31 @@ public sealed class AppSettingsStoreTests
     }
 
     [Theory]
-    [InlineData(-10, 1)]
-    [InlineData(0, 1)]
-    [InlineData(90, 60)]
+    [InlineData(-10, 30)]
+    [InlineData(0, 30)]
+    [InlineData(10, 30)]
+    [InlineData(7200, 3600)]
     public void Refresh_interval_is_clamped_at_the_trust_boundary(int raw, int expected)
     {
         using var temporary = TemporaryDirectory.Create();
         var path = Path.Combine(temporary.Path, "settings.json");
-        File.WriteAllText(path, $$"""{"refreshIntervalMinutes":{{raw}}}""");
+        File.WriteAllText(path, $$"""{"refreshIntervalSeconds":{{raw}}}""");
 
         var store = new AppSettingsStore(path);
 
-        Assert.Equal(expected, store.Current.RefreshIntervalMinutes);
+        Assert.Equal(expected, store.Current.RefreshIntervalSeconds);
+    }
+
+    [Fact]
+    public void Legacy_minute_interval_moves_to_the_new_thirty_second_default()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var path = Path.Combine(temporary.Path, "settings.json");
+        File.WriteAllText(path, """{"refreshIntervalMinutes":10}""");
+
+        var store = new AppSettingsStore(path);
+
+        Assert.Equal(30, store.Current.RefreshIntervalSeconds);
     }
 
     [Fact]
@@ -74,7 +87,7 @@ public sealed class AppSettingsStoreTests
 
         Assert.NotNull(store.LastError);
         Assert.Equal("{ invalid", File.ReadAllText(path));
-        Assert.Equal(2, store.Current.RefreshIntervalMinutes);
+        Assert.Equal(30, store.Current.RefreshIntervalSeconds);
     }
 
     [Theory]

@@ -82,11 +82,11 @@ public partial class MainWindow : Window
                 .OfType<ComboBoxItem>()
                 .FirstOrDefault(item => string.Equals(
                     item.Tag?.ToString(),
-                    settings.RefreshIntervalMinutes.ToString(),
+                    settings.RefreshIntervalSeconds.ToString(),
                     StringComparison.Ordinal));
             RefreshIntervalComboBox.SelectedItem = selected
                 ?? RefreshIntervalComboBox.Items.OfType<ComboBoxItem>()
-                    .First(item => string.Equals(item.Tag?.ToString(), "2", StringComparison.Ordinal));
+                    .First(item => string.Equals(item.Tag?.ToString(), "30", StringComparison.Ordinal));
 
             var selectedPetSize = FloatingPetSizeComboBox.Items
                 .OfType<ComboBoxItem>()
@@ -1437,7 +1437,7 @@ public partial class MainWindow : Window
     {
         if (_applyingSettings
             || RefreshIntervalComboBox.SelectedItem is not ComboBoxItem intervalItem
-            || !int.TryParse(intervalItem.Tag?.ToString(), out var intervalMinutes)
+            || !int.TryParse(intervalItem.Tag?.ToString(), out var intervalSeconds)
             || FloatingPetSizeComboBox.SelectedItem is not ComboBoxItem petSizeItem
             || !int.TryParse(petSizeItem.Tag?.ToString(), out var petSize))
         {
@@ -1447,7 +1447,7 @@ public partial class MainWindow : Window
         ShowSettingsStatus("설정을 저장하는 중...");
         SettingsChanged?.Invoke(_currentSettings with
         {
-            RefreshIntervalMinutes = intervalMinutes,
+            RefreshIntervalSeconds = intervalSeconds,
             NotificationsEnabled = NotificationsCheckBox.IsChecked == true,
             AlwaysOnTop = AlwaysOnTopCheckBox.IsChecked == true,
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,

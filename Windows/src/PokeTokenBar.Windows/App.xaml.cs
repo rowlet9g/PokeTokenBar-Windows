@@ -158,7 +158,7 @@ public partial class App : System.Windows.Application
 
         _usageTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
-            Interval = TimeSpan.FromMinutes(_settings.RefreshIntervalMinutes),
+            Interval = TimeSpan.FromSeconds(_settings.RefreshIntervalSeconds),
         };
         _usageTimer.Tick += UsageTimer_OnTick;
         _usageTimer.Start();
@@ -296,7 +296,7 @@ public partial class App : System.Windows.Application
     {
         if (_usageTimer is not null)
         {
-            _usageTimer.Interval = TimeSpan.FromMinutes(_settings.RefreshIntervalMinutes);
+            _usageTimer.Interval = TimeSpan.FromSeconds(_settings.RefreshIntervalSeconds);
         }
 
         _popover?.ApplySettings(_settings);

@@ -5,9 +5,9 @@ namespace PokeTokenBar.Core;
 
 public sealed record AppSettings
 {
-    public const int DefaultRefreshIntervalMinutes = 2;
+    public const int DefaultRefreshIntervalSeconds = 30;
 
-    public int RefreshIntervalMinutes { get; init; } = DefaultRefreshIntervalMinutes;
+    public int RefreshIntervalSeconds { get; init; } = DefaultRefreshIntervalSeconds;
 
     public bool NotificationsEnabled { get; init; } = true;
 
@@ -25,7 +25,7 @@ public sealed record AppSettings
 
     public AppSettings Normalize() => this with
     {
-        RefreshIntervalMinutes = Math.Clamp(RefreshIntervalMinutes, 1, 60),
+        RefreshIntervalSeconds = Math.Clamp(RefreshIntervalSeconds, 30, 60 * 60),
         FloatingPetSize = Math.Clamp(FloatingPetSize, 64, 160),
         FloatingPetLeft = NormalizeCoordinate(FloatingPetLeft),
         FloatingPetTop = NormalizeCoordinate(FloatingPetTop),
