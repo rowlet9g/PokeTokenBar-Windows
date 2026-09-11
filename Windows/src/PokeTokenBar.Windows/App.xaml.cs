@@ -31,10 +31,13 @@ public partial class App : System.Windows.Application
     private DispatcherTimer? _usageTimer;
     private readonly CancellationTokenSource _refreshCancellation = new();
     private int _spriteGeneration;
+    private bool _explicitExitRequested;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        DispatcherUnhandledException += App_OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_OnUnhandledException;
 
         _singleInstance = new SingleInstanceGuard(SingleInstanceName);
         if (!_singleInstance.IsPrimaryInstance)
@@ -57,6 +60,7 @@ public partial class App : System.Windows.Application
             return;
         }
         _logsDirectory = paths.LogsDirectory;
+        LogLifecycle("start", $"pid={Environment.ProcessId} args={string.Join(' ', e.Args)}");
         _settingsStore = new AppSettingsStore(Path.Combine(paths.DataDirectory, "settings.json"));
         _settings = _settingsStore.Current;
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -169,6 +173,11 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        LogLifecycle(
+            "exit",
+            $"code={e.ApplicationExitCode} explicit={_explicitExitRequested}");
+        DispatcherUnhandledException -= App_OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_OnUnhandledException;
         _usageTimer?.Stop();
         if (_usageTimer is not null)
         {
@@ -245,6 +254,7 @@ public partial class App : System.Windows.Application
 
     private void ExitApplication()
     {
+        _explicitExitRequested = true;
         _popover?.Close();
         Shutdown();
     }
@@ -345,6 +355,10 @@ public partial class App : System.Windows.Application
         catch (OperationCanceledException) when (_refreshCancellation.IsCancellationRequested)
         {
             // Normal application shutdown.
+        }
+        catch (Exception error)
+        {
+            LogRuntimeError("usage-refresh", error);
         }
     }
 
@@ -674,6 +688,49 @@ public partial class App : System.Windows.Application
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
             // Settings remain usable even when diagnostics cannot be written.
+        }
+    }
+
+    private void App_OnDispatcherUnhandledException(
+        object sender,
+        DispatcherUnhandledExceptionEventArgs e)
+    {
+        LogRuntimeError("dispatcher-unhandled", e.Exception);
+        e.Handled = true;
+    }
+
+    private void CurrentDomain_OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        var error = e.ExceptionObject as Exception
+            ?? new InvalidOperationException(e.ExceptionObject?.ToString() ?? "Unknown fatal exception");
+        LogRuntimeError(e.IsTerminating ? "runtime-fatal" : "runtime-unhandled", error);
+    }
+
+    private void LogLifecycle(string action, string description)
+    {
+        AppendRuntimeLog($"lifecycle-{action}", description);
+    }
+
+    private void LogRuntimeError(string operation, Exception error)
+    {
+        AppendRuntimeLog(operation, $"{error.GetType().FullName}: {error.Message}{Environment.NewLine}{error.StackTrace}");
+    }
+
+    private void AppendRuntimeLog(string operation, string description)
+    {
+        if (_logsDirectory is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var line = $"{DateTimeOffset.Now:O} [{operation}] {description}{Environment.NewLine}";
+            File.AppendAllText(Path.Combine(_logsDirectory, "runtime.log"), line);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // Runtime behavior remains unaffected when diagnostics cannot be written.
         }
     }
 
