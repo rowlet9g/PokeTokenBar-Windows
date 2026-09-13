@@ -188,15 +188,15 @@ public sealed class CodexRateLimitsProvider : IRateLimitProvider
             startInfo.FileName = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
             // cmd.exe does not understand the backslash quoting used by ArgumentList.
             // /s /c removes the outer quotes, preserving the quoted batch file path.
-            startInfo.Arguments = $"/d /s /c \"\"{binary}\" app-server --stdio\"";
+            startInfo.Arguments = $"/d /s /c \"\"{binary}\" app-server\"";
         }
         else
         {
             startInfo.FileName = binary;
             startInfo.ArgumentList.Add("app-server");
-            startInfo.ArgumentList.Add("--stdio");
         }
 
+        // app-server uses stdio by default; --stdio is not a supported CLI option.
         return startInfo;
     }
 }

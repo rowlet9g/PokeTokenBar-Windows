@@ -29,7 +29,11 @@ provider's fetch time are displayed. A failed provider can retain its previous
 snapshot, with an error notice indicating that older values may be included.
 
 HOME also shows Codex's official 5-hour and weekly utilization when the local
-Codex executable can answer `account/rateLimits/read`, and Claude Code's official
+Codex executable can answer `account/rateLimits/read`. Launch it with
+`codex app-server`, which uses stdio by default; `--stdio` is unsupported and
+causes the process to exit before returning limits. Token totals are read separately
+from local session files, so they can still update when the limit request fails.
+HOME also shows Claude Code's official
 5-hour/weekly windows when its OAuth credential file is available. Claude Code
 credentials are read exclusively from `CLAUDE_CONFIG_DIR\.credentials.json` when
 that directory is configured; otherwise they are read from
