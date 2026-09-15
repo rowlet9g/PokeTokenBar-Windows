@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace PokeTokenBar.Core;
 
-public sealed class CompanionStore
+public sealed partial class CompanionStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -81,6 +81,16 @@ public sealed class CompanionStore
                 var previous = SaveTransfer.CloneState(_state);
                 var replacement = SaveTransfer.CloneState(imported);
                 Sanitize(replacement);
+                foreach (var (key, progress) in previous.LimitProgress)
+                {
+                    if (!replacement.LimitProgress.TryGetValue(key, out var restored))
+                        replacement.LimitProgress[key] = progress;
+                    else
+                    {
+                        restored.Rewarded |= progress.Rewarded;
+                        restored.AlertTier = Math.Max(restored.AlertTier, progress.AlertTier);
+                    }
+                }
                 if (hasUsageData && todayTokensByProvider.Count > 0)
                 {
                     replacement.InstallBaselineSet = true;
@@ -1359,6 +1369,10 @@ public sealed class CompanionStore
             state.EggGuarantee = null;
         }
 
+        state.LimitProgress ??= [];
+        state.LimitProgress = state.LimitProgress
+            .Where(pair => !string.IsNullOrWhiteSpace(pair.Key) && pair.Value is not null)
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
         state.Inventory ??= [];
         state.Inventory = Enum.GetValues<CompanionItemKind>()
             .Select(kind => (Key: CompanionItemRules.StorageKey(kind), Kind: kind))

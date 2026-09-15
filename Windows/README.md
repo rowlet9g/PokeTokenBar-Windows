@@ -18,6 +18,14 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 
 ## Usage display and progression
 
+Official limits now drive 80%/95% edge-triggered warnings, companion mood text and a
+six-second floating-pet popup. `RateLimitStore.FreshSnapshots` excludes failed requests'
+preserved values from these effects. `CompanionStore.Limits.cs` atomically records candy
+claims with inventory: session limits grant one Rare Candy and weekly limits grant five
+on a new 100% crossing. Initial full windows are seeded without retroactive rewards.
+The notification switch suppresses alerts and popups, but does not suppress rewards.
+These source changes are pending release; the published v0.5.7 does not include them.
+
 `UsageStore.Snapshots` supplies provider data to HOME and TOKENS. HOME displays
 all providers' daily total; `MainWindow.Tokens.cs` renders provider totals and
 shares for TODAY, WEEK, and MONTH. TODAY additionally shows input, output, and

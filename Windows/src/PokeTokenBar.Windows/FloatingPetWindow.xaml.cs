@@ -18,11 +18,24 @@ public partial class FloatingPetWindow : Window
     private const int WsExToolWindow = 0x00000080;
     private bool _positionInitialized;
     private bool _applyingPosition;
+    private readonly System.Windows.Threading.DispatcherTimer _alertTimer = new()
+        { Interval = TimeSpan.FromSeconds(6) };
 
     public FloatingPetWindow()
     {
         InitializeComponent();
         StartIdleAnimation();
+        _alertTimer.Tick += (_, _) => { LimitAlertPopup.IsOpen = false; _alertTimer.Stop(); };
+        Closed += (_, _) => _alertTimer.Stop();
+    }
+
+    public void ShowLimitAlert(string text)
+    {
+        if (!IsVisible) return;
+        LimitAlertText.Text = text;
+        LimitAlertPopup.IsOpen = true;
+        _alertTimer.Stop();
+        _alertTimer.Start();
     }
 
     public event EventHandler? OpenRequested;

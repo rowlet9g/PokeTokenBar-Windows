@@ -242,7 +242,7 @@ public static class CodexRateLimitParser
         var plans = new List<string>();
         foreach (var snapshot in snapshots)
         {
-            var bucket = snapshot.LimitName ?? snapshot.LimitId ?? "codex";
+            var bucket = snapshot.LimitId ?? snapshot.LimitName ?? "codex";
             if (!string.IsNullOrWhiteSpace(snapshot.PlanType))
             {
                 plans.Add(snapshot.PlanType!);

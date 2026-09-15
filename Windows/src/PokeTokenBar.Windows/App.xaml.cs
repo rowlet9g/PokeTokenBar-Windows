@@ -378,11 +378,35 @@ public partial class App : System.Windows.Application
     {
         if (Dispatcher.CheckAccess())
         {
-            _popover?.ApplyRateLimitState();
+            ApplyOfficialLimitState();
         }
         else
         {
-            Dispatcher.BeginInvoke(new Action(() => _popover?.ApplyRateLimitState()));
+            Dispatcher.BeginInvoke(new Action(ApplyOfficialLimitState));
+        }
+    }
+
+    private void ApplyOfficialLimitState()
+    {
+        _popover?.ApplyRateLimitState();
+        if (_rateLimitStore is null || _companionStore is null || _rateLimitStore.IsRefreshing) return;
+        try
+        {
+            var result = _companionStore.ApplyOfficialLimits(_rateLimitStore.FreshSnapshots, DateTimeOffset.Now);
+            var alert = result.Notices.OrderByDescending(n => n.Tier).ThenByDescending(n => n.UsedPercent).FirstOrDefault();
+            if (_settings.NotificationsEnabled && (alert is not null || result.Rewards.Count > 0))
+            {
+                var parts = result.Rewards.Select(r => $"{r.Name}: 이상한 사탕 {r.Count}개 획득").ToList();
+                if (alert is not null) parts.Insert(0, $"{alert.Name} · {alert.UsedPercent:0.#}% 사용");
+                _trayIcon?.ShowNotification(result.Rewards.Count > 0 ? "한도 달성 보상"
+                    : alert?.Tier == 2 ? "사용량 한도 임박" : "사용량 한도 경고", string.Join("\n", parts));
+                if (alert is not null) _floatingPet?.ShowLimitAlert($"{alert.Name}\n{alert.UsedPercent:0.#}% 사용");
+            }
+            ApplyCompanionState();
+        }
+        catch (Exception error)
+        {
+            LogRuntimeError("official-limit-effects", error);
         }
     }
 
@@ -450,6 +474,10 @@ public partial class App : System.Windows.Application
         var tooltip = _companionStore.HasActivePokemon
             ? $"{_companionStore.CurrentPokemonName ?? "Pokémon"} · 오늘 {today} 토큰"
             : $"새 알 · 오늘 {today} 토큰";
+        tooltip += "\n" + LimitInteraction.Mood(_companionStore.HasActivePokemon,
+            _usageStore.Snapshots.Count > 0, _usageStore.TodayTotalTokens,
+            _usageStore.Snapshots.Sum(s => s.ActiveBlock?.TokensPerMinute ?? 0),
+            _rateLimitStore?.FreshSnapshots ?? [], DateTimeOffset.Now);
         _floatingPet.UpdateCompanionState(_companionStore.HasActivePokemon, tooltip);
     }
 

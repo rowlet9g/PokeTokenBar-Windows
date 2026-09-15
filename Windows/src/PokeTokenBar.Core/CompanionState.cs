@@ -23,4 +23,6 @@ public sealed class CompanionState
     public List<PokemonDexEntry> Dex { get; set; } = [];
 
     public Dictionary<string, int> Inventory { get; set; } = [];
+
+    public Dictionary<string, LimitWindowProgress> LimitProgress { get; set; } = [];
 }

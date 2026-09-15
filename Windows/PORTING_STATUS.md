@@ -59,7 +59,8 @@ available through Git history and the upstream project, not in the active tree.
 
 1. Finish official-limit resilience: retry backoff for HTTP 429 and authentication failures,
    account-change handling during failed requests, and actual Windows credential discovery validation.
-2. Connect official limits to upstream-style warnings and companion state, then candy rewards.
+2. Official-limit warnings, companion mood and candy rewards are connected (see validation below).
+   Remaining: exhaustion forecasts, configurable thresholds, and independent notification/bubble settings.
 3. Continue HOME provider selection and settings parity, then address localization and system theme support.
 4. Validate the seven new local adapters against real tool sessions.
 5. Decide the release version and publish its matching tag when ready; signing and updates remain pending.
@@ -118,3 +119,25 @@ available through Git history and the upstream project, not in the active tree.
 - Actual user Codex account returned three official limit windows.
 - Release build: zero warnings/errors; 165 tests passed, including batch launch paths with spaces.
 - Installer keeps the same AppId and user data directory; existing saves remain separate from program files.
+
+## Official-limit interaction (2026-09-15; source change, not a new release)
+
+- Reference: upstream `b34673aa74f26375dffa3564caf730d0dfcbd171`,
+  `UsageStore.evaluateLimitAlerts`, `CompanionStore.grantCandies` and `computeState`.
+- Warning at 80%, critical at 95%; each rising tier triggers once, rearming below 80%.
+  HOME companion mood and floating-pet tooltip use critical limits before activity/sleep state.
+  The floating pet shows a six-second warning popup when notifications are enabled.
+- A newly reached 100% grants one Rare Candy for session windows and five for windows
+  longer than 24 hours. Claude model/scoped windows and Codex individual spend caps are excluded.
+  Antigravity rewards use its 5-hour/weekly buckets only. Candy adds inventory, not usage tokens.
+- The first observation of each window seeds already-full limits without retroactive rewards,
+  including providers that become available after the first refresh (stricter than upstream's global seed).
+- Reward/alert ledgers and inventory share the existing atomic save. Restart and changing
+  reset timestamps do not repeat rewards. A fresh below-100 observation rearms rewards;
+  failed/expired/nonfinite snapshots cannot rearm them. Import merges existing claim markers.
+  Save failure rolls back the effect and retries on a later refresh.
+- 186 tests passed; solution Release build had zero warnings/errors. An isolated WPF fixture
+  rendered the critical HOME message and popup; no real account was driven to its limit.
+- The existing notification switch controls both system alerts and pet popups. Rewards remain
+  enabled when notifications are disabled. Animated mood changes, forecasts, configurable
+  thresholds and separate switches are not claimed as complete by this slice.

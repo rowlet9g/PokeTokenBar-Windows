@@ -1188,8 +1188,10 @@ public partial class MainWindow : Window
         }
         var destination = _companionStore.CurrentStage < _companionStore.TotalForms ? "다음 진화" : "졸업";
         CompanionProgressText.Text = $"{destination}까지 {TokenFormatter.Compact(_companionStore.TokensToNextStage)}";
-        CompanionMoodText.Text = _usageStore.TodayTotalTokens > 0
-            ? "오늘의 작업 흔적이 쌓이고 있어요." : "다음 작업을 기다리며 쉬고 있어요.";
+        CompanionMoodText.Text = LimitInteraction.Mood(_companionStore.HasActivePokemon,
+            _usageStore.Snapshots.Count > 0, _usageStore.TodayTotalTokens,
+            _usageStore.Snapshots.Sum(s => s.ActiveBlock?.TokensPerMinute ?? 0),
+            _rateLimitStore.FreshSnapshots, DateTimeOffset.Now);
     }
 
     public void ShowNearNotificationArea(bool hideOnDeactivate = true)

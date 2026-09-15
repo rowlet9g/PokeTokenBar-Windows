@@ -6,6 +6,7 @@ public sealed class RateLimitStore : IDisposable
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
     private readonly object _stateLock = new();
     private ProviderRateLimitSnapshot[] _snapshots = [];
+    private ProviderRateLimitSnapshot[] _freshSnapshots = [];
     private int _refreshPending;
     private bool _disposed;
     private bool _isRefreshing;
@@ -101,6 +102,16 @@ public sealed class RateLimitStore : IDisposable
         _refreshGate.Dispose();
     }
 
+    // A failed request preserves its old display snapshot, but must never trigger rewards.
+    public IReadOnlyList<ProviderRateLimitSnapshot> FreshSnapshots
+    {
+        get
+        {
+            lock (_stateLock)
+                return _isRefreshing ? [] : _freshSnapshots.ToArray();
+        }
+    }
+
     private async Task RefreshOnceAsync(CancellationToken cancellationToken)
     {
         lock (_stateLock)
@@ -157,6 +168,8 @@ public sealed class RateLimitStore : IDisposable
                 }
 
                 _snapshots = next.ToArray();
+                _freshSnapshots = outcomes.Where(outcome => outcome.ErrorDescription is null && outcome.Snapshot is not null)
+                    .Select(outcome => outcome.Snapshot!).ToArray();
                 _lastUpdated = now;
                 _lastErrorDescription = errors.Count == 0 ? null : string.Join(" / ", errors);
             }

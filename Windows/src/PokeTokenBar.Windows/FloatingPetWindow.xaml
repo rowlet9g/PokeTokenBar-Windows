@@ -21,6 +21,14 @@
             <Image x:Name="PetImage"
                    Stretch="Uniform"
                    SnapsToDevicePixels="True" />
+            <Popup x:Name="LimitAlertPopup" Placement="Top" PlacementTarget="{Binding ElementName=PetHitSurface}"
+                   AllowsTransparency="True" StaysOpen="True">
+                <Border Background="#FFF8F9FB" BorderBrush="#FFE59B36" BorderThickness="1"
+                        CornerRadius="8" Padding="10">
+                    <TextBlock x:Name="LimitAlertText" Foreground="#FF343A46" MaxWidth="240"
+                               TextWrapping="Wrap" FontSize="13" />
+                </Border>
+            </Popup>
             <Viewbox x:Name="EggVisual" Stretch="Uniform">
                 <Canvas Width="100" Height="112">
                     <Path Fill="#FF171A21"
