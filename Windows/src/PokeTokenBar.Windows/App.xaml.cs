@@ -137,7 +137,8 @@ public partial class App : System.Windows.Application
             _companionStore,
             _spriteStore,
             _settings,
-            _refreshCancellation.Token);
+            _refreshCancellation.Token,
+            WindowsSshHostDiscovery.Discover());
         _popover.RefreshRequested += Popover_OnRefreshRequested;
         _popover.SettingsChanged += Popover_OnSettingsChanged;
         MainWindow = _popover;

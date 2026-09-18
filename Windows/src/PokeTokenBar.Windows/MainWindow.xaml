@@ -729,30 +729,40 @@
 
                             <Border Height="1" Margin="0,0,0,14" Background="#FFD9DADD" />
 
-                            <DockPanel Margin="0,0,0,14">
-                                <TextBox x:Name="RemoteCodexHostsTextBox"
-                                         DockPanel.Dock="Right"
-                                         Width="150"
-                                         Height="26"
-                                         Padding="7,3"
-                                         VerticalContentAlignment="Center"
-                                         Background="#FFFFFFFF"
-                                         Foreground="#FF202124"
-                                         BorderBrush="#FFC9CBD0"
-                                         BorderThickness="1"
-                                         LostFocus="SettingsControls_OnChanged"
-                                         ToolTip="예: yonuth94, devbox" />
-                                <StackPanel>
-                                    <TextBlock Foreground="#FF202124"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Text="원격 Codex SSH" />
-                                    <TextBlock Margin="0,2,18,0"
-                                               Foreground="#FF81858C"
-                                               FontSize="9"
-                                               Text="SSH config 별칭 · 쉼표로 여러 호스트 등록" />
-                                </StackPanel>
-                            </DockPanel>
+                            <StackPanel Margin="0,0,0,14">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right"
+                                            Height="24"
+                                            Padding="9,0"
+                                            Background="#FFFFFFFF"
+                                            Foreground="#FF4B5563"
+                                            BorderBrush="#FFC9CBD0"
+                                            BorderThickness="1"
+                                            Click="RefreshSshHostsButton_OnClick"
+                                            Content="다시 검색" />
+                                    <StackPanel>
+                                        <TextBlock Foreground="#FF202124"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Text="원격 Codex SSH" />
+                                        <TextBlock Margin="0,2,18,0"
+                                                   Foreground="#FF81858C"
+                                                   FontSize="9"
+                                                   Text="SSH config에서 자동 발견 · 선택한 호스트만 집계" />
+                                    </StackPanel>
+                                </DockPanel>
+                                <TextBlock x:Name="RemoteCodexHostsEmptyText"
+                                           Margin="0,7,0,0"
+                                           Foreground="#FF81858C"
+                                           FontSize="10"
+                                           Text="발견된 SSH 호스트가 없습니다" />
+                                <WrapPanel x:Name="RemoteCodexHostsPanel"
+                                           Margin="0,3,0,0" />
+                                <TextBlock Margin="0,6,0,0"
+                                           Foreground="#FF9A6A00"
+                                           FontSize="9"
+                                           Text="현재 원격 사용량 집계는 Codex 세션만 지원합니다" />
+                            </StackPanel>
 
                             <Border Height="1" Margin="0,0,0,14" Background="#FFD9DADD" />
 

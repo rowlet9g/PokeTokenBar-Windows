@@ -16,6 +16,7 @@ using MediaColor = System.Windows.Media.Color;
 using MediaColorConverter = System.Windows.Media.ColorConverter;
 using WpfHorizontalAlignment = System.Windows.HorizontalAlignment;
 using WpfOrientation = System.Windows.Controls.Orientation;
+using WpfCheckBox = System.Windows.Controls.CheckBox;
 
 namespace PokeTokenBar.Windows;
 
@@ -32,6 +33,7 @@ public partial class MainWindow : Window
     private bool _hasUserPosition;
     private bool _applyingSettings;
     private AppSettings _currentSettings = new();
+    private IReadOnlyList<string> _discoveredSshHosts;
     private CompanionMilestone? _pendingMilestone;
     private CompanionItemKind? _pendingPurchase;
     private FreshEggTier? _pendingEggPurchase;
@@ -44,13 +46,15 @@ public partial class MainWindow : Window
         CompanionStore companionStore,
         PokemonSpriteStore spriteStore,
         AppSettings settings,
-        CancellationToken applicationToken)
+        CancellationToken applicationToken,
+        IReadOnlyList<string>? discoveredSshHosts = null)
     {
         _usageStore = usageStore;
         _rateLimitStore = rateLimitStore;
         _companionStore = companionStore;
         _spriteStore = spriteStore;
         _applicationToken = applicationToken;
+        _discoveredSshHosts = discoveredSshHosts ?? WindowsSshHostDiscovery.Discover();
         InitializeComponent();
         HeaderVersionText.Text = $"v{ProductVersion}";
         Title = $"PokeTokenBar v{ProductVersion}";
@@ -76,7 +80,7 @@ public partial class MainWindow : Window
             AlwaysOnTopCheckBox.IsChecked = settings.AlwaysOnTop;
             LaunchAtLoginCheckBox.IsChecked = settings.LaunchAtLogin;
             FloatingPetCheckBox.IsChecked = settings.FloatingPetEnabled;
-            RemoteCodexHostsTextBox.Text = settings.RemoteCodexSshHosts;
+            ApplyRemoteCodexHosts(settings.RemoteCodexSshHosts);
             Topmost = settings.AlwaysOnTop;
 
             var selected = RefreshIntervalComboBox.Items
@@ -1451,7 +1455,7 @@ public partial class MainWindow : Window
         SettingsChanged?.Invoke(_currentSettings with
         {
             RefreshIntervalSeconds = intervalSeconds,
-            RemoteCodexSshHosts = RemoteCodexHostsTextBox.Text,
+            RemoteCodexSshHosts = SelectedRemoteCodexHosts(),
             NotificationsEnabled = NotificationsCheckBox.IsChecked == true,
             AlwaysOnTop = AlwaysOnTopCheckBox.IsChecked == true,
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
@@ -1459,6 +1463,53 @@ public partial class MainWindow : Window
             FloatingPetSize = petSize,
         });
     }
+
+    private void RefreshSshHostsButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        _discoveredSshHosts = WindowsSshHostDiscovery.Discover();
+        ApplyRemoteCodexHosts(_currentSettings.RemoteCodexSshHosts);
+        ShowSettingsStatus(_discoveredSshHosts.Count == 0
+            ? "SSH config에서 호스트 별칭을 찾지 못했습니다"
+            : $"SSH 호스트 {_discoveredSshHosts.Count}개를 찾았습니다");
+    }
+
+    private void ApplyRemoteCodexHosts(string selectedHosts)
+    {
+        var selected = AppSettings.ParseRemoteCodexSshHosts(selectedHosts);
+        var discovered = new HashSet<string>(_discoveredSshHosts, StringComparer.OrdinalIgnoreCase);
+        var aliases = _discoveredSshHosts
+            .Concat(selected)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        RemoteCodexHostsPanel.Children.Clear();
+        foreach (var alias in aliases)
+        {
+            var isDiscovered = discovered.Contains(alias);
+            var checkBox = new WpfCheckBox
+            {
+                Content = isDiscovered ? alias : $"{alias} (저장됨 · config에서 찾지 못함)",
+                Tag = alias,
+                IsChecked = selected.Contains(alias, StringComparer.OrdinalIgnoreCase),
+                Foreground = Brush(isDiscovered ? "#FF202124" : "#FF81858C"),
+                FontSize = 10,
+                Margin = new Thickness(0, 4, 14, 0),
+            };
+            checkBox.Click += SettingsControls_OnChanged;
+            RemoteCodexHostsPanel.Children.Add(checkBox);
+        }
+
+        RemoteCodexHostsEmptyText.Visibility = aliases.Length == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private string SelectedRemoteCodexHosts() => string.Join(", ",
+        RemoteCodexHostsPanel.Children
+            .OfType<WpfCheckBox>()
+            .Where(checkBox => checkBox.IsChecked == true)
+            .Select(checkBox => checkBox.Tag?.ToString())
+            .OfType<string>());
 
     private void ExportSaveButton_OnClick(object sender, RoutedEventArgs e)
     {

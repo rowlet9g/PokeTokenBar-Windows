@@ -11,7 +11,7 @@ public sealed class RemoteCodexUsageProviderTests
         using var temporary = TemporaryDirectory.Create();
         var local = Path.Combine(temporary.Path, "local");
         var cache = Path.Combine(temporary.Path, "cache");
-        var remote = Path.Combine(cache, RemoteCodexUsageProvider.CacheName("yonuth94"));
+        var remote = Path.Combine(cache, RemoteCodexUsageProvider.CacheName("devbox-a"));
         Directory.CreateDirectory(local);
         Directory.CreateDirectory(remote);
         var now = DateTimeOffset.Now;
@@ -32,7 +32,7 @@ public sealed class RemoteCodexUsageProviderTests
         ]);
 
         var provider = new RemoteCodexUsageProvider(
-            () => ["yonuth94"], cache, [local], new NoOpSynchronizer());
+            () => ["devbox-a"], cache, [local], new NoOpSynchronizer());
 
         var snapshot = await provider.FetchAsync(now);
 

@@ -27,7 +27,7 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 - Windows 알림 영역(시스템 트레이) 아이콘과 WPF 팝업
 - 좌측 상단 제목에서 현재 설치 버전 확인
 - Claude Code, Codex, Gemini CLI(레거시), Antigravity, OpenCode, Hermes Agent, Cursor, Grok CLI, Copilot CLI, Kiro CLI, Pi Agent, omp 로컬 사용량 집계
-- Codex SSH 원격 세션 사용량 집계 · 설정에 `~/.ssh/config`의 호스트 별칭 등록
+- Codex SSH 원격 세션 사용량 집계 · `~/.ssh/config`의 호스트 별칭 자동 발견 및 선택
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
 - Codex·Claude Code·Antigravity 공식 5시간·주간 사용량 한도와 reset countdown 표시
   (각 도구의 로컬 실행 파일 또는 OAuth 자격증명이 Windows에 있는 경우)
@@ -53,7 +53,7 @@ WEEK와 MONTH는 공급자별 합계와 비율을 표시합니다. 선택 기간
 | 도구 | 기본 검색 위치 | 형식 |
 | --- | --- | --- |
 | Codex | `%USERPROFILE%\.codex\sessions`, `archived_sessions` | JSONL |
-| Codex (원격) | 등록한 SSH 호스트의 `~/.codex/sessions`, `archived_sessions` | SSH 증분 동기화 |
+| Codex (원격) | 선택한 SSH 호스트의 `~/.codex/sessions`, `archived_sessions` | SSH 증분 동기화 |
 | Gemini CLI (레거시) | `%USERPROFILE%\.gemini\tmp` | JSON / JSONL |
 | Antigravity CLI / IDE | `%USERPROFILE%\.gemini\antigravity*\conversations` | SQLite / protobuf |
 | Cursor | `%APPDATA%\Cursor\User\globalStorage` 및 Nightly 경로 | SQLite |
@@ -70,9 +70,12 @@ WEEK와 MONTH는 공급자별 합계와 비율을 표시합니다. 선택 기간
 대화 사용량은 포함하지 않습니다. Gemini CLI의 기존 로컬 기록 지원은 유지합니다.
 
 원격 Codex는 Windows OpenSSH로 비대화형 접속할 수 있고 원격 호스트에 `python3`가
-설치되어 있어야 합니다. 앱의 **설정 → 원격 Codex SSH**에 `~/.ssh/config`의 구체적인
-호스트 별칭을 입력하면 됩니다. 프롬프트나 응답 본문은 복사하지 않고 세션 ID, 모델,
+설치되어 있어야 합니다. 앱의 **설정 → 원격 Codex SSH**에서 `~/.ssh/config`로부터 자동
+발견된 구체적인 호스트 별칭 중 집계할 호스트를 선택하면 됩니다. 프롬프트나 응답 본문은 복사하지 않고 세션 ID, 모델,
 토큰 사용량 메타데이터만 로컬 캐시에 증분 저장합니다.
+
+SSH 호스트 자동 발견은 모든 로컬 AI 도구에 공통으로 쓸 수 있지만, 원격 기록의 위치와
+형식은 도구마다 다릅니다. 현재 원격 집계기는 Codex 세션만 지원합니다.
 
 Kiro CLI는 원본과 같이 텍스트의 UTF-8 바이트 길이를 이용한 **추정치**이며, 실제
 토큰 사용량과 다를 수 있습니다. 추정치도 전체 합계와 포켓몬 성장에 반영됩니다.
