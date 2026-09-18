@@ -36,6 +36,12 @@ Zero-usage providers are hidden for the selected period. Refresh status and each
 provider's fetch time are displayed. A failed provider can retain its previous
 snapshot, with an error notice indicating that older values may be included.
 
+SETTINGS accepts concrete SSH aliases for remote Codex sessions. The remote host
+must support non-interactive OpenSSH authentication and provide `python3`. Only
+session identity, model, and token-count metadata is synchronized; prompt and
+response text remains on the remote host. After the first scan, the cache advances
+by byte offset, and remote entries already present locally are deduplicated.
+
 HOME also shows Codex's official 5-hour and weekly utilization when the local
 Codex executable can answer `account/rateLimits/read`. Launch it with
 `codex app-server`, which uses stdio by default; `--stdio` is unsupported and

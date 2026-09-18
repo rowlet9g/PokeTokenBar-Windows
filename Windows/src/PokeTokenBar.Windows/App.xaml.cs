@@ -75,9 +75,14 @@ public partial class App : System.Windows.Application
             TryRepairStartupRegistration();
         }
 
+        var localCodexRoots = WindowsCodexPaths.CreateDefaultRoots();
         var providers = new List<IUsageProvider>
         {
-            new CodexUsageProvider(WindowsCodexPaths.CreateDefaultRoots()),
+            new CodexUsageProvider(localCodexRoots),
+            new RemoteCodexUsageProvider(
+                () => AppSettings.ParseRemoteCodexSshHosts(_settings.RemoteCodexSshHosts),
+                Path.Combine(paths.CacheDirectory, "RemoteCodex"),
+                localCodexRoots),
             new GeminiUsageProvider(WindowsGeminiPaths.CreateDefaultRoots()),
             new AntigravityUsageProvider(WindowsAntigravityPaths.CreateDefaultRoots()),
             new CursorUsageProvider(WindowsCursorPaths.CreateDefaultRoots()),

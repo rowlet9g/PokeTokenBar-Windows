@@ -9,6 +9,8 @@ public sealed record AppSettings
 
     public int RefreshIntervalSeconds { get; init; } = DefaultRefreshIntervalSeconds;
 
+    public string RemoteCodexSshHosts { get; init; } = string.Empty;
+
     public bool NotificationsEnabled { get; init; } = true;
 
     public bool AlwaysOnTop { get; init; } = true;
@@ -26,10 +28,23 @@ public sealed record AppSettings
     public AppSettings Normalize() => this with
     {
         RefreshIntervalSeconds = Math.Clamp(RefreshIntervalSeconds, 30, 60 * 60),
+        RemoteCodexSshHosts = string.Join(", ", ParseRemoteCodexSshHosts(RemoteCodexSshHosts)),
         FloatingPetSize = Math.Clamp(FloatingPetSize, 64, 160),
         FloatingPetLeft = NormalizeCoordinate(FloatingPetLeft),
         FloatingPetTop = NormalizeCoordinate(FloatingPetTop),
     };
+
+    public static IReadOnlyList<string> ParseRemoteCodexSshHosts(string? value) =>
+        (value ?? string.Empty)
+            .Split([',', ';', '\r', '\n', '\t', ' '], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Where(IsSafeSshAlias)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+    private static bool IsSafeSshAlias(string value) =>
+        value.Length is > 0 and <= 128
+        && char.IsLetterOrDigit(value[0])
+        && value.All(character => char.IsLetterOrDigit(character) || character is '.' or '_' or '-');
 
     private static double? NormalizeCoordinate(double? value) =>
         value is { } number && double.IsFinite(number) ? number : null;

@@ -25,6 +25,7 @@ available through Git history and the upstream project, not in the active tree.
 | Area | Windows status | Decision / next work |
 | --- | --- | --- |
 | Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |
+| Codex SSH usage | Complete | Configured SSH aliases sync token metadata incrementally; local and remote copies of the same session are deduplicated. |
 | Today/week/month totals | Complete | Windows locale controls the week boundary. |
 | Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, today input/output/cache, and refresh/error status. A live Antigravity request was user-verified to increase both tokens and companion progress on 2026-09-07. |
 | Official usage limits | Partial | Codex app-server, Claude Code OAuth, and Antigravity Cloud Code 5-hour/weekly buckets are read and shown on HOME; other providers' official APIs remain outside this slice. |

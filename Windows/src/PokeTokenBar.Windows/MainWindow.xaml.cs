@@ -76,6 +76,7 @@ public partial class MainWindow : Window
             AlwaysOnTopCheckBox.IsChecked = settings.AlwaysOnTop;
             LaunchAtLoginCheckBox.IsChecked = settings.LaunchAtLogin;
             FloatingPetCheckBox.IsChecked = settings.FloatingPetEnabled;
+            RemoteCodexHostsTextBox.Text = settings.RemoteCodexSshHosts;
             Topmost = settings.AlwaysOnTop;
 
             var selected = RefreshIntervalComboBox.Items
@@ -1450,6 +1451,7 @@ public partial class MainWindow : Window
         SettingsChanged?.Invoke(_currentSettings with
         {
             RefreshIntervalSeconds = intervalSeconds,
+            RemoteCodexSshHosts = RemoteCodexHostsTextBox.Text,
             NotificationsEnabled = NotificationsCheckBox.IsChecked == true,
             AlwaysOnTop = AlwaysOnTopCheckBox.IsChecked == true,
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,

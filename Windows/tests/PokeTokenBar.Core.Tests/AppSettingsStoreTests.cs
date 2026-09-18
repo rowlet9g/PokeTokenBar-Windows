@@ -16,6 +16,7 @@ public sealed class AppSettingsStoreTests
         Assert.False(store.Current.LaunchAtLogin);
         Assert.False(store.Current.FloatingPetEnabled);
         Assert.Equal(96, store.Current.FloatingPetSize);
+        Assert.Empty(store.Current.RemoteCodexSshHosts);
     }
 
     [Fact]
@@ -34,6 +35,7 @@ public sealed class AppSettingsStoreTests
             FloatingPetSize = 128,
             FloatingPetLeft = 321.5,
             FloatingPetTop = 123.5,
+            RemoteCodexSshHosts = "yonuth94, woody96",
         });
 
         var restored = new AppSettingsStore(path).Current;
@@ -46,6 +48,20 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(128, restored.FloatingPetSize);
         Assert.Equal(321.5, restored.FloatingPetLeft);
         Assert.Equal(123.5, restored.FloatingPetTop);
+        Assert.Equal("yonuth94, woody96", restored.RemoteCodexSshHosts);
+    }
+
+    [Fact]
+    public void Remote_codex_hosts_are_normalized_deduplicated_and_option_injection_is_rejected()
+    {
+        var normalized = new AppSettings
+        {
+            RemoteCodexSshHosts = " yonuth94;WOODY96\nYonuth94 -oProxyCommand=bad good_host ",
+        }.Normalize();
+
+        Assert.Equal("yonuth94, WOODY96, good_host", normalized.RemoteCodexSshHosts);
+        Assert.Equal(["yonuth94", "WOODY96", "good_host"],
+            AppSettings.ParseRemoteCodexSshHosts(normalized.RemoteCodexSshHosts));
     }
 
     [Theory]

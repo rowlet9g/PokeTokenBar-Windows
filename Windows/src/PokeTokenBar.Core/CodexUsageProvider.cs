@@ -32,19 +32,30 @@ public sealed class CodexUsageProvider : IUsageProvider
             _roots,
             UsageAggregation.EnrichmentScanStart(now),
             cancellationToken);
+        return BuildSnapshot(Id, DisplayName, entries, now, ReportsCost);
+    }
+
+    public static ProviderSnapshot? BuildSnapshot(
+        string providerId,
+        string displayName,
+        IEnumerable<UsageEntry> entries,
+        DateTimeOffset now,
+        bool reportsCost = false)
+    {
+        var materialized = entries as IReadOnlyList<UsageEntry> ?? entries.ToArray();
         var localDay = DateOnly.FromDateTime(now.LocalDateTime);
         var firstDayOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
         var weekStart = UsageAggregation.StartOfWeek(localDay, firstDayOfWeek);
         var monthStart = new DateOnly(localDay.Year, localDay.Month, 1);
-        var daily = UsageAggregation.Daily(entries, localDay);
-        var block = UsageAggregation.ActiveBlock(entries, now);
+        var daily = UsageAggregation.Daily(materialized, localDay);
+        var block = UsageAggregation.ActiveBlock(materialized, now);
         var week = UsageAggregation.Period(
-            entries,
+            materialized,
             weekStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             weekStart,
             localDay);
         var month = UsageAggregation.Period(
-            entries,
+            materialized,
             UsageAggregation.MonthKey(localDay),
             monthStart,
             localDay);
@@ -58,13 +69,13 @@ public sealed class CodexUsageProvider : IUsageProvider
         }
 
         return new ProviderSnapshot(
-            Id,
-            DisplayName,
+            providerId,
+            displayName,
             daily,
             block,
             week,
             month,
             now,
-            ReportsCost);
+            reportsCost);
     }
 }

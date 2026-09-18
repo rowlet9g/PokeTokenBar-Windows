@@ -13,6 +13,15 @@ This reads local tool records; it does not connect Claude/Grok web subscriptions
 mobile chats, account quotas, or cloud usage dashboards. The new adapters do not
 report subscription costs.
 
+Codex sessions executed on an SSH host are optional. Add concrete aliases from
+`%USERPROFILE%\.ssh\config` under **Settings → Remote Codex SSH**. PokeTokenBar
+uses non-interactive OpenSSH and a small `python3` collector on the remote host.
+The collector returns only session identity, model, and token-count metadata.
+Prompt, response, tool output, and repository contents remain on the host.
+After the initial scan, each source file resumes from its last complete byte
+offset. Session IDs and cumulative token fingerprints remove records also found
+in the local Codex store or another registered host.
+
 | Adapter | Records and accounting |
 | --- | --- |
 | Claude Code | Assistant `message.usage`; input, output, cache creation/read. Repeated message/request IDs keep the largest total and earliest timestamp. Includes discoverable embedded Claude Code project directories under the Windows Claude app data folder. |
@@ -64,8 +73,9 @@ the last successful provider snapshot and displays an error. No database copies
 or conversation exports are created. Kiro reads text transiently for estimation;
 the other adapters aggregate token metadata.
 
-Release build and 149 tests passed on 2026-09-08, including synthetic fixtures for
+Release build and 189 tests passed on 2026-09-18, including synthetic fixtures for
 all seven new adapters. The fixtures exercise deduplication, replay exclusions,
-incremental record changes, partial JSONL and database errors. Live sessions for
+incremental record changes, partial JSONL and database errors. Remote Codex was
+also validated against a live SSH host with repeat incremental refreshes. Live sessions for
 these seven tools still need validation; supported source schemas can change.
 Existing live Antigravity growth was separately user-verified on 2026-09-07.

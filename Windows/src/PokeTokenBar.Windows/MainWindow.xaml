@@ -729,6 +729,33 @@
 
                             <Border Height="1" Margin="0,0,0,14" Background="#FFD9DADD" />
 
+                            <DockPanel Margin="0,0,0,14">
+                                <TextBox x:Name="RemoteCodexHostsTextBox"
+                                         DockPanel.Dock="Right"
+                                         Width="150"
+                                         Height="26"
+                                         Padding="7,3"
+                                         VerticalContentAlignment="Center"
+                                         Background="#FFFFFFFF"
+                                         Foreground="#FF202124"
+                                         BorderBrush="#FFC9CBD0"
+                                         BorderThickness="1"
+                                         LostFocus="SettingsControls_OnChanged"
+                                         ToolTip="예: yonuth94, devbox" />
+                                <StackPanel>
+                                    <TextBlock Foreground="#FF202124"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Text="원격 Codex SSH" />
+                                    <TextBlock Margin="0,2,18,0"
+                                               Foreground="#FF81858C"
+                                               FontSize="9"
+                                               Text="SSH config 별칭 · 쉼표로 여러 호스트 등록" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <Border Height="1" Margin="0,0,0,14" Background="#FFD9DADD" />
+
                             <DockPanel>
                                 <ComboBox x:Name="RefreshIntervalComboBox"
                                           Style="{StaticResource ModernComboBox}"
