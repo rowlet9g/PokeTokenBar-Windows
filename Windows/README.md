@@ -24,7 +24,7 @@ preserved values from these effects. `CompanionStore.Limits.cs` atomically recor
 claims with inventory: session limits grant one Rare Candy and weekly limits grant five
 on a new 100% crossing. Initial full windows are seeded without retroactive rewards.
 The notification switch suppresses alerts and popups, but does not suppress rewards.
-These source changes are pending release; the published v0.5.7 does not include them.
+These interactions shipped before 0.6.0; release 0.6.0 adds remote Codex SSH usage.
 
 `UsageStore.Snapshots` supplies provider data to HOME and TOKENS. HOME displays
 all providers' daily total; `MainWindow.Tokens.cs` renders provider totals and

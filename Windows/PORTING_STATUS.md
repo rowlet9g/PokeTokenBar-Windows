@@ -25,7 +25,7 @@ available through Git history and the upstream project, not in the active tree.
 | Area | Windows status | Decision / next work |
 | --- | --- | --- |
 | Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |
-| Codex SSH usage | Complete | Configured SSH aliases sync token metadata incrementally; local and remote copies of the same session are deduplicated. |
+| Codex SSH usage | Complete | Concrete aliases are discovered from SSH config; selected hosts sync token metadata incrementally, and local/remote copies of the same session are deduplicated. |
 | Today/week/month totals | Complete | Windows locale controls the week boundary. |
 | Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, today input/output/cache, and refresh/error status. A live Antigravity request was user-verified to increase both tokens and companion progress on 2026-09-07. |
 | Official usage limits | Partial | Codex app-server, Claude Code OAuth, and Antigravity Cloud Code 5-hour/weekly buckets are read and shown on HOME; other providers' official APIs remain outside this slice. |
@@ -64,7 +64,15 @@ available through Git history and the upstream project, not in the active tree.
    Remaining: exhaustion forecasts, configurable thresholds, and independent notification/bubble settings.
 3. Continue HOME provider selection and settings parity, then address localization and system theme support.
 4. Validate the seven new local adapters against real tool sessions.
-5. Decide the release version and publish its matching tag when ready; signing and updates remain pending.
+5. Add Authenticode signing and an update channel when the certificate and distribution policy are ready.
+
+## Release 0.6.0 validation (2026-09-18)
+
+- Added optional remote Codex usage collection with incremental metadata-only SSH sync.
+- Concrete aliases are discovered from `%USERPROFILE%\.ssh\config`; pattern hosts are ignored and no remote host is selected automatically on a fresh install.
+- Existing selected aliases remain selected after upgrading, while removed aliases remain visible until the user deselects them.
+- Local and remote copies of the same Codex entries are deduplicated.
+- Release build passed with zero warnings/errors; 191 tests passed, and the SSH selection view was rendered with empty and populated host lists.
 
 ## Provider expansion validation recorded on 2026-09-08
 
