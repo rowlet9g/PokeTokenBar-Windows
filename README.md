@@ -31,6 +31,7 @@ PokeTokenBar는 로컬에 저장된 AI 코딩 도구의 사용량을 읽어 오�
 - 오늘·이번 주·이번 달 토큰 표시와 자동/수동 새로고침
 - Codex·Claude Code·Antigravity 공식 5시간·주간 사용량 한도와 reset countdown 표시
   (각 도구의 로컬 실행 파일 또는 OAuth 자격증명이 Windows에 있는 경우)
+- Antigravity Desktop 실행 중에는 로컬 language server를 통해 공식 한도를 조회하며 OAuth 비밀값은 읽지 않음
 - 홈·상점·가방·컬렉션 탐색과 밝은 팝업 화면, 별도 사용량 상세·설정 버튼
 - 사용량 상세(TOKENS): 기간별 공급자 합계·비율과 오늘의 Input / Output / Cache 상세
 - 홈의 성격·희귀도·진화 단계 표시와 확정 경로의 진화 스프라이트 미리보기(분기는 숨김)

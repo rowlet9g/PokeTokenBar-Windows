@@ -74,6 +74,18 @@ available through Git history and the upstream project, not in the active tree.
 - Local and remote copies of the same Codex entries are deduplicated.
 - Release build passed with zero warnings/errors; 191 tests passed, and the SSH selection view was rendered with empty and populated host lists.
 
+## Antigravity Desktop limits validated on 2026-09-22
+
+- Antigravity Desktop 2.15.1 exposes its authenticated official quota through the
+  local language server `RetrieveUserQuotaSummary` method.
+- PokeTokenBar discovers the current loopback HTTP port and CSRF value from the
+  desktop app's own logs, keeps the CSRF value in memory, and never reads or logs
+  the desktop OAuth access token, refresh token, client secret, prompts, or responses.
+- A live account returned Gemini and third-party weekly utilization and reset times.
+  Legacy CLI token-file support remains as a fallback when the desktop app is unavailable.
+- Release build passed with zero warnings/errors and 194 tests passed, including
+  local server discovery, header forwarding, wrapped response parsing, and fallback isolation.
+
 ## Provider expansion validation recorded on 2026-09-08
 
 - Release build passed with zero warnings/errors; 152 tests passed.

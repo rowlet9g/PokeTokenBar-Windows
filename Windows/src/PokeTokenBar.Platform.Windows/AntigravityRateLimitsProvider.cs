@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using PokeTokenBar.Core;
 
 namespace PokeTokenBar.Platform.Windows;
@@ -25,17 +26,38 @@ public sealed class AntigravityRateLimitsProvider : IRateLimitProvider
 
     private readonly HttpClient _httpClient;
     private readonly IReadOnlyList<string> _tokenPaths;
+    private readonly string? _desktopMainLogPath;
+    private readonly string? _desktopLanguageServerLogPath;
 
     public AntigravityRateLimitsProvider(
         HttpClient httpClient,
-        IEnumerable<string>? tokenPaths = null)
+        IEnumerable<string>? tokenPaths = null,
+        string? desktopMainLogPath = null,
+        string? desktopLanguageServerLogPath = null)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        var useDefaultSources = tokenPaths is null;
         _tokenPaths = (tokenPaths ?? ResolveTokenPaths())
             .Where(path => !string.IsNullOrWhiteSpace(path))
             .Select(Path.GetFullPath)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
+
+        if (desktopMainLogPath is not null || desktopLanguageServerLogPath is not null)
+        {
+            _desktopMainLogPath = desktopMainLogPath;
+            _desktopLanguageServerLogPath = desktopLanguageServerLogPath;
+        }
+        else if (useDefaultSources)
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            _desktopMainLogPath = Path.Combine(appData, "Antigravity", "logs", "main.log");
+            _desktopLanguageServerLogPath = Path.Combine(
+                appData,
+                "Antigravity",
+                "logs",
+                "language_server.log");
+        }
     }
 
     public string Id => "antigravity";
@@ -46,6 +68,13 @@ public sealed class AntigravityRateLimitsProvider : IRateLimitProvider
         DateTimeOffset now,
         CancellationToken cancellationToken = default)
     {
+        var desktopSnapshot = await TryFetchDesktopSnapshotAsync(now, cancellationToken)
+            .ConfigureAwait(false);
+        if (desktopSnapshot is not null)
+        {
+            return desktopSnapshot;
+        }
+
         var credential = await ReadCredentialAsync(cancellationToken).ConfigureAwait(false);
         if (credential is null)
         {
@@ -100,6 +129,121 @@ public sealed class AntigravityRateLimitsProvider : IRateLimitProvider
         }
 
         throw lastError ?? new InvalidOperationException("Antigravity 공식 한도 응답을 받지 못했습니다.");
+    }
+
+    private async Task<ProviderRateLimitSnapshot?> TryFetchDesktopSnapshotAsync(
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var connection = ResolveDesktopConnection(
+            _desktopMainLogPath,
+            _desktopLanguageServerLogPath);
+        if (connection is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var endpoint = new Uri(
+                $"http://127.0.0.1:{connection.HttpPort}" +
+                "/exa.language_server_pb.LanguageServerService/RetrieveUserQuotaSummary");
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            request.Headers.TryAddWithoutValidation("Connect-Protocol-Version", "1");
+            request.Headers.TryAddWithoutValidation("x-codeium-csrf-token", connection.CsrfToken);
+            request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(3));
+            using var response = await _httpClient.SendAsync(request, timeout.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false);
+            return AntigravityRateLimitParser.Parse(json, now);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error) when (error is HttpRequestException
+                                          or OperationCanceledException
+                                          or JsonException
+                                          or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    internal static AntigravityDesktopConnection? ResolveDesktopConnection(
+        string? mainLogPath,
+        string? languageServerLogPath)
+    {
+        var mainLog = ReadLogTail(mainLogPath);
+        var serverLog = ReadLogTail(languageServerLogPath);
+        if (mainLog is null || serverLog is null)
+        {
+            return null;
+        }
+
+        var lastLaunch = mainLog.LastIndexOf("Spawning:", StringComparison.OrdinalIgnoreCase);
+        var lastShutdown = mainLog.LastIndexOf(
+            "Shutting down language server",
+            StringComparison.OrdinalIgnoreCase);
+        if (lastLaunch < 0 || lastShutdown > lastLaunch)
+        {
+            return null;
+        }
+
+        var tokenMatches = Regex.Matches(
+            mainLog,
+            @"--csrf_token\s+(?<token>\S+)",
+            RegexOptions.CultureInvariant);
+        var portMatches = Regex.Matches(
+            serverLog,
+            @"listening on random port at (?<port>\d+) for HTTP",
+            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        if (tokenMatches.Count == 0
+            || portMatches.Count == 0
+            || !int.TryParse(portMatches[^1].Groups["port"].Value, out var port)
+            || port is < 1 or > 65_535)
+        {
+            return null;
+        }
+
+        var token = tokenMatches[^1].Groups["token"].Value;
+        return token.Length is > 0 and <= 4_096
+            ? new AntigravityDesktopConnection(port, token)
+            : null;
+    }
+
+    private static string? ReadLogTail(string? path)
+    {
+        const int maxBytes = 1024 * 1024;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var stream = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            var length = (int)Math.Min(stream.Length, maxBytes);
+            stream.Seek(-length, SeekOrigin.End);
+            var bytes = new byte[length];
+            stream.ReadExactly(bytes);
+            return Encoding.UTF8.GetString(bytes);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -363,6 +507,12 @@ public static class AntigravityRateLimitParser
 
     public static ProviderRateLimitSnapshot? Parse(JsonElement response, DateTimeOffset fetchedAt)
     {
+        if (response.ValueKind == JsonValueKind.Object
+            && response.TryGetProperty("response", out var wrapped))
+        {
+            response = wrapped;
+        }
+
         var payload = response.Deserialize<AntigravityQuotaPayload>(JsonOptions)
             ?? throw new JsonException("Antigravity 공식 한도 응답을 해석할 수 없습니다.");
         var windows = new List<RateLimitWindow>();
@@ -486,4 +636,14 @@ public static class AntigravityRateLimitParser
         [JsonPropertyName("remainingFraction")]
         public double? RemainingFraction { get; set; }
     }
+}
+
+internal sealed class AntigravityDesktopConnection(int httpPort, string csrfToken)
+{
+    public int HttpPort { get; } = httpPort;
+
+    public string CsrfToken { get; } = csrfToken;
+
+    public override string ToString() =>
+        $"AntigravityDesktopConnection {{ HttpPort = {HttpPort}, CsrfToken = [REDACTED] }}";
 }

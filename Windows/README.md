@@ -57,9 +57,11 @@ that directory is configured; otherwise they are read from
 `%USERPROFILE%\.claude\.credentials.json` or
 `%USERPROFILE%\.config\claude\.credentials.json`; the OAuth token is used only
 in memory for the HTTPS request and is never written to PokeTokenBar logs or state.
-Antigravity official quota is read from the Cloud Code `retrieveUserQuotaSummary`
-endpoint, trying `CLOUD_CODE_URL` (when set), the daily endpoint, and the primary
-endpoint. Its token file is read from `PTB_ANTIGRAVITY_TOKEN_FILE`,
+Antigravity Desktop official quota is read through its authenticated local language
+server's `RetrieveUserQuotaSummary` method; OAuth secrets are not read by PokeTokenBar.
+When the desktop app is unavailable, the Cloud Code `retrieveUserQuotaSummary`
+endpoint remains available for legacy CLI token files, trying `CLOUD_CODE_URL`
+(when set), the daily endpoint, and the primary endpoint. Token files are read from `PTB_ANTIGRAVITY_TOKEN_FILE`,
 `ANTIGRAVITY_TOKEN_FILE`, `%USERPROFILE%\.gemini\jetski-standalone-oauth-token`,
 or `%USERPROFILE%\.gemini\antigravity\jetski-standalone-oauth-token`.
 Reset countdowns are calculated from each provider response. If a request fails,
