@@ -74,7 +74,7 @@ available through Git history and the upstream project, not in the active tree.
 - Local and remote copies of the same Codex entries are deduplicated.
 - Release build passed with zero warnings/errors; 191 tests passed, and the SSH selection view was rendered with empty and populated host lists.
 
-## Antigravity Desktop limits validated on 2026-09-22
+## Release 0.6.1 validation (2026-09-22)
 
 - Antigravity Desktop 2.15.1 exposes its authenticated official quota through the
   local language server `RetrieveUserQuotaSummary` method.
@@ -85,6 +85,9 @@ available through Git history and the upstream project, not in the active tree.
   Legacy CLI token-file support remains as a fallback when the desktop app is unavailable.
 - Release build passed with zero warnings/errors and 194 tests passed, including
   local server discovery, header forwarding, wrapped response parsing, and fallback isolation.
+- The self-contained `win-x64` portable archive was generated with product/file
+  version 0.6.1, its SHA-256 matched `SHA256SUMS.txt`, and no user-state files
+  were present in the publish directory. The tag workflow builds the installer.
 
 ## Provider expansion validation recorded on 2026-09-08
 
