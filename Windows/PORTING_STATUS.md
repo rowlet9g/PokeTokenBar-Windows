@@ -104,6 +104,7 @@ available through Git history and the upstream project, not in the active tree.
 - The affected live Desktop store changed from zero today entries to one entry with
   74,679 tokens at its recorded 2026-09-23 step time. Release build passed with zero
   warnings/errors and all 195 tests passed, including a greater-than-1-MiB regression.
+- This fix is prepared for release 0.6.2.
 
 ## Provider expansion validation recorded on 2026-09-08
 
