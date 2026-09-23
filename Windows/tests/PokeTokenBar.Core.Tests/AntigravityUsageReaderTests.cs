@@ -86,6 +86,43 @@ public sealed class AntigravityUsageReaderTests
     }
 
     [Fact]
+    public void Reader_dates_antigravity_2_usage_from_the_matching_step()
+    {
+        using var temporary = TemporaryDirectory.Create();
+        var root = Path.Combine(temporary.Path, "antigravity");
+        var conversations = Path.Combine(root, "conversations");
+        Directory.CreateDirectory(conversations);
+        var database = Path.Combine(conversations, "desktop.db");
+        Seed(database);
+        Execute(database, "CREATE TABLE steps (idx INTEGER PRIMARY KEY, metadata BLOB);");
+        Insert(database, 0, CurrentGenerationBlob(
+            "gemini-3.1-pro-high",
+            "response-current",
+            "execution-current",
+            input: 120,
+            output: 30,
+            cacheWrite: 5,
+            cacheRead: 400,
+            leadingPayloadBytes: 1024 * 1024 + 128));
+        InsertStep(database, 0, StepBlob(
+            "response-current",
+            "execution-current",
+            SampleTime));
+
+        var entry = Assert.Single(new AntigravityUsageReader().ReadEntries(
+            [root],
+            SampleTime.AddMinutes(-1)));
+
+        Assert.Equal(SampleTime, entry.Timestamp);
+        Assert.Equal(120, entry.Input);
+        Assert.Equal(30, entry.Output);
+        Assert.Equal(5, entry.CacheWrite);
+        Assert.Equal(400, entry.CacheRead);
+        Assert.Equal(555, entry.Total);
+        Assert.Equal("antigravity|response|response-current", entry.Id);
+    }
+
+    [Fact]
     public async Task Provider_aggregates_antigravity_with_its_own_identity()
     {
         using var temporary = TemporaryDirectory.Create();
@@ -156,6 +193,57 @@ public sealed class AntigravityUsageReaderTests
         return result.ToArray();
     }
 
+    private static byte[] CurrentGenerationBlob(
+        string model,
+        string responseId,
+        string executionId,
+        ulong input,
+        ulong output,
+        ulong cacheWrite,
+        ulong cacheRead,
+        int leadingPayloadBytes = 0)
+    {
+        var usage = new List<byte>();
+        VarintField(usage, 2, input);
+        VarintField(usage, 3, output);
+        VarintField(usage, 4, cacheWrite);
+        VarintField(usage, 5, cacheRead);
+        LengthField(usage, 11, Encoding.UTF8.GetBytes(responseId));
+
+        var chatModel = new List<byte>();
+        if (leadingPayloadBytes > 0)
+        {
+            LengthField(chatModel, 1, new byte[leadingPayloadBytes]);
+        }
+
+        LengthField(chatModel, 4, usage.ToArray());
+        LengthField(chatModel, 19, Encoding.UTF8.GetBytes(model));
+
+        var result = new List<byte>();
+        LengthField(result, 1, chatModel.ToArray());
+        LengthField(result, 4, Encoding.UTF8.GetBytes(executionId));
+        return result.ToArray();
+    }
+
+    private static byte[] StepBlob(
+        string responseId,
+        string executionId,
+        DateTimeOffset timestamp)
+    {
+        var stamp = new List<byte>();
+        VarintField(stamp, 1, (ulong)timestamp.ToUnixTimeSeconds());
+        VarintField(stamp, 2, (ulong)((timestamp.Ticks % TimeSpan.TicksPerSecond) * 100));
+
+        var response = new List<byte>();
+        LengthField(response, 11, Encoding.UTF8.GetBytes(responseId));
+
+        var result = new List<byte>();
+        LengthField(result, 8, stamp.ToArray());
+        LengthField(result, 9, response.ToArray());
+        LengthField(result, 12, Encoding.UTF8.GetBytes(executionId));
+        return result.ToArray();
+    }
+
     private static void VarintField(List<byte> target, ulong field, ulong value)
     {
         Varint(target, field << 3);
@@ -195,6 +283,10 @@ public sealed class AntigravityUsageReaderTests
     private static void Insert(string databasePath, int id, byte[] blob) => Execute(
         databasePath,
         $"INSERT INTO gen_metadata (idx, data, size) VALUES ({id}, X'{Convert.ToHexString(blob)}', {blob.Length});");
+
+    private static void InsertStep(string databasePath, int id, byte[] blob) => Execute(
+        databasePath,
+        $"INSERT INTO steps (idx, metadata) VALUES ({id}, X'{Convert.ToHexString(blob)}');");
 
     private static void Execute(string databasePath, string sql)
     {

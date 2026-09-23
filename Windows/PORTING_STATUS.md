@@ -89,6 +89,22 @@ available through Git history and the upstream project, not in the active tree.
   version 0.6.1, its SHA-256 matched `SHA256SUMS.txt`, and no user-state files
   were present in the publish directory. The tag workflow builds the installer.
 
+## Antigravity 2.x token accounting fix (2026-09-23)
+
+- Confirmed that official quota percentages and local growth tokens use separate
+  sources: the Desktop language server supplies quota, while conversation SQLite
+  stores supply exact token counters.
+- Antigravity 2.x removed generation `created_at`; the reader now correlates each
+  generation with `steps.metadata` by response or execution ID instead of assigning
+  the conversation's old timestamp.
+- Generation blobs are read whole because current Desktop sessions can place usage
+  metadata after more than 1 MiB of cumulative transcript payload.
+- Current model counters use input/output/cache-write/cache-read fields directly;
+  the legacy split output layout remains supported.
+- The affected live Desktop store changed from zero today entries to one entry with
+  74,679 tokens at its recorded 2026-09-23 step time. Release build passed with zero
+  warnings/errors and all 195 tests passed, including a greater-than-1-MiB regression.
+
 ## Provider expansion validation recorded on 2026-09-08
 
 - Release build passed with zero warnings/errors; 152 tests passed.

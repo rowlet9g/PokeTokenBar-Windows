@@ -5,8 +5,9 @@ namespace PokeTokenBar.Platform.Windows;
 
 public sealed class AntigravityUsageReader
 {
-    // Some Antigravity generations contain cumulative transcript payloads. The
-    // token metadata is near the front, so a prefix keeps refresh memory bounded.
+    // Trajectory metadata is tiny and only its timestamp is needed. Generation
+    // blobs must be read whole: Antigravity 2.x may place usage metadata after
+    // more than 1 MiB of cumulative transcript payload.
     private const int MetadataPrefixBytes = 1024 * 1024;
 
     private readonly object _cacheLock = new();
@@ -39,10 +40,22 @@ public sealed class AntigravityUsageReader
     {
         ArgumentNullException.ThrowIfNull(blob);
         var decoded = DecodeGeneration(blob);
+        return CreateEntry(databasePath, rowId, decoded, fallbackTimestamp, modifiedSince);
+    }
+
+    private static UsageEntry? CreateEntry(
+        string databasePath,
+        long rowId,
+        DecodedGeneration decoded,
+        DateTimeOffset fallbackTimestamp,
+        DateTimeOffset modifiedSince)
+    {
         var timestamp = decoded.Timestamp ?? fallbackTimestamp;
-        var input = UsageMath.SaturatingAdd(decoded.SystemInput, decoded.FreshInput);
-        var output = UsageMath.SaturatingAdd(decoded.Output, decoded.Thinking);
-        var total = UsageMath.SaturatingSum(input, output, decoded.CacheRead);
+        var total = UsageMath.SaturatingSum(
+            decoded.Input,
+            decoded.Output,
+            decoded.CacheWrite,
+            decoded.CacheRead);
         if (total == 0 || timestamp < modifiedSince)
         {
             return null;
@@ -57,9 +70,9 @@ public sealed class AntigravityUsageReader
             timestamp,
             DateOnly.FromDateTime(timestamp.LocalDateTime),
             NormalizeModel(decoded.Model),
-            input,
-            output,
-            0,
+            decoded.Input,
+            decoded.Output,
+            decoded.CacheWrite,
             decoded.CacheRead);
     }
 
@@ -142,11 +155,13 @@ public sealed class AntigravityUsageReader
             cache.HighWaterRowId = -1;
         }
 
-        var fallbackTimestamp = ReadTrajectoryTimestamp(database)
+        var stepDates = ReadStepDates(database);
+        var executionOrdinals = new Dictionary<string, int>(StringComparer.Ordinal);
+        var conversationFallback = ReadTrajectoryTimestamp(database)
             ?? new DateTimeOffset(File.GetLastWriteTimeUtc(sourceDatabasePath), TimeSpan.Zero);
         var sql = cache.HighWaterRowId < 0
-            ? $"SELECT idx, substr(data, 1, {MetadataPrefixBytes}) FROM gen_metadata ORDER BY idx"
-            : $"SELECT idx, substr(data, 1, {MetadataPrefixBytes}) FROM gen_metadata WHERE idx >= ?1 ORDER BY idx";
+            ? "SELECT idx, data FROM gen_metadata ORDER BY idx"
+            : "SELECT idx, data FROM gen_metadata WHERE idx >= ?1 ORDER BY idx";
         if (!database.TryPrepare(sql, out var statement))
         {
             return false;
@@ -170,10 +185,16 @@ public sealed class AntigravityUsageReader
                     continue;
                 }
 
-                var entry = ParseGeneration(
+                var decoded = DecodeGeneration(blob);
+                var fallbackTimestamp = ResolveStepTimestamp(
+                        decoded,
+                        stepDates,
+                        executionOrdinals)
+                    ?? conversationFallback;
+                var entry = CreateEntry(
                     sourceDatabasePath,
                     rowId,
-                    blob,
+                    decoded,
                     fallbackTimestamp,
                     DateTimeOffset.MinValue);
                 if (entry is null)
@@ -329,13 +350,136 @@ public sealed class AntigravityUsageReader
         return null;
     }
 
+    private static StepDates ReadStepDates(WindowsSqlite.Database database)
+    {
+        var result = new StepDates();
+        if (!database.TryPrepare(
+                "SELECT metadata FROM steps WHERE metadata IS NOT NULL ORDER BY idx",
+                out var statement))
+        {
+            return result;
+        }
+
+        using (statement)
+        {
+            while (statement.Step())
+            {
+                if (statement.ColumnBlob(0) is not { Length: > 0 } blob)
+                {
+                    continue;
+                }
+
+                DecodeStepMetadata(blob, result);
+            }
+        }
+
+        return result;
+    }
+
+    private static void DecodeStepMetadata(ReadOnlySpan<byte> blob, StepDates result)
+    {
+        DateTimeOffset? createdAt = null;
+        DateTimeOffset? finishedAt = null;
+        string? responseId = null;
+        string? executionId = null;
+        var reader = new ProtobufReader(blob);
+        while (reader.TryRead(out var field))
+        {
+            switch (field.Number, field.WireType)
+            {
+                case (1, 2):
+                    createdAt = DecodeTimestamp(field.Bytes);
+                    break;
+                case (8, 2):
+                    finishedAt = DecodeTimestamp(field.Bytes);
+                    break;
+                case (9, 2):
+                    responseId = DecodeResponseId(field.Bytes);
+                    break;
+                case (12, 2):
+                    executionId = Utf8(field.Bytes);
+                    break;
+            }
+        }
+
+        var timestamp = finishedAt ?? createdAt;
+        if (timestamp is null)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(responseId))
+        {
+            result.ByResponse[responseId] = timestamp.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(executionId))
+        {
+            if (!result.ByExecution.TryGetValue(executionId, out var timestamps))
+            {
+                timestamps = [];
+                result.ByExecution[executionId] = timestamps;
+            }
+
+            timestamps.Add(timestamp.Value);
+        }
+    }
+
+    private static string? DecodeResponseId(ReadOnlySpan<byte> bytes)
+    {
+        var reader = new ProtobufReader(bytes);
+        while (reader.TryRead(out var field))
+        {
+            if (field.Number == 11 && field.WireType == 2)
+            {
+                return Utf8(field.Bytes);
+            }
+        }
+
+        return null;
+    }
+
+    private static DateTimeOffset? ResolveStepTimestamp(
+        DecodedGeneration decoded,
+        StepDates stepDates,
+        Dictionary<string, int> executionOrdinals)
+    {
+        if (!string.IsNullOrWhiteSpace(decoded.ResponseId)
+            && stepDates.ByResponse.TryGetValue(decoded.ResponseId, out var responseTimestamp))
+        {
+            return responseTimestamp;
+        }
+
+        if (string.IsNullOrWhiteSpace(decoded.ExecutionId)
+            || !stepDates.ByExecution.TryGetValue(decoded.ExecutionId, out var timestamps)
+            || timestamps.Count == 0)
+        {
+            return null;
+        }
+
+        var ordinal = executionOrdinals.GetValueOrDefault(decoded.ExecutionId);
+        executionOrdinals[decoded.ExecutionId] = ordinal + 1;
+        return timestamps[Math.Min(ordinal, timestamps.Count - 1)];
+    }
+
     private static DecodedGeneration DecodeGeneration(ReadOnlySpan<byte> blob)
     {
         var decoded = new DecodedGeneration();
         var root = new ProtobufReader(blob);
         while (root.TryRead(out var rootField))
         {
-            if (rootField.Number != 1 || rootField.WireType != 2)
+            if (rootField.WireType != 2)
+            {
+                continue;
+            }
+
+            if (rootField.Number == 4)
+            {
+                decoded.ExecutionId = Utf8(rootField.Bytes);
+                continue;
+            }
+
+            if (rootField.Number != 1)
             {
                 continue;
             }
@@ -363,6 +507,13 @@ public sealed class AntigravityUsageReader
 
     private static void DecodeUsage(ReadOnlySpan<byte> bytes, DecodedGeneration decoded)
     {
+        long? legacySystemInput = null;
+        long? input = null;
+        long? output = null;
+        long? cacheWrite = null;
+        long? cacheRead = null;
+        long? legacyOutput = null;
+        long? legacyThinking = null;
         var reader = new ProtobufReader(bytes);
         while (reader.TryRead(out var field))
         {
@@ -372,19 +523,25 @@ public sealed class AntigravityUsageReader
                 switch (field.Number)
                 {
                     case 1:
-                        decoded.SystemInput = value;
+                        legacySystemInput = value;
                         break;
                     case 2:
-                        decoded.FreshInput = value;
+                        input = value;
+                        break;
+                    case 3:
+                        output = value;
+                        break;
+                    case 4:
+                        cacheWrite = value;
                         break;
                     case 5:
-                        decoded.CacheRead = value;
+                        cacheRead = value;
                         break;
                     case 9:
-                        decoded.Output = value;
+                        legacyOutput = value;
                         break;
                     case 10:
-                        decoded.Thinking = value;
+                        legacyThinking = value;
                         break;
                 }
             }
@@ -393,6 +550,19 @@ public sealed class AntigravityUsageReader
                 decoded.ResponseId = Utf8(field.Bytes);
             }
         }
+
+        if (output is not null || cacheWrite is not null)
+        {
+            decoded.Input = input ?? 0;
+            decoded.Output = output ?? 0;
+            decoded.CacheWrite = cacheWrite ?? 0;
+            decoded.CacheRead = cacheRead ?? 0;
+            return;
+        }
+
+        decoded.Input = UsageMath.SaturatingAdd(legacySystemInput ?? 0, input ?? 0);
+        decoded.Output = UsageMath.SaturatingAdd(legacyOutput ?? 0, legacyThinking ?? 0);
+        decoded.CacheRead = cacheRead ?? 0;
     }
 
     private static DateTimeOffset? DecodeGenerationTimestamp(ReadOnlySpan<byte> bytes)
@@ -554,17 +724,24 @@ public sealed class AntigravityUsageReader
 
         public DateTimeOffset? Timestamp { get; set; }
 
-        public long SystemInput { get; set; }
+        public string? ExecutionId { get; set; }
 
-        public long FreshInput { get; set; }
-
-        public long CacheRead { get; set; }
+        public long Input { get; set; }
 
         public long Output { get; set; }
 
-        public long Thinking { get; set; }
+        public long CacheWrite { get; set; }
+
+        public long CacheRead { get; set; }
 
         public string? ResponseId { get; set; }
+    }
+
+    private sealed class StepDates
+    {
+        public Dictionary<string, DateTimeOffset> ByResponse { get; } = new(StringComparer.Ordinal);
+
+        public Dictionary<string, List<DateTimeOffset>> ByExecution { get; } = new(StringComparer.Ordinal);
     }
 
     private ref struct ProtobufReader
