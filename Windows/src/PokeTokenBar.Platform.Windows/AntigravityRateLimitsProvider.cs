@@ -37,6 +37,11 @@ public sealed class AntigravityRateLimitsProvider : IRateLimitProvider
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         var useDefaultSources = tokenPaths is null;
+        if (useDefaultSources)
+        {
+            DesktopConnectionResolver = token => AntigravityDesktopDiscovery.ResolveAsync(
+                _desktopLanguageServerLogPath, token);
+        }
         _tokenPaths = (tokenPaths ?? ResolveTokenPaths())
             .Where(path => !string.IsNullOrWhiteSpace(path))
             .Select(Path.GetFullPath)
@@ -61,6 +66,8 @@ public sealed class AntigravityRateLimitsProvider : IRateLimitProvider
     }
 
     public string Id => "antigravity";
+
+    internal Func<CancellationToken, Task<AntigravityDesktopConnection?>>? DesktopConnectionResolver { get; set; }
 
     public string DisplayName => "Antigravity";
 
@@ -135,7 +142,10 @@ public sealed class AntigravityRateLimitsProvider : IRateLimitProvider
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        var connection = ResolveDesktopConnection(
+        var connection = DesktopConnectionResolver is null
+            ? null
+            : await DesktopConnectionResolver(cancellationToken).ConfigureAwait(false);
+        connection ??= ResolveDesktopConnection(
             _desktopMainLogPath,
             _desktopLanguageServerLogPath);
         if (connection is null)

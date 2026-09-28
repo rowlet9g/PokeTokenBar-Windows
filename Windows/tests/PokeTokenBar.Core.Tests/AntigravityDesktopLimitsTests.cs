@@ -6,6 +6,43 @@ namespace PokeTokenBar.Core.Tests;
 public sealed class AntigravityDesktopLimitsTests
 {
     [Fact]
+    public async Task Live_connection_takes_precedence_over_missing_launch_logs()
+    {
+        using var handler = new DesktopQuotaHandler();
+        using var client = new HttpClient(handler);
+        var provider = new AntigravityRateLimitsProvider(client, [])
+        {
+            DesktopConnectionResolver = _ => Task.FromResult<AntigravityDesktopConnection?>(
+                new AntigravityDesktopConnection(43210, "fixture-csrf")),
+        };
+        var snapshot = await provider.FetchAsync(DateTimeOffset.UtcNow);
+        Assert.NotNull(snapshot);
+        Assert.True(handler.SawCsrfHeader);
+        Assert.Equal(43210, handler.RequestUri?.Port);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("{}")]
+    [InlineData("{\"port\":0,\"csrf\":\"fixture\"}")]
+    [InlineData("{\"port\":65536,\"csrf\":\"fixture\"}")]
+    [InlineData("{\"port\":1234,\"csrf\":\"bad token\"}")]
+    public void Invalid_live_connection_is_rejected(string json)
+    {
+        Assert.Null(AntigravityDesktopDiscovery.ParseConnection(json));
+    }
+
+    [Fact]
+    public void Live_connection_does_not_expose_token_in_diagnostic_text()
+    {
+        var connection = AntigravityDesktopDiscovery.ParseConnection(
+            "{\"port\":1234,\"csrf\":\"private-fixture\"}");
+        Assert.NotNull(connection);
+        Assert.Equal(1234, connection.HttpPort);
+        Assert.DoesNotContain("private-fixture", connection.ToString());
+    }
+
+    [Fact]
     public async Task Desktop_language_server_returns_official_quota_without_oauth_token_access()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"PtbAntigravity-{Guid.NewGuid():N}");

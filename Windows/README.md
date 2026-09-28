@@ -59,6 +59,11 @@ that directory is configured; otherwise they are read from
 in memory for the HTTPS request and is never written to PokeTokenBar logs or state.
 Antigravity Desktop official quota is read through its authenticated local language
 server's `RetrieveUserQuotaSummary` method; OAuth secrets are not read by PokeTokenBar.
+For Desktop 2.17, a hidden, time-bounded Windows PowerShell query reads the running
+Antigravity language server's CSRF argument. It checks the Windows session,
+executable path and ownership of the logged loopback HTTP port before connecting.
+The CSRF value stays in memory and is never written to PokeTokenBar logs or state.
+Older Desktop launch-log discovery remains available as a fallback.
 When the desktop app is unavailable, the Cloud Code `retrieveUserQuotaSummary`
 endpoint remains available for legacy CLI token files, trying `CLOUD_CODE_URL`
 (when set), the daily endpoint, and the primary endpoint. Token files are read from `PTB_ANTIGRAVITY_TOKEN_FILE`,

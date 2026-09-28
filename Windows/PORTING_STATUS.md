@@ -58,6 +58,15 @@ available through Git history and the upstream project, not in the active tree.
 
 ## Remaining work
 
+Antigravity Desktop 2.17 compatibility was validated on 2026-09-28: the app no
+longer logs its server launch arguments. Discovery now reads the live server's
+CSRF argument with a bounded hidden PowerShell query, verifying session, executable
+path and ownership of the loopback port. Legacy log discovery remains supported.
+The real provider returned both weekly quota buckets (55.6% Gemini, 100% external
+models at validation time). All 202 tests passed, including injected live discovery,
+invalid connection rejection and credential redaction. This source change is not
+yet included in the v0.6.2 installer.
+
 1. Finish official-limit resilience: retry backoff for HTTP 429 and authentication failures,
    account-change handling during failed requests, and actual Windows credential discovery validation.
 2. Official-limit warnings, companion mood and candy rewards are connected (see validation below).
