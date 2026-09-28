@@ -64,8 +64,7 @@ CSRF argument with a bounded hidden PowerShell query, verifying session, executa
 path and ownership of the loopback port. Legacy log discovery remains supported.
 The real provider returned both weekly quota buckets (55.6% Gemini, 100% external
 models at validation time). All 202 tests passed, including injected live discovery,
-invalid connection rejection and credential redaction. This source change is not
-yet included in the v0.6.2 installer.
+invalid connection rejection and credential redaction. This change is prepared for release 0.6.3.
 
 1. Finish official-limit resilience: retry backoff for HTTP 429 and authentication failures,
    account-change handling during failed requests, and actual Windows credential discovery validation.
