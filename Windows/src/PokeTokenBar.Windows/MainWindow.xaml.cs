@@ -178,6 +178,7 @@ public partial class MainWindow : Window
         {
             CompanionMilestoneKind.Hatched => ("✦", "새로운 포켓몬!", $"{shiny}{name} 부화"),
             CompanionMilestoneKind.Evolved => ("★", "진화 성공!", $"새로운 모습 · {shiny}{name}"),
+            CompanionMilestoneKind.DittoRevealed => ("🎭", "메타몽의 정체 공개!", $"진화인 줄 알았는데… {shiny}{name}!"),
             CompanionMilestoneKind.Graduated => ("✓", "도감 등록 완료!", $"{shiny}{name} 육성 완료"),
             _ => throw new ArgumentOutOfRangeException(),
         };

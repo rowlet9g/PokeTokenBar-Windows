@@ -8,8 +8,9 @@ public static class UsageAggregation
 
     public static DailyUsage? Daily(IEnumerable<UsageEntry> entries, DateOnly localDay)
     {
+        var selected = entries.Where(entry => entry.LocalDay == localDay).ToArray();
         var bucket = UsageBucket.Empty;
-        foreach (var entry in entries)
+        foreach (var entry in selected)
         {
             if (entry.LocalDay == localDay)
             {
@@ -29,7 +30,8 @@ public static class UsageAggregation
             bucket.CacheWrite,
             bucket.CacheRead,
             bucket.Total,
-            bucket.Cost);
+            bucket.Cost,
+            Models(selected));
     }
 
     public static PeriodUsage Period(
@@ -38,8 +40,9 @@ public static class UsageAggregation
         DateOnly fromDay,
         DateOnly toDay)
     {
+        var selected = entries.Where(entry => entry.LocalDay >= fromDay && entry.LocalDay <= toDay).ToArray();
         var bucket = UsageBucket.Empty;
-        foreach (var entry in entries)
+        foreach (var entry in selected)
         {
             if (entry.LocalDay >= fromDay && entry.LocalDay <= toDay)
             {
@@ -47,8 +50,20 @@ public static class UsageAggregation
             }
         }
 
-        return new PeriodUsage(periodKey, bucket.Total, bucket.Cost);
+        return new PeriodUsage(periodKey, bucket.Total, bucket.Cost, Models(selected));
     }
+
+    private static IReadOnlyList<ModelUsage> Models(IEnumerable<UsageEntry> entries) => entries
+        .GroupBy(entry => string.IsNullOrWhiteSpace(entry.Model) ? "unknown" : entry.Model.Trim(), StringComparer.Ordinal)
+        .Select(group =>
+        {
+            var bucket = group.Aggregate(UsageBucket.Empty, (sum, entry) => sum.Add(entry));
+            return new ModelUsage(group.Key, bucket.Input, bucket.Output, bucket.CacheWrite, bucket.CacheRead, bucket.Total);
+        })
+        .Where(model => model.TotalTokens > 0)
+        .OrderByDescending(model => model.TotalTokens)
+        .ThenBy(model => model.Model, StringComparer.Ordinal)
+        .ToArray();
 
     public static BlockUsage? ActiveBlock(
         IEnumerable<UsageEntry> entries,

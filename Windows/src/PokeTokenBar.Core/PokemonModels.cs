@@ -114,6 +114,16 @@ public enum PokemonNature
 
 public sealed class PokemonMonState
 {
+    public int? DittoDisguise { get; set; }
+
+    public bool DittoRevealed { get; set; }
+
+    [JsonIgnore]
+    public bool IsDittoDisguised => DittoDisguise is not null && !DittoRevealed;
+
+    [JsonIgnore]
+    public bool VisibleShiny => IsShiny && !IsDittoDisguised;
+
     public int BaseId { get; set; }
 
     public List<int> PathIds { get; set; } = [];

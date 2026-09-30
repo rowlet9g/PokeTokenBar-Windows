@@ -18,6 +18,7 @@ public sealed partial class CompanionStore
     private readonly string _filePath;
     private readonly IPokemonProvider? _pokemonProvider;
     private readonly IRandomSource _randomSource;
+    private readonly bool _dittoDisguiseRollingEnabled;
     private readonly SemaphoreSlim _hatchGate = new(1, 1);
     private CompanionState _state;
     private string? _lastPersistenceError;
@@ -27,7 +28,8 @@ public sealed partial class CompanionStore
     public CompanionStore(
         string filePath,
         IPokemonProvider? pokemonProvider = null,
-        IRandomSource? randomSource = null)
+        IRandomSource? randomSource = null,
+        bool dittoDisguiseRollingEnabled = false)
     {
         _filePath = Path.GetFullPath(filePath);
         var directory = Path.GetDirectoryName(_filePath)
@@ -35,6 +37,7 @@ public sealed partial class CompanionStore
         Directory.CreateDirectory(directory);
         _pokemonProvider = pokemonProvider;
         _randomSource = randomSource ?? new SystemRandomSource();
+        _dittoDisguiseRollingEnabled = dittoDisguiseRollingEnabled;
         _state = LoadState();
     }
 
@@ -388,7 +391,7 @@ public sealed partial class CompanionStore
         {
             lock (_stateLock)
             {
-                return _state.ActivePokemon?.IsShiny ?? false;
+                return _state.ActivePokemon?.VisibleShiny ?? false;
             }
         }
     }
@@ -581,17 +584,17 @@ public sealed partial class CompanionStore
                             speciesId,
                             NameFor(active.Names, speciesId),
                             PokemonLineStageStatus.Realized,
-                            active.IsShiny),
+                            active.VisibleShiny),
                         _ when index == active.StageIndex => new PokemonLineStage(
                             speciesId,
                             NameFor(active.Names, speciesId),
                             PokemonLineStageStatus.Current,
-                            active.IsShiny),
+                            active.VisibleShiny),
                         _ => new PokemonLineStage(
                             null,
                             "???",
                             PokemonLineStageStatus.HiddenFuture,
-                            active.IsShiny),
+                            active.VisibleShiny),
                     })
                     .ToArray();
             }
@@ -615,7 +618,7 @@ public sealed partial class CompanionStore
                         new Dictionary<int, string>(active.Names),
                         active.Rarity,
                         null,
-                        active.IsShiny,
+                        active.VisibleShiny,
                         active.Nature,
                         true));
                 }
@@ -683,7 +686,7 @@ public sealed partial class CompanionStore
                         {
                             species[speciesId] = existing with
                             {
-                                IsShiny = existing.IsShiny || active.IsShiny,
+                                IsShiny = existing.IsShiny || active.VisibleShiny,
                             };
                             continue;
                         }
@@ -692,7 +695,7 @@ public sealed partial class CompanionStore
                             speciesId,
                             NameFor(active.Names, speciesId),
                             active.Rarity,
-                            active.IsShiny,
+                            active.VisibleShiny,
                             true);
                     }
                 }
@@ -791,6 +794,7 @@ public sealed partial class CompanionStore
 
     public async Task<bool> EnsureHatchedAsync(CancellationToken cancellationToken = default)
     {
+        if (await RevealDittoAsync(cancellationToken).ConfigureAwait(false)) return true;
         if (_pokemonProvider is null)
         {
             return false;
@@ -888,6 +892,9 @@ public sealed partial class CompanionStore
                     Nature = (PokemonNature)_randomSource.NextInt64(natureCount),
                     Names = line.Names.ToDictionary(pair => pair.Key, pair => pair.Value),
                 };
+                if (_dittoDisguiseRollingEnabled && DittoDisguiseHit(line.Rarity, plan.Count,
+                        _randomSource.NextInt64(long.MaxValue)))
+                    _state.ActivePokemon.DittoDisguise = line.BaseId;
                 _state.EggUsage = 0;
                 _state.EggGuarantee = null;
                 _state.PendingHatchId = null;
@@ -1086,6 +1093,10 @@ public sealed partial class CompanionStore
                 return;
             }
 
+            // A disguised Ditto reveals instead of evolving. Keep all progress
+            // while the metadata request is pending or fails; retry next refresh.
+            if (active.IsDittoDisguised) return;
+
             var nextIndex = active.StageIndex + 1;
             if (nextIndex < active.PlannedPathIds.Count)
             {
@@ -1118,7 +1129,7 @@ public sealed partial class CompanionStore
             ChainOrder = [.. active.PathIds],
             Rarity = active.Rarity,
             CaughtAt = DateTimeOffset.UtcNow,
-            IsShiny = active.IsShiny,
+            IsShiny = active.VisibleShiny,
             Nature = active.Nature,
             Names = new Dictionary<int, string>(active.Names),
         });
@@ -1147,7 +1158,7 @@ public sealed partial class CompanionStore
             Rarity = active.Rarity,
             CaughtAt = now,
             ReleasedAt = now,
-            IsShiny = active.IsShiny,
+            IsShiny = active.VisibleShiny,
             Nature = active.Nature,
             Names = active.Names
                 .Where(pair => reachedSet.Contains(pair.Key))
@@ -1443,6 +1454,12 @@ public sealed partial class CompanionStore
 
     private static void SanitizeActivePokemon(CompanionState state, PokemonMonState active)
     {
+        if (active.DittoDisguise is { } disguise
+            && (!PokemonAssets.HasSprite(disguise) || disguise == PokemonAssets.DittoSpeciesId
+                || (!active.DittoRevealed && active.BaseId != disguise)))
+            active.DittoDisguise = null;
+        if (active.DittoDisguise is null || active.BaseId != PokemonAssets.DittoSpeciesId)
+            active.DittoRevealed = false;
         if (!PokemonAssets.HasSprite(active.BaseId))
         {
             state.ActivePokemon = null;

@@ -909,14 +909,14 @@
                     <TextBlock x:Name="MilestoneTitleText"
                                Margin="0,10,0,0"
                                HorizontalAlignment="Center"
-                               Foreground="#FF202124"
+                               Foreground="#FFF9FAFB"
                                FontSize="22"
                                FontWeight="Bold"
                                Text="진화 성공!" />
                     <TextBlock x:Name="MilestoneDetailText"
                                Margin="0,6,0,0"
                                HorizontalAlignment="Center"
-                               Foreground="#FF007AFF"
+                               Foreground="#FF93C5FD"
                                FontSize="13"
                                Text="새로운 모습" />
                 </StackPanel>

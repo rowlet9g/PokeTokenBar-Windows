@@ -121,7 +121,8 @@ public partial class App : System.Windows.Application
             Path.Combine(paths.CacheDirectory, "Sprites"));
         _companionStore = new CompanionStore(
             Path.Combine(paths.DataDirectory, "companion-state.json"),
-            pokemonProvider);
+            pokemonProvider,
+            dittoDisguiseRollingEnabled: true);
         _milestoneTracker = new CompanionMilestoneTracker(CaptureCompanionSnapshot());
         LogCompanionStateLoad(paths.LogsDirectory, _companionStore);
         if (_companionStore.LastPersistenceError is { } persistenceError)
@@ -499,7 +500,8 @@ public partial class App : System.Windows.Application
             _companionStore.CurrentPokemonName,
             _companionStore.HasActivePokemon ? _companionStore.CurrentStage : 0,
             _companionStore.IsCurrentPokemonShiny,
-            _companionStore.DexCount);
+            _companionStore.DexCount,
+            _companionStore.IsCurrentPokemonRevealedDitto);
     }
 
     private void ShowCompanionMilestoneIfNeeded()
@@ -526,6 +528,8 @@ public partial class App : System.Windows.Application
                 ("포켓몬이 태어났어요!", $"새로운 동료: {shiny}{name}"),
             CompanionMilestoneKind.Evolved =>
                 ("포켓몬이 진화했어요!", $"새로운 모습: {shiny}{name}"),
+            CompanionMilestoneKind.DittoRevealed =>
+                ("메타몽이 정체를 드러냈어요!", $"진화인 줄 알았는데… {shiny}{name}이었어요!"),
             CompanionMilestoneKind.Graduated =>
                 ("육성을 완료했어요!", $"{shiny}{name}의 기록이 도감에 등록되었습니다."),
             _ => throw new ArgumentOutOfRangeException(),

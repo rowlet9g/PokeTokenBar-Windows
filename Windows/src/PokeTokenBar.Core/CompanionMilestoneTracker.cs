@@ -5,6 +5,7 @@ public enum CompanionMilestoneKind
     Hatched,
     Evolved,
     Graduated,
+    DittoRevealed,
 }
 
 public sealed record CompanionMilestone(
@@ -18,7 +19,8 @@ public readonly record struct CompanionMilestoneSnapshot(
     string? PokemonName,
     int Stage,
     bool IsShiny,
-    int DexCount)
+    int DexCount,
+    bool IsRevealedDitto = false)
 {
     public bool HasActivePokemon => SpeciesId is not null;
 }
@@ -34,6 +36,12 @@ public sealed class CompanionMilestoneTracker
     {
         var previous = _previous;
         _previous = current;
+
+        if (previous.HasActivePokemon && current.HasActivePokemon
+            && !previous.IsRevealedDitto && current.IsRevealedDitto
+            && current.SpeciesId == PokemonAssets.DittoSpeciesId)
+            return new CompanionMilestone(CompanionMilestoneKind.DittoRevealed,
+                current.PokemonName, current.IsShiny, current.DexCount);
 
         if (!previous.HasActivePokemon && current.HasActivePokemon)
         {

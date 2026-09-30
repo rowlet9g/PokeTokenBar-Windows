@@ -54,10 +54,21 @@ public partial class MainWindow
                   + $"\nCache {TokenFormatter.Grouped(UsageMath.SaturatingAdd(today.CacheCreationTokens, today.CacheReadTokens))}"
                   + $" (쓰기 {TokenFormatter.Grouped(today.CacheCreationTokens)} / 읽기 {TokenFormatter.Grouped(today.CacheReadTokens)})";
             if (snapshot.ProviderId == "kiro") detail += "\n텍스트 바이트 기반 추정치 · 실제 사용량과 다를 수 있음";
+            var models = _tokenPeriod switch
+            {
+                TokenPeriod.Week => snapshot.WeekTotal?.Models,
+                TokenPeriod.Month => snapshot.MonthTotal?.Models,
+                _ => snapshot.Today?.Models,
+            };
+            if (models is { Count: > 0 })
+                detail += (detail.Length > 0 ? "\n\n" : string.Empty) + "모델별 사용량\n"
+                    + string.Join("\n", models.Select(model =>
+                        $"{(model.Model == "unknown" ? "모델 정보 없음" : model.Model)} · {TokenFormatter.Grouped(model.TotalTokens)}"
+                        + $" ({(row.Total > 0 ? (double)model.TotalTokens / row.Total * 100 : 0):0.0}%)"));
             return new TokenProviderCard(
                 snapshot.ProviderId == "gemini" ? "Gemini CLI (Legacy)" : snapshot.DisplayName,
                 TokenFormatter.Grouped(row.Total), share, $"{share:0.0}%", detail,
-                today is null && snapshot.ProviderId != "kiro" ? Visibility.Collapsed : Visibility.Visible,
+                detail.Length == 0 ? Visibility.Collapsed : Visibility.Visible,
                 $"{snapshot.FetchedAt.LocalDateTime:MM/dd HH:mm:ss} 갱신");
         }).ToArray();
 

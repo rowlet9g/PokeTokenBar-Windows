@@ -27,9 +27,10 @@ available through Git history and the upstream project, not in the active tree.
 | Codex local usage | Complete | Replay-safe JSONL parsing and regression tests are in C#. |
 | Codex SSH usage | Complete | Concrete aliases are discovered from SSH config; selected hosts sync token metadata incrementally, and local/remote copies of the same session are deduplicated. |
 | Today/week/month totals | Complete | Windows locale controls the week boundary. |
-| Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, today input/output/cache, and refresh/error status. A live Antigravity request was user-verified to increase both tokens and companion progress on 2026-09-07. |
+| Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, per-model totals/shares for all three periods, today input/output/cache, and refresh/error status. Model identifiers are retained from local records; missing identifiers are explicitly unknown. |
 | Official usage limits | Partial | Codex app-server, Claude Code OAuth, and Antigravity Cloud Code 5-hour/weekly buckets are read and shown on HOME; other providers' official APIs remain outside this slice. |
 | Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
+| Ditto disguise/reveal | Implemented | Common evolving hatches roll 1/128; first evolution reveals Ditto, preserving nature, shiny status and overflow. Disguised shiny appearance is hidden. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
 | Pokédex and catch log | Complete | Only encountered forms are revealed. |
 | Tray popup and single instance | Complete | WPF, WinForms `NotifyIcon`, and a named mutex are used. |
@@ -57,6 +58,22 @@ available through Git history and the upstream project, not in the active tree.
   or SmartScreen prompt has been checked.
 
 ## Remaining work
+
+### Model breakdown and Ditto (2026-09-30; source changes)
+
+- Reference: upstream `42df4e61590fd049b299ec21c349f6d84f93a96a`,
+  `CompanionStore.dittoDisguiseHit` and `revealDitto`.
+- Daily/week/month aggregation preserves per-model input/output/cache totals;
+  TOKENS shows descending totals and provider-relative shares without adding tokens
+  to the growth ledger. Missing model identifiers remain explicitly unknown.
+- Disguise identity is persisted on new hatches only. Reveal metadata failures retain
+  the disguise and progress for retry. Subject identity checks prevent a pending
+  reveal from overwriting a newly purchased egg; import is serialized by the hatch gate.
+- The rare single-form Ditto replaces the disguise in the active collection, carries
+  first-stage overflow, and has its own notification and milestone overlay.
+- Release build passed without warnings/errors and 214 tests passed. Isolated WPF
+  previews verified all three model period views and the reveal overlay. No real
+  user save was modified and no release has been issued for these source changes.
 
 Antigravity Desktop 2.17 compatibility was validated on 2026-09-28: the app no
 longer logs its server launch arguments. Discovery now reads the live server's

@@ -7,12 +7,22 @@ public sealed record DailyUsage(
     long CacheCreationTokens,
     long CacheReadTokens,
     long TotalTokens,
-    double TotalCost);
+    double TotalCost,
+    IReadOnlyList<ModelUsage>? Models = null);
 
 public sealed record PeriodUsage(
     string Period,
     long TotalTokens,
-    double TotalCost);
+    double TotalCost,
+    IReadOnlyList<ModelUsage>? Models = null);
+
+public sealed record ModelUsage(
+    string Model,
+    long InputTokens,
+    long OutputTokens,
+    long CacheCreationTokens,
+    long CacheReadTokens,
+    long TotalTokens);
 
 public sealed record BlockUsage(
     string Id,
