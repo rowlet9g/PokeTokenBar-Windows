@@ -20,6 +20,7 @@ public sealed partial class CompanionStore
     private readonly IRandomSource _randomSource;
     private readonly bool _dittoDisguiseRollingEnabled;
     private readonly SemaphoreSlim _hatchGate = new(1, 1);
+    private PokemonMonState? _validatedEvolutionSubject;
     private CompanionState _state;
     private string? _lastPersistenceError;
     private bool _persistenceEnabled = true;
@@ -794,7 +795,9 @@ public sealed partial class CompanionStore
 
     public async Task<bool> EnsureHatchedAsync(CancellationToken cancellationToken = default)
     {
+        var repaired = await PrepareEvolutionAsync(cancellationToken).ConfigureAwait(false);
         if (await RevealDittoAsync(cancellationToken).ConfigureAwait(false)) return true;
+        if (HasActivePokemon) return repaired;
         if (_pokemonProvider is null)
         {
             return false;
@@ -858,7 +861,7 @@ public sealed partial class CompanionStore
                 return false;
             }
 
-            var plan = BuildEvolutionPlan(line.Tree);
+            var plan = BuildEvolutionPlan(line.Tree, line.BaseId);
             lock (_stateLock)
             {
                 if (_state.ActivePokemon is not null
@@ -895,6 +898,7 @@ public sealed partial class CompanionStore
                 if (_dittoDisguiseRollingEnabled && DittoDisguiseHit(line.Rarity, plan.Count,
                         _randomSource.NextInt64(long.MaxValue)))
                     _state.ActivePokemon.DittoDisguise = line.BaseId;
+                _validatedEvolutionSubject = _state.ActivePokemon;
                 _state.EggUsage = 0;
                 _state.EggGuarantee = null;
                 _state.PendingHatchId = null;
@@ -1069,17 +1073,14 @@ public sealed partial class CompanionStore
         return null;
     }
 
-    private List<int> BuildEvolutionPlan(PokemonEvolutionNode root)
+    private List<int> BuildEvolutionPlan(PokemonEvolutionNode root, int baseId)
     {
-        var plan = new List<int> { root.SpeciesId };
-        var node = root;
-        while (node.Children.Count > 0)
+        lock (_stateLock)
         {
-            node = node.Children[(int)_randomSource.NextInt64(node.Children.Count)];
-            plan.Add(node.SpeciesId);
+            var completed = _state.Dex.Where(entry => !entry.IsReleased && entry.BaseId == baseId)
+                .Select(entry => entry.FinalId).ToHashSet();
+            return EvolutionPlanner.Build(root, completed, _randomSource);
         }
-
-        return plan;
     }
 
     private void ProcessActiveProgress()
@@ -1087,6 +1088,8 @@ public sealed partial class CompanionStore
         var guardCount = 0;
         while (_state.ActivePokemon is { } active && guardCount++ < 50)
         {
+            // Retain growth while a loaded/imported plan awaits tree validation.
+            if (_pokemonProvider is not null && !ReferenceEquals(active, _validatedEvolutionSubject)) return;
             var threshold = PhaseThreshold(active);
             if (active.UsedAtStage < threshold)
             {

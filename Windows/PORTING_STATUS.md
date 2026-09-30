@@ -30,6 +30,7 @@ available through Git history and the upstream project, not in the active tree.
 | Provider usage dashboard | Complete | TOKENS shows period totals, provider shares, per-model totals/shares for all three periods, today input/output/cache, and refresh/error status. Model identifiers are retained from local records; missing identifiers are explicitly unknown. |
 | Official usage limits | Partial | Codex app-server, Claude Code OAuth, and Antigravity Cloud Code 5-hour/weekly buckets are read and shown on HOME; other providers' official APIs remain outside this slice. |
 | Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
+| Evolution branch selection and plan recovery | Implemented | Branches leading to uncompleted final forms are preferred. Complete saved routes are retained without rerolling; truncated routes are extended from the reached form. |
 | Ditto disguise/reveal | Implemented | Common evolving hatches roll 1/128; first evolution reveals Ditto, preserving nature, shiny status and overflow. Disguised shiny appearance is hidden. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
 | Pokédex and catch log | Complete | Only encountered forms are revealed. |
@@ -58,6 +59,23 @@ available through Git history and the upstream project, not in the active tree.
   or SmartScreen prompt has been checked.
 
 ## Remaining work
+
+### Evolution selection and recovery (2026-09-30; source changes)
+
+- Reference: upstream `42df4e61590fd049b299ec21c349f6d84f93a96a`,
+  `CompanionStore.pickPlannedChild` and `normalizedEvolutionState`.
+- Selection remains automatic: at every branch, prefer children with at least
+  one final species not completed for that base species, then randomly choose
+  within the candidate pool. Released companions do not count as completed.
+- Valid saved plans remain unchanged, including collected branches, and consume
+  no new random rolls at restart. Missing/invalid future plans are rebuilt from
+  the reached form, retaining growth, shiny status and nature.
+- Loaded/imported subjects accumulate tokens but wait for tree validation before
+  applying evolution/graduation. Failed lookups retry at the next refresh. If
+  metadata cannot explain an already reached path, it does not roll that path back.
+- Release build passed with zero warnings/errors and 221 tests passed, including
+  branch preference, released-history exclusion, stable restarts, recovery and
+  offline progress retention. No user save or published installer was changed.
 
 ### Model breakdown and Ditto (2026-09-30; source changes)
 
