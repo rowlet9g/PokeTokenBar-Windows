@@ -11,6 +11,7 @@ public enum PokemonRarity
 public static class PokemonBalance
 {
     public const long EggHatchThreshold = 5_000_000;
+    public const int RepeatGrowthMultiplier = 2;
     public const long MaxTokenValue = 1_000_000_000_000_000;
 
     public static long GraduationTotal(PokemonRarity rarity) => rarity switch
@@ -45,14 +46,18 @@ public static class PokemonBalance
     public static long PhaseThreshold(
         PokemonRarity rarity,
         int totalForms,
-        int stageIndex)
+        int stageIndex,
+        int growthMultiplier = 1)
     {
         var forms = Math.Max(1, totalForms);
         var oneBasedStage = Math.Max(0, stageIndex) + 1L;
         var denominator = forms * (forms + 1L) / 2d;
         var threshold = (double)GraduationTotal(rarity) * oneBasedStage / denominator;
-        return (long)Math.Round(
+        var standardThreshold = (long)Math.Round(
             Math.Min(MaxTokenValue, threshold),
             MidpointRounding.AwayFromZero);
+        return Math.Max(1, (long)Math.Round(
+            standardThreshold / (double)Math.Max(1, growthMultiplier),
+            MidpointRounding.AwayFromZero));
     }
 }

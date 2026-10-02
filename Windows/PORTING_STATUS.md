@@ -31,6 +31,7 @@ available through Git history and the upstream project, not in the active tree.
 | Official usage limits | Partial | Codex app-server, Claude Code OAuth, and Antigravity Cloud Code 5-hour/weekly buckets are read and shown on HOME; other providers' official APIs remain outside this slice. |
 | Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
 | Evolution branch selection and plan recovery | Implemented | Branches leading to uncompleted final forms are preferred. Complete saved routes are retained without rerolling; truncated routes are extended from the reached form. |
+| Collection-aware hatch weights and repeat growth | Implemented in source | Completed base species use half the integer capture-rate weight (minimum 1); new repeat hatches save a 2x growth bonus. Old active saves retain their original stage costs. |
 | Ditto disguise/reveal | Implemented | Common evolving hatches roll 1/128; first evolution reveals Ditto, preserving nature, shiny status and overflow. Disguised shiny appearance is hidden. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
 | Pokédex and catch log | Complete | Only encountered forms are revealed. |
@@ -59,6 +60,26 @@ available through Git history and the upstream project, not in the active tree.
   or SmartScreen prompt has been checked.
 
 ## Remaining work
+
+### Collection balance (2026-10-02; source changes, not yet released)
+
+- Reference: upstream `42df4e61590fd049b299ec21c349f6d84f93a96a`,
+  `CollectionWeight.adjusted`, hatch-time `hasGrowthBoost`, and
+  `PokemonBalance.phaseThreshold`.
+- Indexed hatch selection halves completed base species' integer weights, with
+  minimum 1. Multiple completed individuals do not apply the reduction repeatedly;
+  released-only records do not count. Guaranteed eggs retain their rarity filter.
+  The existing REST fallback remains unweighted, matching the upstream fallback.
+- New hatches of a completed base species save `hasGrowthBoost`. Each rounded
+  stage cost is divided by 2 and rounded away from zero, including graduation.
+  Egg incubation, actual token usage, the usage ledger and wallet are unchanged.
+- HOME shows an orange growth x2 badge. The saved bonus survives evolution,
+  Ditto reveal, restart and save transfer; existing saves missing the flag remain
+  unboosted rather than changing progress during an update.
+- Release build passed with zero warnings/errors; all 240 tests passed, including
+  19 collection-balance cases. An isolated WPF render confirmed the HOME badge.
+  The pre-existing database-recovery test now dates its fixture in the current
+  month so a calendar rollover does not hide it from the provider snapshot.
 
 ### Evolution selection and recovery (2026-09-30; source changes)
 

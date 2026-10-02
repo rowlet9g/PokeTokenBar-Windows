@@ -331,7 +331,13 @@
                       <TextBlock x:Name="CompanionTitleText" FontSize="17" FontWeight="SemiBold" Foreground="#FF202124"/>
                       <Border x:Name="RarityBadge" CornerRadius="8" Padding="6,2" Margin="6,0,0,0" Background="#FF007AFF"><TextBlock x:Name="RarityText" Foreground="White" FontSize="10"/></Border>
                     </WrapPanel>
-                    <TextBlock x:Name="CompanionIdentityText" Margin="0,5,0,0" Foreground="#FF575B63" FontSize="11" TextWrapping="Wrap"/>
+                    <WrapPanel Margin="0,5,0,0">
+                      <TextBlock x:Name="CompanionIdentityText" Foreground="#FF575B63" FontSize="11" VerticalAlignment="Center"/>
+                      <Border x:Name="GrowthBoostBadge" Visibility="Collapsed" CornerRadius="6" Padding="5,2" Margin="5,0,0,0" Background="#FFFFEDD5"
+                              ToolTip="이전에 육성 완료한 계열은 진화·졸업에 필요한 토큰이 절반으로 줄어듭니다.">
+                        <TextBlock x:Name="GrowthBoostText" Text="성장 ×2" Foreground="#FF9A4A00" FontSize="10" FontWeight="SemiBold"/>
+                      </Border>
+                    </WrapPanel>
                     <ProgressBar x:Name="CompanionProgressBar" Height="7" Margin="0,8,0,0" Maximum="1" Foreground="#FFFF9500" Background="#FFD9DADD" BorderThickness="0"/>
                     <TextBlock x:Name="CompanionProgressText" Margin="0,7,0,0" Foreground="#FF81858C" FontSize="11" TextWrapping="Wrap"/>
                     <TextBlock x:Name="CompanionMoodText" Margin="0,6,0,0" Foreground="#FF575B63" FontSize="11" TextWrapping="Wrap"/>

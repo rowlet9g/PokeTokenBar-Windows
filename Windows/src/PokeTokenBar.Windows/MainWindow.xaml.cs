@@ -389,6 +389,7 @@ public partial class MainWindow : Window
 
         CompanionIdentityText.Text = "알을 품는 중";
         RarityBadge.Visibility = Visibility.Collapsed;
+        GrowthBoostBadge.Visibility = Visibility.Collapsed;
         CompanionMoodText.Text = "새로운 동료가 깨어나기를 기다리고 있어요.";
         EggVisual.Visibility = Visibility.Visible;
         PokemonImage.Visibility = Visibility.Collapsed;
@@ -1186,6 +1187,9 @@ public partial class MainWindow : Window
         var nature = _companionStore.CurrentPokemonNature;
         CompanionIdentityText.Text = $"진화 단계 {_companionStore.CurrentStage} / {_companionStore.TotalForms}"
             + (nature is { } n ? $" · {NatureName(n).Replace("한 성격", "").Replace(" 성격", "")}" : "");
+        var growthMultiplier = _companionStore.CurrentGrowthMultiplier;
+        GrowthBoostBadge.Visibility = growthMultiplier > 1 ? Visibility.Visible : Visibility.Collapsed;
+        GrowthBoostText.Text = $"성장 ×{growthMultiplier}";
         RarityBadge.Visibility = _companionStore.CurrentPokemonRarity is null ? Visibility.Collapsed : Visibility.Visible;
         if (_companionStore.CurrentPokemonRarity is { } rarity)
         {

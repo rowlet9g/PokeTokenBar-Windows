@@ -408,6 +408,18 @@ public sealed partial class CompanionStore
         }
     }
 
+    public int CurrentGrowthMultiplier
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _state.ActivePokemon?.HasGrowthBoost == true
+                    ? PokemonBalance.RepeatGrowthMultiplier : 1;
+            }
+        }
+    }
+
     public PokemonRarity? CurrentPokemonRarity
     {
         get
@@ -882,6 +894,7 @@ public sealed partial class CompanionStore
                 var natureCount = Enum.GetValues<PokemonNature>().Length;
                 _state.ActivePokemon = new PokemonMonState
                 {
+                    HasGrowthBoost = _state.Dex.Any(entry => !entry.IsReleased && entry.BaseId == line.BaseId),
                     BaseId = line.BaseId,
                     PathIds = [line.BaseId],
                     PlannedPathIds = plan,
@@ -1024,14 +1037,22 @@ public sealed partial class CompanionStore
                 .ToArray();
             if (candidates.Length > 0)
             {
-                var totalWeight = candidates.Sum(species => (long)Math.Clamp(species.CaptureRate, 1, 255));
-                var roll = _randomSource.NextInt64(totalWeight);
-                foreach (var candidate in candidates)
+                HashSet<int> completedBases;
+                lock (_stateLock)
                 {
-                    roll -= Math.Clamp(candidate.CaptureRate, 1, 255);
+                    completedBases = _state.Dex.Where(entry => !entry.IsReleased)
+                        .Select(entry => entry.BaseId).ToHashSet();
+                }
+                var weights = candidates.Select(species => CollectionWeight.Adjusted(
+                    Math.Clamp(species.CaptureRate, 1, 255), completedBases.Contains(species.Id))).ToArray();
+                var totalWeight = weights.Sum(weight => (long)weight);
+                var roll = _randomSource.NextInt64(totalWeight);
+                for (var i = 0; i < candidates.Length; i++)
+                {
+                    roll -= weights[i];
                     if (roll < 0)
                     {
-                        return candidate.Id;
+                        return candidates[i].Id;
                     }
                 }
 
@@ -1173,7 +1194,8 @@ public sealed partial class CompanionStore
         PokemonBalance.PhaseThreshold(
             active.Rarity,
             active.TotalForms,
-            active.StageIndex);
+            active.StageIndex,
+            active.HasGrowthBoost ? PokemonBalance.RepeatGrowthMultiplier : 1);
 
     private CompanionState LoadState()
     {

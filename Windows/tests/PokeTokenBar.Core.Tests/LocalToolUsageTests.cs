@@ -152,8 +152,11 @@ public sealed class LocalToolUsageTests : IDisposable
     public async Task Database_failure_preserves_provider_snapshot_and_recovers()
     {
         var db = Path.Combine(_root, "opencode.db");
+        // UsageStore refreshes at the real clock. Keep this recovery fixture in
+        // its current month so it does not disappear when September has ended.
+        var currentUsage = OpenCode.Replace("1788832800000", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString());
         Execute(db, "CREATE TABLE message (id TEXT, data TEXT);");
-        Execute(db, $"INSERT INTO message VALUES ('o1', '{OpenCode}');");
+        Execute(db, $"INSERT INTO message VALUES ('o1', '{currentUsage}');");
         var reader = new LocalToolUsageReader("opencode");
         using var store = new UsageStore([new LocalToolUsageProvider("opencode", "OpenCode", (_, token) => reader.ReadEntries([_root], DateTimeOffset.MinValue, token))]);
         await store.RefreshAsync();

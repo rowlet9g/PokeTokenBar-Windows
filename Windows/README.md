@@ -18,6 +18,14 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 
 ## Usage display and progression
 
+Indexed hatch selection halves the capture-rate weight of each base species with
+a completed companion (integer division, minimum 1), while keeping duplicates
+possible. Released-only companions do not count. Repeat hatches save a 2x growth
+bonus: evolution and graduation costs are halved, with HOME showing `성장 ×2`.
+Existing active saves without the bonus flag keep their original costs. Egg
+incubation, actual usage and wallet totals stay unchanged; restart and save
+transfer preserve the hatch-time bonus. The REST fallback remains unweighted.
+
 Official limits now drive 80%/95% edge-triggered warnings, companion mood text and a
 six-second floating-pet popup. `RateLimitStore.FreshSnapshots` excludes failed requests'
 preserved values from these effects. `CompanionStore.Limits.cs` atomically records candy

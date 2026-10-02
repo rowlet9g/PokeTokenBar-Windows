@@ -114,6 +114,9 @@ public enum PokemonNature
 
 public sealed class PokemonMonState
 {
+    // Fixed at hatch. Missing fields in older saves retain their original costs.
+    public bool HasGrowthBoost { get; set; }
+
     public int? DittoDisguise { get; set; }
 
     public bool DittoRevealed { get; set; }
