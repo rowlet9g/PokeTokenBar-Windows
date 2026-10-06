@@ -31,11 +31,11 @@ available through Git history and the upstream project, not in the active tree.
 | Official usage limits | Partial | Codex app-server, Claude Code OAuth, and Antigravity Cloud Code 5-hour/weekly buckets are read and shown on HOME; other providers' official APIs remain outside this slice. |
 | Egg, hatch, growth, evolution | Complete | C# owns persistence and balance rules. |
 | Evolution branch selection and plan recovery | Implemented | Branches leading to uncompleted final forms are preferred. Complete saved routes are retained without rerolling; truncated routes are extended from the reached form. |
-| Collection-aware hatch weights and repeat growth | Implemented in source | Completed base species use half the integer capture-rate weight (minimum 1); new repeat hatches save a 2x growth bonus. Old active saves retain their original stage costs. |
+| Collection-aware hatch weights and repeat growth | Included in 0.6.5 | Completed base species use half the integer capture-rate weight (minimum 1); new repeat hatches save a 2x growth bonus. Old active saves retain their original stage costs. |
 | Ditto disguise/reveal | Implemented | Common evolving hatches roll 1/128; first evolution reveals Ditto, preserving nature, shiny status and overflow. Disguised shiny appearance is hidden. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
-| Pokédex and catch log | Implemented in source | Only encountered forms are revealed. Shared name/number search and rarity/shiny filters, independent sort orders, and a 4x4 species grid with 16 species per page. |
-| Representative Pokemon | Implemented in source | Optional owned-species pin for the tray icon and floating pet; default follows the active companion/egg. HOME, growth and milestones retain the active subject. Selection is saved and transferred. |
+| Pokédex and catch log | Included in 0.6.5 | Only encountered forms are revealed. Shared name/number search and rarity/shiny filters, independent sort orders, and a 4x4 species grid with 16 species per page. |
+| Representative Pokemon | Included in 0.6.5 | Optional owned-species pin for the tray icon and floating pet; default follows the active companion/egg. HOME, growth and milestones retain the active subject. Selection is saved and transferred. |
 | Tray popup and single instance | Complete | WPF, WinForms `NotifyIcon`, and a named mutex are used. |
 | Milestone notifications and animations | Complete | Hatch, evolution, graduation, and queued overlays are implemented. |
 | Floating pet | Complete | Click toggle, drag persistence, sizing, and disable menu are implemented. |
@@ -60,9 +60,9 @@ available through Git history and the upstream project, not in the active tree.
   each new artifact; this is not a claim that every interactive installer screen
   or SmartScreen prompt has been checked.
 
-## Remaining work
+## Implementation notes and remaining work
 
-### Representative selection and collection navigation (2026-10-06; source changes, not yet released)
+### Representative selection and collection navigation (2026-10-06; included in 0.6.5)
 
 - Reference: upstream `42df4e61590fd049b299ec21c349f6d84f93a96a`,
   representative selection, `filteredDexSpecies`, `filteredDexEntries`, and
@@ -91,7 +91,7 @@ available through Git history and the upstream project, not in the active tree.
   switching, representative pinning and automatic tracking, while verifying
   that the active companion and its progress remained unchanged.
 
-### Collection balance (2026-10-02; source changes, not yet released)
+### Collection balance (2026-10-02; included in 0.6.5)
 
 - Reference: upstream `42df4e61590fd049b299ec21c349f6d84f93a96a`,
   `CollectionWeight.adjusted`, hatch-time `hasGrowthBoost`, and
