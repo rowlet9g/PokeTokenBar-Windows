@@ -41,6 +41,7 @@ available through Git history and the upstream project, not in the active tree.
 | Floating pet | Complete | Click toggle, drag persistence, sizing, and disable menu are implemented. |
 | Persistence diagnostics | Complete | Diagnostics remain in logs rather than the user-facing popup. |
 | Settings and startup | Complete | Refresh, topmost, notifications, floating pet, and login startup persist. |
+| Growth and shop difficulty | Implemented in source after 0.6.5 | Independent 10%-200% logarithmic sliders, explicit Save, progress fraction preservation, fixed candy XP and consistent scaled prices. |
 | Bag and shop | Complete | Wallet, inventory, confirmations, items, and paid egg rerolls are implemented. |
 | Save transfer | Complete | Versioned import/export, validation, rebasing, and recovery backups are implemented. |
 | Usage providers | Implemented; new adapters need live validation | Twelve local providers: existing five plus Claude Code, OpenCode, Hermes Agent, Grok CLI, Kiro CLI (estimated), Pi Agent, and omp. See the local-provider reference for accounting limitations. |
@@ -61,6 +62,29 @@ available through Git history and the upstream project, not in the active tree.
   or SmartScreen prompt has been checked.
 
 ## Implementation notes and remaining work
+
+### Difficulty settings (2026-10-06; source changes, not yet released)
+
+- Reference: upstream `CompanionStore.setGrowthDifficulty`,
+  `rescaleBankedGrowth`, `setShopDifficulty`, `stageThreshold`, `price`, and
+  `PokemonBalance` logarithmic slider mapping and 10%-200% limits.
+- Growth applies to egg, evolution and graduation thresholds, including repeat
+  growth and Ditto reveal. Saving rescales banked progression to retain its
+  earned fraction and overflow; it never evolves or hatches on its own. Actual
+  usage, provider ledgers, wallet and Rare Candy's 100M XP are unchanged.
+- Shop prices use a separate multiplier for item/egg labels, confirmation text,
+  affordability checks and payment. Both controls wait for Save. Other immediate
+  settings preserve pending slider edits.
+- Difficulty remains a PC preference in settings. `growthDifficultyBasis` is
+  accounting metadata for saved progression, allowing import and interrupted
+  two-file writes to retain the earned fraction while using recipient preferences.
+  Old saves default to 100%, with no rewrite at the default setting.
+- Validation: Release build has zero warnings/errors; 279 tests passed, including
+  21 difficulty cases covering persistence, write failures, interrupted saves,
+  import, rounding, boosted growth, candy, egg overflow, Ditto and shop debits.
+  Isolated WPF controls verified drafts, unrelated settings, explicit Save,
+  unchanged progress fraction, repriced shop and restart. No live user save or
+  installed app was modified for validation.
 
 ### Representative selection and collection navigation (2026-10-06; included in 0.6.5)
 

@@ -14,6 +14,45 @@
         AllowsTransparency="True"
         Background="Transparent">
     <Window.Resources>
+        <Style x:Key="DifficultyTrackButton" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Grid Height="24" Background="Transparent">
+                            <Border Height="3" VerticalAlignment="Center" CornerRadius="1.5" Background="{TemplateBinding Background}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DifficultySlider" TargetType="Slider">
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="IsMoveToPointEnabled" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Track x:Name="PART_Track" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Style="{StaticResource DifficultyTrackButton}" Background="#FF007AFF"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Width="14" Height="14" Cursor="Hand">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border Background="#FFFAFAFC" BorderBrush="#FFB8B9BE" BorderThickness="1" CornerRadius="7"/>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="{x:Static Slider.IncreaseLarge}" Style="{StaticResource DifficultyTrackButton}" Background="#FFD1D2D6"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="ModernToggleCheckBox" TargetType="CheckBox">
             <Setter Property="Width" Value="42" />
             <Setter Property="Height" Value="22" />
@@ -732,7 +771,7 @@
                     <TextBlock Margin="0,3,0,12"
                                Foreground="#FF737780"
                                FontSize="10"
-                               Text="변경 사항은 즉시 저장되고 적용됩니다" />
+                               Text="일반 설정은 즉시 적용 · 난이도는 저장 후 적용" />
 
                     <Border Padding="12" Margin="0,0,0,10" Background="#FFF0F1F3" BorderBrush="#FFD9DADD" BorderThickness="1" CornerRadius="10">
                         <StackPanel>
@@ -742,6 +781,27 @@
                                 <Button Content="도감에서 선택" Padding="8,4" Margin="0,0,6,0" Style="{StaticResource ModernActionButton}" Click="ChooseRepresentative_OnClick"/>
                                 <Button x:Name="FollowCurrentSettingsButton" Content="현재 포켓몬 자동 추적" Padding="8,4" Style="{StaticResource ModernActionButton}" Click="FollowCurrent_OnClick"/>
                             </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="12" Margin="0,0,0,10" Background="#FFF0F1F3" BorderBrush="#FFD9DADD" BorderThickness="1" CornerRadius="10">
+                        <StackPanel>
+                            <TextBlock Text="난이도" FontSize="12" FontWeight="SemiBold" Foreground="#FF202124" Margin="0,0,0,10"/>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="성장" VerticalAlignment="Center" FontSize="11" Foreground="#FF202124"/>
+                                <Slider x:Name="GrowthDifficultySlider" Style="{StaticResource DifficultySlider}" Grid.Column="1" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.05" VerticalAlignment="Center" Margin="0,0,8,0" ValueChanged="DifficultySlider_OnChanged" AutomationProperties.Name="성장 난이도"/>
+                                <TextBlock x:Name="GrowthDifficultyText" Grid.Column="2" Text="100%" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#FF202124"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="상점 가격" VerticalAlignment="Center" FontSize="11" Foreground="#FF202124"/>
+                                <Slider x:Name="ShopDifficultySlider" Style="{StaticResource DifficultySlider}" Grid.Column="1" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.05" VerticalAlignment="Center" Margin="0,0,8,0" ValueChanged="DifficultySlider_OnChanged" AutomationProperties.Name="상점 가격 난이도"/>
+                                <TextBlock x:Name="ShopDifficultyText" Grid.Column="2" Text="100%" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#FF202124"/>
+                            </Grid>
+                            <TextBlock Text="10~200% · 기본값 100%. 낮추면 빨리 자라고 싸지며, 높이면 그 반대입니다." FontSize="10" Foreground="#FF737780" TextWrapping="Wrap"/>
+                            <TextBlock Text="저장해도 현재 진행률은 유지됩니다." FontSize="10" Foreground="#FF737780" Margin="0,3,0,8"/>
+                            <Button x:Name="SaveDifficultyButton" Content="저장" HorizontalAlignment="Right" Padding="14,5" Style="{StaticResource ModernActionButton}" IsEnabled="False" Click="SaveDifficultyButton_OnClick"/>
                         </StackPanel>
                     </Border>
 

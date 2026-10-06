@@ -123,10 +123,22 @@ public partial class App : System.Windows.Application
         _spriteStore = new PokemonSpriteStore(
             _httpClient,
             Path.Combine(paths.CacheDirectory, "Sprites"));
-        _companionStore = new CompanionStore(
-            Path.Combine(paths.DataDirectory, "companion-state.json"),
-            pokemonProvider,
-            dittoDisguiseRollingEnabled: true);
+        try
+        {
+            _companionStore = new CompanionStore(
+                Path.Combine(paths.DataDirectory, "companion-state.json"),
+                pokemonProvider,
+                dittoDisguiseRollingEnabled: true,
+                settings: _settings);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            LogSettingsError(error.Message);
+            System.Windows.MessageBox.Show("저장된 난이도를 적용하지 못했습니다. 저장소를 확인한 뒤 다시 실행하십시오.\n\n" + error.Message,
+                "PokeTokenBar 저장소 오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
         _milestoneTracker = new CompanionMilestoneTracker(CaptureCompanionSnapshot());
         LogCompanionStateLoad(paths.LogsDirectory, _companionStore);
         if (_companionStore.LastPersistenceError is { } persistenceError)
@@ -277,7 +289,7 @@ public partial class App : System.Windows.Application
 
     private void Popover_OnSettingsChanged(AppSettings requested)
     {
-        if (_settingsStore is null || _startupRegistration is null || _popover is null)
+        if (_settingsStore is null || _startupRegistration is null || _popover is null || _companionStore is null)
         {
             return;
         }
@@ -286,7 +298,7 @@ public partial class App : System.Windows.Application
         try
         {
             _startupRegistration.SetEnabled(requested.LaunchAtLogin);
-            _settingsStore.Save(requested);
+            _companionStore.SaveSettings(_settingsStore, requested);
             _settings = _settingsStore.Current;
             ApplyRuntimeSettings();
             _popover.ApplySettings(_settings);

@@ -21,6 +21,10 @@ public sealed record AppSettings
 
     public int FloatingPetSize { get; init; } = 96;
 
+    public double GrowthDifficulty { get; init; } = PokemonBalance.DefaultDifficulty;
+
+    public double ShopDifficulty { get; init; } = PokemonBalance.DefaultDifficulty;
+
     public double? FloatingPetLeft { get; init; }
 
     public double? FloatingPetTop { get; init; }
@@ -30,6 +34,8 @@ public sealed record AppSettings
         RefreshIntervalSeconds = Math.Clamp(RefreshIntervalSeconds, 30, 60 * 60),
         RemoteCodexSshHosts = string.Join(", ", ParseRemoteCodexSshHosts(RemoteCodexSshHosts)),
         FloatingPetSize = Math.Clamp(FloatingPetSize, 64, 160),
+        GrowthDifficulty = PokemonBalance.ClampDifficulty(GrowthDifficulty),
+        ShopDifficulty = PokemonBalance.ClampDifficulty(ShopDifficulty),
         FloatingPetLeft = NormalizeCoordinate(FloatingPetLeft),
         FloatingPetTop = NormalizeCoordinate(FloatingPetTop),
     };

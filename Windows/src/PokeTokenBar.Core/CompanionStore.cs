@@ -30,7 +30,8 @@ public sealed partial class CompanionStore
         string filePath,
         IPokemonProvider? pokemonProvider = null,
         IRandomSource? randomSource = null,
-        bool dittoDisguiseRollingEnabled = false)
+        bool dittoDisguiseRollingEnabled = false,
+        AppSettings? settings = null)
     {
         _filePath = Path.GetFullPath(filePath);
         var directory = Path.GetDirectoryName(_filePath)
@@ -40,6 +41,7 @@ public sealed partial class CompanionStore
         _randomSource = randomSource ?? new SystemRandomSource();
         _dittoDisguiseRollingEnabled = dittoDisguiseRollingEnabled;
         _state = LoadState();
+        LoadDifficultySettings(settings ?? new AppSettings());
     }
 
     public event EventHandler? Changed;
@@ -85,6 +87,7 @@ public sealed partial class CompanionStore
                 var previous = SaveTransfer.CloneState(_state);
                 var replacement = SaveTransfer.CloneState(imported);
                 Sanitize(replacement);
+                RebaseGrowth(replacement, _growthDifficulty);
                 foreach (var (key, progress) in previous.LimitProgress)
                 {
                     if (!replacement.LimitProgress.TryGetValue(key, out var restored))
@@ -225,7 +228,7 @@ public sealed partial class CompanionStore
                 return false;
             }
 
-            var price = CompanionItemRules.Price(kind);
+            var price = ItemPriceUnsafe(kind);
             _state.SpentTokens = SaturatingTokenAdd(_state.SpentTokens, price);
             var key = CompanionItemRules.StorageKey(kind);
             _state.Inventory[key] = Math.Min(int.MaxValue, ItemCountUnsafe(kind) + 1);
@@ -333,13 +336,13 @@ public sealed partial class CompanionStore
     public bool EggStarted => EggUsage > 0;
 
     public double EggProgress => Math.Clamp(
-        EggUsage / (double)PokemonBalance.EggHatchThreshold,
+        EggUsage / (double)EggHatchThreshold,
         0,
         1);
 
     public long EggTokensToHatch => Math.Max(
         0,
-        PokemonBalance.EggHatchThreshold - EggUsage);
+        EggHatchThreshold - EggUsage);
 
     public bool ReadyToHatch
     {
@@ -348,7 +351,7 @@ public sealed partial class CompanionStore
             lock (_stateLock)
             {
                 return _state.ActivePokemon is null
-                    && _state.EggUsage >= PokemonBalance.EggHatchThreshold;
+                    && _state.EggUsage >= EggHatchThreshold;
             }
         }
     }
@@ -448,7 +451,7 @@ public sealed partial class CompanionStore
         {
             return _state.ActivePokemon is not null
                 && Math.Max(0, _state.UsedSinceInstall - _state.SpentTokens)
-                    >= CompanionItemRules.FreshEggPrice(tier);
+                    >= FreshEggPriceUnsafe(tier);
         }
     }
 
@@ -458,14 +461,14 @@ public sealed partial class CompanionStore
         {
             if (_state.ActivePokemon is null
                 || Math.Max(0, _state.UsedSinceInstall - _state.SpentTokens)
-                    < CompanionItemRules.FreshEggPrice(tier))
+                    < FreshEggPriceUnsafe(tier))
             {
                 return false;
             }
 
             _state.SpentTokens = SaturatingTokenAdd(
                 _state.SpentTokens,
-                CompanionItemRules.FreshEggPrice(tier));
+                FreshEggPriceUnsafe(tier));
             _state.Dex.Add(CreateReleasedDexEntry(_state.ActivePokemon));
             _state.ActivePokemon = null;
             _state.EggUsage = 0;
@@ -828,7 +831,7 @@ public sealed partial class CompanionStore
             lock (_stateLock)
             {
                 if (_state.ActivePokemon is not null
-                    || _state.EggUsage < PokemonBalance.EggHatchThreshold)
+                    || _state.EggUsage < EggHatchThreshold)
                 {
                     return false;
                 }
@@ -847,7 +850,7 @@ public sealed partial class CompanionStore
                 lock (_stateLock)
                 {
                     if (_state.ActivePokemon is not null
-                        || _state.EggUsage < PokemonBalance.EggHatchThreshold)
+                        || _state.EggUsage < EggHatchThreshold)
                     {
                         return false;
                     }
@@ -882,7 +885,7 @@ public sealed partial class CompanionStore
             lock (_stateLock)
             {
                 if (_state.ActivePokemon is not null
-                    || _state.EggUsage < PokemonBalance.EggHatchThreshold
+                    || _state.EggUsage < EggHatchThreshold
                     || _state.PendingHatchId != baseSpeciesId)
                 {
                     return false;
@@ -895,7 +898,7 @@ public sealed partial class CompanionStore
                     return false;
                 }
 
-                var overflow = Math.Max(0, _state.EggUsage - PokemonBalance.EggHatchThreshold);
+                var overflow = Math.Max(0, _state.EggUsage - EggHatchThreshold);
                 var natureCount = Enum.GetValues<PokemonNature>().Length;
                 _state.ActivePokemon = new PokemonMonState
                 {
@@ -1195,7 +1198,9 @@ public sealed partial class CompanionStore
         };
     }
 
-    private static long PhaseThreshold(PokemonMonState active) =>
+    private long PhaseThreshold(PokemonMonState active) => PokemonBalance.Scaled(BasePhaseThreshold(active), _growthDifficulty);
+
+    private static long BasePhaseThreshold(PokemonMonState active) =>
         PokemonBalance.PhaseThreshold(
             active.Rarity,
             active.TotalForms,
@@ -1369,6 +1374,7 @@ public sealed partial class CompanionStore
         state.UsedSinceInstall = ClampToken(state.UsedSinceInstall);
         state.SpentTokens = ClampToken(state.SpentTokens);
         state.EggUsage = ClampToken(state.EggUsage);
+        state.GrowthDifficultyBasis = PokemonBalance.ClampDifficulty(state.GrowthDifficultyBasis);
         if (state.PendingHatchId is { } pending && !PokemonAssets.HasSprite(pending))
         {
             state.PendingHatchId = null;
@@ -1468,7 +1474,7 @@ public sealed partial class CompanionStore
         }
 
         return Math.Max(0, _state.UsedSinceInstall - _state.SpentTokens)
-            >= CompanionItemRules.Price(kind);
+            >= ItemPriceUnsafe(kind);
     }
 
     private void DecrementItemUnsafe(CompanionItemKind kind)

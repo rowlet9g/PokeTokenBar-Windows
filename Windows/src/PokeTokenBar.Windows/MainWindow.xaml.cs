@@ -76,7 +76,9 @@ public partial class MainWindow : Window
         _applyingSettings = true;
         try
         {
+            var previous = _currentSettings;
             _currentSettings = settings;
+            ApplyDifficultyControls(settings, previous);
             NotificationsCheckBox.IsChecked = settings.NotificationsEnabled;
             AlwaysOnTopCheckBox.IsChecked = settings.AlwaysOnTop;
             LaunchAtLoginCheckBox.IsChecked = settings.LaunchAtLogin;
@@ -638,7 +640,7 @@ public partial class MainWindow : Window
         ShopWalletText.Text = TokenFormatter.Compact(_companionStore.AvailableTokens);
         ShopItemsPanel.Children.Clear();
         foreach (var kind in Enum.GetValues<CompanionItemKind>()
-                     .OrderBy(CompanionItemRules.Price))
+                     .OrderBy(_companionStore.Price))
         {
             ShopItemsPanel.Children.Add(CreateShopItemCard(kind));
         }
@@ -687,7 +689,7 @@ public partial class MainWindow : Window
             Foreground = Brush("#FF8F98A8"),
             FontFamily = new System.Windows.Media.FontFamily("Consolas"),
             FontSize = 10,
-            Text = $"가격 {TokenFormatter.Compact(CompanionItemRules.Price(kind))}"
+            Text = $"가격 {TokenFormatter.Compact(_companionStore.Price(kind))}"
                 + (owned > 0 && !CompanionItemRules.IsPassive(kind) ? $" · 보유 {owned}" : string.Empty),
         });
 
@@ -802,7 +804,7 @@ public partial class MainWindow : Window
             Foreground = Brush("#FF8F98A8"),
             FontFamily = new System.Windows.Media.FontFamily("Consolas"),
             FontSize = 10,
-            Text = $"가격 {TokenFormatter.Compact(CompanionItemRules.FreshEggPrice(tier))}",
+            Text = $"가격 {TokenFormatter.Compact(_companionStore.FreshEggPrice(tier))}",
         });
 
         var header = new StackPanel { Orientation = WpfOrientation.Horizontal };
@@ -1228,7 +1230,7 @@ public partial class MainWindow : Window
         _pendingEggShinyConfirmed = false;
         ConfirmPurchaseButton.Content = "구매 확정";
         ShopConfirmationText.Text =
-            $"{ItemName(kind)}을(를) {TokenFormatter.Compact(CompanionItemRules.Price(kind))} 토큰에 구매하겠습니까?";
+            $"{ItemName(kind)}을(를) {TokenFormatter.Compact(_companionStore.Price(kind))} 토큰에 구매하겠습니까?";
         ShopConfirmationPanel.Visibility = Visibility.Visible;
     }
 
@@ -1297,7 +1299,7 @@ public partial class MainWindow : Window
         ConfirmPurchaseButton.Content = "구매 확정";
         ShopConfirmationText.Text =
             $"{_companionStore.CurrentPokemonName ?? "현재 포켓몬"}을(를) 놓아주고 "
-            + $"{FreshEggName(tier)}을(를) {TokenFormatter.Compact(CompanionItemRules.FreshEggPrice(tier))} 토큰에 구매하겠습니까? "
+            + $"{FreshEggName(tier)}을(를) {TokenFormatter.Compact(_companionStore.FreshEggPrice(tier))} 토큰에 구매하겠습니까? "
             + "놓아준 포켓몬은 도감에 등록되지 않습니다.";
         ShopConfirmationPanel.Visibility = Visibility.Visible;
     }

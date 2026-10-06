@@ -13,6 +13,25 @@ public static class PokemonBalance
     public const long EggHatchThreshold = 5_000_000;
     public const int RepeatGrowthMultiplier = 2;
     public const long MaxTokenValue = 1_000_000_000_000_000;
+    public const double DefaultDifficulty = 1;
+
+    public static double ClampDifficulty(double value) =>
+        double.IsFinite(value) ? Math.Clamp(value, 0.1, 2) : DefaultDifficulty;
+
+    public static long Scaled(long value, double difficulty) => Math.Max(1,
+        (long)Math.Round(Math.Min(MaxTokenValue, value * ClampDifficulty(difficulty)), MidpointRounding.AwayFromZero));
+
+    // Match the upstream logarithmic slider: equal ratios occupy equal distances.
+    public static double DifficultyPosition(double value) => Math.Log(ClampDifficulty(value) / 0.1) / Math.Log(20);
+
+    public static double DifficultyAtPosition(double position)
+    {
+        var p = double.IsFinite(position) ? Math.Clamp(position, 0, 1) : DifficultyPosition(DefaultDifficulty);
+        if (Math.Abs(p - DifficultyPosition(DefaultDifficulty)) < 0.01) return DefaultDifficulty;
+        var value = 0.1 * Math.Pow(20, p);
+        var magnitude = Math.Pow(10, Math.Floor(Math.Log10(value)) - 1);
+        return ClampDifficulty(Math.Round(value / magnitude, MidpointRounding.AwayFromZero) * magnitude);
+    }
 
     public static long GraduationTotal(PokemonRarity rarity) => rarity switch
     {

@@ -18,6 +18,22 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 
 ## Usage display and progression
 
+Difficulty controls (source changes after 0.6.5) independently scale growth and
+shop prices from 10% to 200%, default 100%. Both logarithmic sliders are drafts
+until Save; unrelated immediate settings neither apply nor erase the draft.
+Growth scales egg, evolution and graduation thresholds after the repeat bonus;
+shop scaling applies consistently to displayed prices, confirmations, affordability
+and actual debits. Rare Candy remains 100M XP. Saving preserves the current egg
+or stage fraction, including pending overflow, without triggering progression.
+
+Preferences stay in `settings.json`. The companion save's optional
+`growthDifficultyBasis` records the units of banked progression, defaults to 1
+for old saves, and lets interrupted two-file writes or imported saves be rebased
+to this PC's preferences exactly once. A settings write failure restores original
+credits; a progress write failure does not commit preferences. Import preserves
+the recipient's difficulty, and usage ledgers, lifetime tokens and wallet do not
+change when difficulty is saved.
+
 Collection supports shared name/number search, rarity and shiny filters, separate
 species/log sorting, and 16-species pages in a 4x4 grid. Search in a catch record
 matches its encountered evolution chain, never planned future forms. Names use

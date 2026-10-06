@@ -10,6 +10,10 @@ public sealed class CompanionState
 
     public long EggUsage { get; set; }
 
+    // Unit basis for banked growth, not a preference. Settings remain authoritative
+    // across imports and interrupted writes to the two separate files.
+    public double GrowthDifficultyBasis { get; set; } = PokemonBalance.DefaultDifficulty;
+
     public int? PendingHatchId { get; set; }
 
     public PokemonRarity? EggGuarantee { get; set; }
