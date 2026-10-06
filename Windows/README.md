@@ -18,7 +18,7 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 
 ## Usage display and progression
 
-Difficulty controls (source changes after 0.6.5) independently scale growth and
+Difficulty controls (included in 0.7.0) independently scale growth and
 shop prices from 10% to 200%, default 100%. Both logarithmic sliders are drafts
 until Save; unrelated immediate settings neither apply nor erase the draft.
 Growth scales egg, evolution and graduation thresholds after the repeat bonus;

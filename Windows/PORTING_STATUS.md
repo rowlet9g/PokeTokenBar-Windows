@@ -41,7 +41,7 @@ available through Git history and the upstream project, not in the active tree.
 | Floating pet | Complete | Click toggle, drag persistence, sizing, and disable menu are implemented. |
 | Persistence diagnostics | Complete | Diagnostics remain in logs rather than the user-facing popup. |
 | Settings and startup | Complete | Refresh, topmost, notifications, floating pet, and login startup persist. |
-| Growth and shop difficulty | Implemented in source after 0.6.5 | Independent 10%-200% logarithmic sliders, explicit Save, progress fraction preservation, fixed candy XP and consistent scaled prices. |
+| Growth and shop difficulty | Included in 0.7.0 | Independent 10%-200% logarithmic sliders, explicit Save, progress fraction preservation, fixed candy XP and consistent scaled prices. |
 | Bag and shop | Complete | Wallet, inventory, confirmations, items, and paid egg rerolls are implemented. |
 | Save transfer | Complete | Versioned import/export, validation, rebasing, and recovery backups are implemented. |
 | Usage providers | Implemented; new adapters need live validation | Twelve local providers: existing five plus Claude Code, OpenCode, Hermes Agent, Grok CLI, Kiro CLI (estimated), Pi Agent, and omp. See the local-provider reference for accounting limitations. |
@@ -63,7 +63,7 @@ available through Git history and the upstream project, not in the active tree.
 
 ## Implementation notes and remaining work
 
-### Difficulty settings (2026-10-06; source changes, not yet released)
+### Difficulty settings (2026-10-06; included in 0.7.0)
 
 - Reference: upstream `CompanionStore.setGrowthDifficulty`,
   `rescaleBankedGrowth`, `setShopDifficulty`, `stageThreshold`, `price`, and
