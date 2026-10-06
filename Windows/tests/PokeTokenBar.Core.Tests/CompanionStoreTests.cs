@@ -379,7 +379,7 @@ public sealed class CompanionStoreTests
     }
 
     [Fact]
-    public void Permanent_species_wins_raising_status_while_shiny_discovery_is_merged()
+    public void Current_species_is_marked_raising_while_normal_and_shiny_discoveries_are_merged()
     {
         using var temporary = TemporaryDirectory.Create();
         File.WriteAllText(
@@ -416,8 +416,10 @@ public sealed class CompanionStoreTests
 
         Assert.Equal(new[] { 1, 2 }, store.DexSpecies.Select(item => item.SpeciesId));
         var bulbasaur = store.DexSpecies[0];
-        Assert.False(bulbasaur.IsRaising);
+        Assert.True(bulbasaur.IsRaising);
         Assert.True(bulbasaur.IsShiny);
+        Assert.True(bulbasaur.HasNormal);
+        Assert.False(store.DexSpecies[1].IsRaising);
         Assert.Equal(2, store.CollectionEntries.Count);
         Assert.True(store.CollectionEntries[0].IsRaising);
         Assert.Equal("graduated-one", store.CollectionEntries[1].Id);

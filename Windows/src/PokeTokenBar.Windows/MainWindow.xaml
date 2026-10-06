@@ -6,7 +6,7 @@
         mc:Ignorable="d"
         Title="PokeTokenBar"
         Width="420"
-        Height="580"
+        Height="640"
         ResizeMode="NoResize"
         WindowStyle="None"
         ShowInTaskbar="False"
@@ -377,7 +377,10 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <DockPanel Margin="2,0,2,10">
                     <TextBlock x:Name="PokedexCountText"
@@ -423,12 +426,51 @@
                                 Content="포획 기록" />
                     </UniformGrid>
                 </Border>
-                <Grid Grid.Row="2">
+                <DockPanel Grid.Row="2" Margin="0,0,0,5">
+                    <Button x:Name="ResetCollectionFiltersButton" DockPanel.Dock="Right" Content="초기화" Margin="5,0,0,0" Padding="7,3"
+                            Style="{StaticResource ModernActionButton}" Click="ResetCollectionFilters_OnClick" />
+                    <Grid>
+                        <TextBox x:Name="CollectionSearchTextBox" Padding="7,5" FontSize="11"
+                                 Background="#FFF9FAFB" Foreground="#FF202124" BorderBrush="#FFC7C7CC"
+                                 ToolTip="이름 또는 도감 번호로 검색 (예: 파이리, #004)"
+                                 AutomationProperties.Name="포켓몬 이름 또는 도감 번호 검색"
+                                 TextChanged="CollectionFilters_OnChanged" />
+                        <TextBlock Text="이름 또는 도감 번호 검색" Margin="8,0" VerticalAlignment="Center"
+                                   FontSize="11" Foreground="#FF81858C" IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=CollectionSearchTextBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger></Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </DockPanel>
+                <Grid Grid.Row="3" Margin="0,0,0,7">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <ComboBox x:Name="CollectionRarityComboBox" Margin="0,0,4,0" Height="27" SelectedIndex="0"
+                              Style="{StaticResource ModernComboBox}" ToolTip="희귀도 필터" AutomationProperties.Name="희귀도 필터"
+                              SelectionChanged="CollectionFilters_OnChanged">
+                        <ComboBoxItem Content="전체 등급" Tag="All"/>
+                        <ComboBoxItem Content="일반" Tag="Common"/>
+                        <ComboBoxItem Content="고급" Tag="Uncommon"/>
+                        <ComboBoxItem Content="희귀" Tag="Rare"/>
+                        <ComboBoxItem Content="전설" Tag="Legendary"/>
+                    </ComboBox>
+                    <ComboBox x:Name="CollectionSortComboBox" Grid.Column="1" Height="27" Margin="0,0,7,0"
+                              Style="{StaticResource ModernComboBox}" ToolTip="정렬 순서" AutomationProperties.Name="정렬 순서"
+                              SelectionChanged="CollectionSort_OnChanged"/>
+                    <CheckBox x:Name="CollectionShinyOnlyCheckBox" Grid.Column="2" Content="★ 이로치" FontSize="10"
+                              Foreground="#FF575B63" VerticalAlignment="Center" ToolTip="이로치를 보유한 종과 개체만 표시"
+                              Checked="CollectionFilters_OnChanged" Unchecked="CollectionFilters_OnChanged"/>
+                </Grid>
+                <Grid Grid.Row="4">
                     <ScrollViewer x:Name="SpeciesScrollView"
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
-                        <WrapPanel x:Name="PokedexItemsPanel"
-                                   HorizontalAlignment="Left" />
+                        <UniformGrid x:Name="PokedexItemsPanel" Columns="4" Rows="4" VerticalAlignment="Top" />
                     </ScrollViewer>
                     <ScrollViewer x:Name="CatchLogScrollView"
                                   VerticalScrollBarVisibility="Auto"
@@ -443,16 +485,39 @@
                                    Foreground="#FF007AFF"
                                    FontSize="32"
                                    Text="?" />
-                        <TextBlock Margin="0,6,0,0"
+                        <TextBlock x:Name="EmptyPokedexTitleText" Margin="0,6,0,0"
                                    Foreground="#FF575B63"
                                    FontSize="12"
                                    Text="아직 만난 포켓몬이 없습니다" />
-                        <TextBlock Margin="0,3,0,0"
+                        <TextBlock x:Name="EmptyPokedexHintText" Margin="0,3,0,0"
                                    Foreground="#FF737780"
                                    FontSize="10"
                                    Text="알이 부화하면 첫 기록이 생깁니다" />
                     </StackPanel>
                 </Grid>
+                <StackPanel Grid.Row="5" Margin="0,6,0,0">
+                    <DockPanel x:Name="SpeciesSelectionPanel">
+                        <Button x:Name="SetRepresentativeButton" DockPanel.Dock="Right" Content="대표 지정"
+                                Style="{StaticResource ModernActionButton}" Padding="7,3" Margin="5,0,0,0"
+                                Click="SetRepresentative_OnClick" IsEnabled="False" />
+                        <TextBlock x:Name="SelectedSpeciesText" VerticalAlignment="Center" Foreground="#FF575B63"
+                                   FontSize="10" TextTrimming="CharacterEllipsis" Text="포켓몬을 선택하면 대표로 지정할 수 있습니다"/>
+                    </DockPanel>
+                    <DockPanel Margin="0,5,0,0">
+                        <StackPanel x:Name="DexPageControls" DockPanel.Dock="Right" Orientation="Horizontal" Margin="5,0,0,0">
+                            <Button x:Name="DexPreviousPageButton" Content="‹" Padding="7,2" Style="{StaticResource ModernActionButton}"
+                                    ToolTip="이전 도감 페이지" Click="DexPreviousPage_OnClick"/>
+                            <TextBlock x:Name="DexPageText" FontSize="10" Margin="6,0" VerticalAlignment="Center" Foreground="#FF575B63"/>
+                            <Button x:Name="DexNextPageButton" Content="›" Padding="7,2" Style="{StaticResource ModernActionButton}"
+                                    ToolTip="다음 도감 페이지" Click="DexNextPage_OnClick"/>
+                        </StackPanel>
+                        <Button x:Name="FollowCurrentButton" DockPanel.Dock="Right" Content="자동 추적" Padding="7,2"
+                                Style="{StaticResource ModernActionButton}" Margin="5,0,0,0" Click="FollowCurrent_OnClick"
+                                ToolTip="대표 고정을 해제하고 현재 키우는 포켓몬이나 알을 표시"/>
+                        <TextBlock x:Name="RepresentativeStatusText" Foreground="#FF007AFF" FontSize="10"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
+                </StackPanel>
             </Grid>
 
             <Grid x:Name="TokensView" Grid.Row="2" Margin="0,10,0,0" Visibility="Collapsed">
@@ -668,6 +733,17 @@
                                Foreground="#FF737780"
                                FontSize="10"
                                Text="변경 사항은 즉시 저장되고 적용됩니다" />
+
+                    <Border Padding="12" Margin="0,0,0,10" Background="#FFF0F1F3" BorderBrush="#FFD9DADD" BorderThickness="1" CornerRadius="10">
+                        <StackPanel>
+                            <TextBlock Text="대표 포켓몬" FontSize="12" FontWeight="SemiBold" Foreground="#FF202124"/>
+                            <TextBlock x:Name="RepresentativeSettingsText" Margin="0,4,0,7" FontSize="10" Foreground="#FF575B63" TextWrapping="Wrap"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="도감에서 선택" Padding="8,4" Margin="0,0,6,0" Style="{StaticResource ModernActionButton}" Click="ChooseRepresentative_OnClick"/>
+                                <Button x:Name="FollowCurrentSettingsButton" Content="현재 포켓몬 자동 추적" Padding="8,4" Style="{StaticResource ModernActionButton}" Click="FollowCurrent_OnClick"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
 
                     <Border Padding="14"
                             Background="#FFF0F1F3"

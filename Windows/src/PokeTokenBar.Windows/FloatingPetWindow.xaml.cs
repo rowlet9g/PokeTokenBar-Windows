@@ -128,7 +128,7 @@ public partial class FloatingPetWindow : Window
         {
             PetImage.Source = null;
             PetImage.Visibility = Visibility.Collapsed;
-            FallbackText.Visibility = Visibility.Visible;
+            FallbackText.Visibility = EggVisual.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
             return;
         }
 

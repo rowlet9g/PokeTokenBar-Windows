@@ -20,6 +20,9 @@ public sealed class CompanionState
 
     public PokemonMonState? ActivePokemon { get; set; }
 
+    // null follows the active companion/egg; a pin only changes display surfaces.
+    public int? RepresentativeSpeciesId { get; set; }
+
     public List<PokemonDexEntry> Dex { get; set; } = [];
 
     public Dictionary<string, int> Inventory { get; set; } = [];

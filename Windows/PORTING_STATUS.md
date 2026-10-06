@@ -34,7 +34,8 @@ available through Git history and the upstream project, not in the active tree.
 | Collection-aware hatch weights and repeat growth | Implemented in source | Completed base species use half the integer capture-rate weight (minimum 1); new repeat hatches save a 2x growth bonus. Old active saves retain their original stage costs. |
 | Ditto disguise/reveal | Implemented | Common evolving hatches roll 1/128; first evolution reveals Ditto, preserving nature, shiny status and overflow. Disguised shiny appearance is hidden. |
 | PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
-| Pokédex and catch log | Complete | Only encountered forms are revealed. |
+| Pokédex and catch log | Implemented in source | Only encountered forms are revealed. Shared name/number search and rarity/shiny filters, independent sort orders, and a 4x4 species grid with 16 species per page. |
+| Representative Pokemon | Implemented in source | Optional owned-species pin for the tray icon and floating pet; default follows the active companion/egg. HOME, growth and milestones retain the active subject. Selection is saved and transferred. |
 | Tray popup and single instance | Complete | WPF, WinForms `NotifyIcon`, and a named mutex are used. |
 | Milestone notifications and animations | Complete | Hatch, evolution, graduation, and queued overlays are implemented. |
 | Floating pet | Complete | Click toggle, drag persistence, sizing, and disable menu are implemented. |
@@ -60,6 +61,35 @@ available through Git history and the upstream project, not in the active tree.
   or SmartScreen prompt has been checked.
 
 ## Remaining work
+
+### Representative selection and collection navigation (2026-10-06; source changes, not yet released)
+
+- Reference: upstream `42df4e61590fd049b299ec21c349f6d84f93a96a`,
+  representative selection, `filteredDexSpecies`, `filteredDexEntries`, and
+  `CollectionView`/`DexGridView`. Default display follows the active subject.
+- Select an owned species in Collection, then use the representative button to
+  pin it; Settings links to the same picker. Automatic tracking can be restored
+  from either screen. The tray icon and floating pet follow the selected species,
+  including owned shiny colors. HOME, growth, usage, wallet and milestone events
+  continue to follow the active companion.
+- The optional saved ID accepts only encountered forms, including released catch
+  records. Invalid pins and disguise identities lost on Ditto reveal fall back
+  automatically. Failed selection writes retain the previous saved selection.
+- Collection shares name/number search (case-insensitive names, optional # and
+  padded/partial numbers), rarity and shiny filters across both views. Species
+  and catch log retain independent sort orders; log search covers reached chain
+  members, never names of planned future forms. Names use the metadata already
+  stored by this Korean-first port; upstream multilingual name storage is separate.
+- Species pages contain up to 16 cells in a 4x4 grid. Filters reset page/selection;
+  result changes clamp the page. A selected shiny-owned species shows its shiny
+  colors. Only the current form carries the raising badge, even when collected
+  previously. The fixed window height is 640 DIP to show all four rows.
+- Animated sprite quality and Pokemon detail/stat/profile screens remain outside
+  these two items. No live user save or installed app was changed for UI previews.
+- Validation: Release build completed without warnings or errors; all 258 tests
+  passed. Isolated UI previews exercised paging, search, shiny filters, view
+  switching, representative pinning and automatic tracking, while verifying
+  that the active companion and its progress remained unchanged.
 
 ### Collection balance (2026-10-02; source changes, not yet released)
 

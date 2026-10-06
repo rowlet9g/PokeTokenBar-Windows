@@ -56,6 +56,7 @@ public partial class MainWindow : Window
         _applicationToken = applicationToken;
         _discoveredSshHosts = discoveredSshHosts ?? WindowsSshHostDiscovery.Discover();
         InitializeComponent();
+        InitializeCollectionControls();
         HeaderVersionText.Text = $"v{ProductVersion}";
         Title = $"PokeTokenBar v{ProductVersion}";
         ShowTab(MainTab.Home);
@@ -486,91 +487,6 @@ public partial class MainWindow : Window
         catch { /* Preview images are optional when offline. */ }
     }
 
-    private void ApplyPokedexState()
-    {
-        var species = _companionStore.DexSpecies;
-        var entries = _companionStore.CollectionEntries;
-        PokedexCountText.Text = $"{species.Count}종 · {entries.Count}마리";
-        EmptyPokedexView.Visibility = entries.Count == 0
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
-        var speciesSignature = string.Join('|', species.Select(item =>
-            $"{item.SpeciesId}:{item.Name}:{item.IsShiny}:{item.IsRaising}"));
-        var entrySignature = string.Join('|', entries.Select(item =>
-            $"{item.Id}:{item.FinalSpeciesId}:{string.Join(',', item.ChainOrder)}:"
-            + $"{item.CaughtAt?.UtcTicks}:{item.IsShiny}:{item.Nature}:{item.IsRaising}"));
-        var signature = $"{speciesSignature};;{entrySignature}";
-        if (string.Equals(signature, _pokedexSignature, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        _pokedexSignature = signature;
-        var generation = Interlocked.Increment(ref _pokedexGeneration);
-        PokedexItemsPanel.Children.Clear();
-        CatchLogItemsPanel.Children.Clear();
-        var imageTargets = new List<SpriteTarget>();
-        foreach (var item in species)
-        {
-            var image = CreateSpriteImage(62);
-            imageTargets.Add(new SpriteTarget(item.SpeciesId, item.IsShiny, image));
-            PokedexItemsPanel.Children.Add(CreatePokedexCard(item, image));
-        }
-
-        if (entries.Count > 0)
-        {
-            CatchLogItemsPanel.Children.Add(CreateCatchLogSummary(entries));
-        }
-
-        foreach (var entry in entries)
-        {
-            CatchLogItemsPanel.Children.Add(CreateCatchLogCard(entry, imageTargets));
-        }
-
-        _ = LoadCollectionSpritesAsync(imageTargets, generation);
-    }
-
-    private static Border CreatePokedexCard(PokemonDexSpecies item, Image image)
-    {
-        var panel = new StackPanel();
-        panel.Children.Add(image);
-        panel.Children.Add(new TextBlock
-        {
-            Margin = new Thickness(0, 1, 0, 0),
-            HorizontalAlignment = WpfHorizontalAlignment.Center,
-            Foreground = Brush("#FF202124"),
-            FontSize = 11,
-            FontWeight = FontWeights.SemiBold,
-            MaxWidth = 88,
-            Text = $"{(item.IsShiny ? "★ " : string.Empty)}{item.Name}",
-            TextTrimming = TextTrimming.CharacterEllipsis,
-        });
-        panel.Children.Add(new TextBlock
-        {
-            Margin = new Thickness(0, 2, 0, 0),
-            HorizontalAlignment = WpfHorizontalAlignment.Center,
-            Foreground = item.IsRaising ? Brush("#FF7DD3FC") : Brush("#FF7D8797"),
-            FontSize = 9,
-            Text = item.IsRaising
-                ? $"#{item.SpeciesId:000} · 육성 중"
-                : $"#{item.SpeciesId:000} · {RarityName(item.Rarity)}",
-        });
-
-        return new Border
-        {
-            Width = 104,
-            Height = 108,
-            Margin = new Thickness(3),
-            Padding = new Thickness(5),
-            Background = Brush(item.IsRaising ? "#FF202A33" : "#FF20242C"),
-            BorderBrush = Brush(item.IsRaising ? "#FF3C8DAA" : "#FF343A46"),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10),
-            Child = panel,
-        };
-    }
-
     private static Border CreateCatchLogSummary(IReadOnlyList<PokemonCollectionEntry> entries)
     {
         var panel = new WrapPanel { HorizontalAlignment = WpfHorizontalAlignment.Left };
@@ -994,6 +910,7 @@ public partial class MainWindow : Window
         {
             foreach (var target in imageTargets)
             {
+                if (generation != Volatile.Read(ref _pokedexGeneration)) return;
                 byte[]? bytes;
                 try
                 {
@@ -1621,12 +1538,16 @@ public partial class MainWindow : Window
 
     private void ShowCollectionMode(bool showCatchLog)
     {
+        _showCatchLog = showCatchLog;
+        UpdateCollectionSortMenu();
         SpeciesScrollView.Visibility = showCatchLog ? Visibility.Collapsed : Visibility.Visible;
         CatchLogScrollView.Visibility = showCatchLog ? Visibility.Visible : Visibility.Collapsed;
         SpeciesModeButton.Background = Brush(showCatchLog ? "#00171A21" : "#FF2B3440");
         SpeciesModeButton.Foreground = Brush(showCatchLog ? "#FF7D8797" : "#FFFFFFFF");
         CatchLogModeButton.Background = Brush(showCatchLog ? "#FF2B3440" : "#00171A21");
         CatchLogModeButton.Foreground = Brush(showCatchLog ? "#FFFFFFFF" : "#FF7D8797");
+        _pokedexSignature = null;
+        ApplyPokedexState();
     }
 
     private void ShowTab(MainTab tab)

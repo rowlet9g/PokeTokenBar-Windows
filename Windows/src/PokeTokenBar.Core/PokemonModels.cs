@@ -217,4 +217,7 @@ public sealed record PokemonDexSpecies(
     string Name,
     PokemonRarity Rarity,
     bool IsShiny,
-    bool IsRaising);
+    bool IsRaising,
+    bool HasNormal = true);
+
+public sealed record RepresentativePokemon(int? SpeciesId, string Name, bool IsShiny, bool IsPinned);

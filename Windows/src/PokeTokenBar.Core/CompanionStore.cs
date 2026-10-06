@@ -676,6 +676,7 @@ public sealed partial class CompanionStore
                             species[speciesId] = existing with
                             {
                                 IsShiny = existing.IsShiny || entry.IsShiny,
+                                HasNormal = existing.HasNormal || !entry.IsShiny,
                                 IsRaising = false,
                             };
                         }
@@ -686,7 +687,8 @@ public sealed partial class CompanionStore
                                 NameFor(entry.Names, speciesId),
                                 entry.Rarity,
                                 entry.IsShiny,
-                                false);
+                                false,
+                                !entry.IsShiny);
                         }
                     }
                 }
@@ -700,6 +702,8 @@ public sealed partial class CompanionStore
                             species[speciesId] = existing with
                             {
                                 IsShiny = existing.IsShiny || active.VisibleShiny,
+                                HasNormal = existing.HasNormal || !active.VisibleShiny,
+                                IsRaising = speciesId == active.CurrentId,
                             };
                             continue;
                         }
@@ -709,7 +713,8 @@ public sealed partial class CompanionStore
                             NameFor(active.Names, speciesId),
                             active.Rarity,
                             active.VisibleShiny,
-                            true);
+                            speciesId == active.CurrentId,
+                            !active.VisibleShiny);
                     }
                 }
 
@@ -1255,6 +1260,7 @@ public sealed partial class CompanionStore
 
     private void TrySaveState()
     {
+        ReconcileRepresentativeSelection(_state);
         if (!_persistenceEnabled)
         {
             return;
@@ -1404,6 +1410,8 @@ public sealed partial class CompanionStore
             SanitizeActivePokemon(state, active);
             state.EggGuarantee = null;
         }
+
+        ReconcileRepresentativeSelection(state);
 
         state.LimitProgress ??= [];
         state.LimitProgress = state.LimitProgress

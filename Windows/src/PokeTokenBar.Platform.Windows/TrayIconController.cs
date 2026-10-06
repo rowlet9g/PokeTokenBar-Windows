@@ -7,10 +7,14 @@ public sealed class TrayIconController : IDisposable
 {
     private readonly NotifyIcon _notifyIcon;
     private readonly ContextMenuStrip _contextMenu;
+    private readonly Icon _defaultIcon;
+    private Icon? _spriteIcon;
+    private byte[]? _spriteBytes;
     private bool _disposed;
 
     public TrayIconController(Icon icon)
     {
+        _defaultIcon = icon;
         _contextMenu = new ContextMenuStrip();
         _contextMenu.Items.Add("Open PokeTokenBar", image: null, (_, _) => ToggleRequested?.Invoke(this, EventArgs.Empty));
         _contextMenu.Items.Add(new ToolStripSeparator());
@@ -33,6 +37,19 @@ public sealed class TrayIconController : IDisposable
     public event EventHandler? ExitRequested;
 
     public event EventHandler? NotificationClicked;
+
+    public void UpdatePokemonSprite(byte[]? bytes)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (bytes is null && _spriteIcon is null) return;
+        if (bytes is not null && _spriteBytes is not null && bytes.AsSpan().SequenceEqual(_spriteBytes)) return;
+        var next = bytes is null ? null : PokemonTrayIcon.Create(bytes);
+        _notifyIcon.Icon = next ?? _defaultIcon;
+        var previous = _spriteIcon;
+        _spriteIcon = next;
+        _spriteBytes = bytes;
+        previous?.Dispose();
+    }
 
     public void UpdateTooltip(string text)
     {
@@ -63,6 +80,7 @@ public sealed class TrayIconController : IDisposable
         _notifyIcon.BalloonTipClicked -= OnBalloonTipClicked;
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
+        _spriteIcon?.Dispose();
         _contextMenu.Dispose();
         _disposed = true;
     }

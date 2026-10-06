@@ -18,6 +18,18 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 
 ## Usage display and progression
 
+Collection supports shared name/number search, rarity and shiny filters, separate
+species/log sorting, and 16-species pages in a 4x4 grid. Search in a catch record
+matches its encountered evolution chain, never planned future forms. Names use
+the localized metadata already stored by the port. The current form carries the
+raising badge; normal and shiny ownership are aggregated independently.
+
+An optional representative species can be pinned from Collection or Settings.
+The tray icon and floating pet display that owned species while HOME and growth
+keep following the active companion. Clear the pin to follow the current Pokemon
+or egg again. The optional `representativeSpeciesId` is part of the companion
+save, survives transfer, and falls back safely if the species is no longer owned.
+
 Indexed hatch selection halves the capture-rate weight of each base species with
 a completed companion (integer division, minimum 1), while keeping duplicates
 possible. Released-only companions do not count. Repeat hatches save a 2x growth

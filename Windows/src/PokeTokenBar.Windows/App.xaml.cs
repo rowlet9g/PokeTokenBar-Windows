@@ -31,6 +31,10 @@ public partial class App : System.Windows.Application
     private DispatcherTimer? _usageTimer;
     private readonly CancellationTokenSource _refreshCancellation = new();
     private int _spriteGeneration;
+    private int? _homeSpriteId;
+    private bool _homeSpriteShiny;
+    private int? _representativeSpriteId;
+    private bool _representativeSpriteShiny;
     private bool _explicitExitRequested;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -457,7 +461,12 @@ public partial class App : System.Windows.Application
         QueueSpriteRefresh();
         ShowCompanionMilestoneIfNeeded();
         var compact = TokenFormatter.Compact(_usageStore.TodayTotalTokens);
-        if (_companionStore.HasActivePokemon)
+        var representative = _companionStore.Representative;
+        if (representative.IsPinned)
+        {
+            _trayIcon?.UpdateTooltip($"PokeTokenBar · {compact} today · 대표 {representative.Name}");
+        }
+        else if (_companionStore.HasActivePokemon)
         {
             var name = _companionStore.CurrentPokemonName ?? "Pokémon";
             var growthPercent = (int)Math.Round(_companionStore.GrowthProgress * 100);
@@ -478,14 +487,13 @@ public partial class App : System.Windows.Application
         }
 
         var today = TokenFormatter.Grouped(_usageStore.TodayTotalTokens);
-        var tooltip = _companionStore.HasActivePokemon
-            ? $"{_companionStore.CurrentPokemonName ?? "Pokémon"} · 오늘 {today} 토큰"
-            : $"새 알 · 오늘 {today} 토큰";
+        var representative = _companionStore.Representative;
+        var tooltip = $"{representative.Name}{(representative.IsPinned ? " · 대표" : "")} · 오늘 {today} 토큰";
         tooltip += "\n" + LimitInteraction.Mood(_companionStore.HasActivePokemon,
             _usageStore.Snapshots.Count > 0, _usageStore.TodayTotalTokens,
             _usageStore.Snapshots.Sum(s => s.ActiveBlock?.TokensPerMinute ?? 0),
             _rateLimitStore?.FreshSnapshots ?? [], DateTimeOffset.Now);
-        _floatingPet.UpdateCompanionState(_companionStore.HasActivePokemon, tooltip);
+        _floatingPet.UpdateCompanionState(representative.SpeciesId is not null, tooltip);
     }
 
     private CompanionMilestoneSnapshot CaptureCompanionSnapshot()
@@ -545,18 +553,30 @@ public partial class App : System.Windows.Application
         }
 
         var generation = Interlocked.Increment(ref _spriteGeneration);
-        if (_companionStore.CurrentSpeciesId is not { } speciesId)
+        var homeId = _companionStore.CurrentSpeciesId;
+        var homeShiny = _companionStore.IsCurrentPokemonShiny;
+        var representative = _companionStore.Representative;
+        if (homeId != _homeSpriteId || homeShiny != _homeSpriteShiny || homeId is null)
         {
             _popover.SetPokemonSprite(null);
-            _floatingPet?.SetPokemonSprite(null);
-            return;
+            _homeSpriteId = homeId;
+            _homeSpriteShiny = homeShiny;
         }
-
-        var shiny = _companionStore.IsCurrentPokemonShiny;
-        _ = LoadPokemonSpriteAsync(speciesId, shiny, generation);
+        if (representative.SpeciesId != _representativeSpriteId || representative.IsShiny != _representativeSpriteShiny
+            || representative.SpeciesId is null)
+        {
+            _floatingPet?.SetPokemonSprite(null);
+            _trayIcon?.UpdatePokemonSprite(null);
+            _representativeSpriteId = representative.SpeciesId;
+            _representativeSpriteShiny = representative.IsShiny;
+        }
+        var shared = homeId == representative.SpeciesId && homeShiny == representative.IsShiny;
+        if (homeId is { } speciesId) _ = LoadPokemonSpriteAsync(speciesId, homeShiny, generation, true, shared);
+        if (!shared && representative.SpeciesId is { } representativeId)
+            _ = LoadPokemonSpriteAsync(representativeId, representative.IsShiny, generation, false, true);
     }
 
-    private async Task LoadPokemonSpriteAsync(int speciesId, bool shiny, int generation)
+    private async Task LoadPokemonSpriteAsync(int speciesId, bool shiny, int generation, bool updateHome, bool updateRepresentative)
     {
         if (_spriteStore is null)
         {
@@ -577,8 +597,13 @@ public partial class App : System.Windows.Application
 
             await Dispatcher.InvokeAsync(() =>
             {
-                _popover?.SetPokemonSprite(bytes);
-                _floatingPet?.SetPokemonSprite(bytes);
+                if (generation != Volatile.Read(ref _spriteGeneration)) return;
+                if (updateHome) _popover?.SetPokemonSprite(bytes);
+                if (updateRepresentative)
+                {
+                    _floatingPet?.SetPokemonSprite(bytes);
+                    _trayIcon?.UpdatePokemonSprite(bytes);
+                }
             });
         }
         catch (OperationCanceledException) when (_refreshCancellation.IsCancellationRequested)
