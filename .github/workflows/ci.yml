@@ -32,6 +32,10 @@ jobs:
       - name: Test
         run: dotnet test Windows/PokeTokenBar.Windows.sln --configuration Release --no-build --verbosity normal
 
+      - name: Test detached update helper
+        shell: pwsh
+        run: .\Windows\test-update-helper.ps1
+
   secret-scan:
     name: secret-scan
     runs-on: ubuntu-latest

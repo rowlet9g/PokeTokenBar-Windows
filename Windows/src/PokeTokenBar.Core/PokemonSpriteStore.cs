@@ -5,11 +5,13 @@ public sealed class PokemonSpriteStore
     private static readonly byte[] PngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
     private readonly HttpClient _httpClient;
     private readonly string _cacheDirectory;
+    private readonly BundledPokemonCatalog? _catalog;
 
-    public PokemonSpriteStore(HttpClient httpClient, string cacheDirectory)
+    public PokemonSpriteStore(HttpClient httpClient, string cacheDirectory, BundledPokemonCatalog? catalog = null)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _cacheDirectory = Path.GetFullPath(cacheDirectory);
+        _catalog = catalog;
         Directory.CreateDirectory(_cacheDirectory);
     }
 
@@ -22,6 +24,9 @@ public sealed class PokemonSpriteStore
         {
             return null;
         }
+
+        // Release-pinned assets take precedence over legacy caches and need no network.
+        if (_catalog is not null) return _catalog.ReadSprite(speciesId, shiny);
 
         var fileName = shiny ? $"shiny-{speciesId}.png" : $"{speciesId}.png";
         var path = Path.Combine(_cacheDirectory, fileName);

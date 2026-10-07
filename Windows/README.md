@@ -7,10 +7,11 @@ work are in [`PORTING_STATUS.md`](PORTING_STATUS.md).
 ## Architecture
 
 - `src/PokeTokenBar.Core`: usage models, local token metadata parsing, aggregation,
-  official rate-limit models, Pokémon progression, wallet, persistence, and save transfer.
+  official rate-limit models, bundled Pokémon catalog/sprites, progression, wallet,
+  persistence, save transfer, and release metadata/download verification.
 - `src/PokeTokenBar.Platform.Windows`: Windows paths, SQLite-backed providers,
   Codex app-server, Claude Code OAuth, and Antigravity Cloud Code rate limits,
-  tray, single-instance activation, and login startup registration.
+  tray, single-instance activation, login startup registration, and detached update installer.
 - `src/PokeTokenBar.Windows`: WPF views and application lifetime. `App.xaml.cs`
   connects providers, refresh events, companion state, tray, and floating pet.
 - `tests/PokeTokenBar.Core.Tests`: parsing, aggregation, progression, persistence,
@@ -53,6 +54,23 @@ bonus: evolution and graduation costs are halved, with HOME showing `성장 ×2`
 Existing active saves without the bonus flag keep their original costs. Egg
 incubation, actual usage and wallet totals stay unchanged; restart and save
 transfer preserve the hatch-time bonus. The REST fallback remains unweighted.
+
+Version 1.0.0 bundles National Dex #1-1025, Korean/English names, capture rates,
+legendary/mythical flags, species ancestry, and 2,050 normal/shiny front PNGs.
+`BundledPokemonCatalog` validates the metadata and verifies each sprite's SHA-256;
+the app no longer needs live PokéAPI requests or existing sprite caches. Default
+Gen 6+ sprites include community-maintained Gen 5-style art, not every alternate
+regional/mega form. The species family determines rarity through its base species;
+legendary/mythical flags override capture-rate tiers. Existing balance is unchanged.
+
+`evolutionCatalogMaximumSpeciesId` defaults to 649 on older active saves and is
+1025 for new hatches. Pruning older subjects to their original catalog prevents
+new descendants from changing their saved plan length, thresholds, or progress.
+The cap and repeat bonus survive save transfer. The checked-in data can be rebuilt
+from the repository root with `python Windows/tools/build-pokemon-catalog.py`
+(requires Pillow). Source downloads are cached under `Windows/artifacts/catalog-source`;
+clear the cache deliberately when updating sources. Metadata provenance and the
+pinned sprite commit are recorded in the catalog; notices ship in `ThirdParty`.
 
 Official limits now drive 80%/95% edge-triggered warnings, companion mood text and a
 six-second floating-pet popup. `RateLimitStore.FreshSnapshots` excludes failed requests'
@@ -146,6 +164,22 @@ dotnet test .\PokeTokenBar.Windows.sln -c Release --no-build
 
 Build and test sequentially because they share output files.
 
+`./test-update-helper.ps1` runs a separate process integration test with fake app
+and installer executables. It exercises the real updater client/helper, final-exit
+save backup, live-process wait, quoted/Unicode paths, data preservation, and restart.
+It does not use or replace the real user's app, data, or installer registration.
+
+Settings automatically checks the public stable release, with a ten-minute cache
+for repeated openings and an explicit retry button. `AppUpdateClient` accepts only
+this repository's complete installer/manifest/checksum assets, enforces size/version
+and SHA-256, and keeps incomplete downloads as temporary files. On update, the app
+saves and exits normally. `WindowsUpdateInstaller` waits for that exact process,
+backs up its final save/settings, runs the existing installer silently in the same
+directory, checks installed version and unchanged data, then restarts. Failures
+remain retryable and preserve diagnostic logs. Portable builds require a manual
+installer. Checksums validate release integrity; Authenticode signing is separate
+and remains pending.
+
 ```powershell
 .\run-dev.ps1
 ```
@@ -167,4 +201,5 @@ with Inno Setup 7 installed:
 
 Artifacts are generated under `artifacts/release/<version>` and ignored by Git.
 See [`../RELEASE.md`](../RELEASE.md) for release tags, state-preservation checks,
-and the per-release checklist. Code signing and in-app updates remain pending.
+and the per-release checklist. Code signing remains pending; installed builds
+support in-app updates starting with 1.0.0.

@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace PokeTokenBar.Core;
 
-public sealed record BasePokemonSpecies(int Id, int CaptureRate);
+public sealed record BasePokemonSpecies(int Id, int CaptureRate, bool IsLegendary = false, bool IsMythical = false);
 
 public sealed record PokemonEvolutionNode(
     int SpeciesId,
@@ -23,8 +23,11 @@ public sealed record PokemonEvolutionNode(
     }
 
     public PokemonEvolutionNode? KeepingSupportedSpecies()
+        => KeepingSpeciesThrough(PokemonAssets.MaximumSpeciesId);
+
+    public PokemonEvolutionNode? KeepingSpeciesThrough(int maximumSpeciesId)
     {
-        if (!PokemonAssets.HasSprite(SpeciesId))
+        if (!PokemonAssets.HasSprite(SpeciesId) || SpeciesId > maximumSpeciesId)
         {
             return null;
         }
@@ -32,7 +35,7 @@ public sealed record PokemonEvolutionNode(
         return new PokemonEvolutionNode(
             SpeciesId,
             Children
-                .Select(child => child.KeepingSupportedSpecies())
+                .Select(child => child.KeepingSpeciesThrough(maximumSpeciesId))
                 .Where(child => child is not null)
                 .Cast<PokemonEvolutionNode>()
                 .ToArray());
@@ -76,7 +79,7 @@ public sealed class SystemRandomSource : IRandomSource
 public static class PokemonAssets
 {
     public const int MinimumSpeciesId = 1;
-    public const int MaximumSpeciesId = 649;
+    public const int MaximumSpeciesId = 1025;
     public const int DittoSpeciesId = 132;
 
     public static bool HasSprite(int speciesId) =>
@@ -114,6 +117,9 @@ public enum PokemonNature
 
 public sealed class PokemonMonState
 {
+    // Preserve pre-1.0 evolution plans even when later generations add a descendant.
+    public int EvolutionCatalogMaximumSpeciesId { get; set; } = 649;
+
     // Fixed at hatch. Missing fields in older saves retain their original costs.
     public bool HasGrowthBoost { get; set; }
 

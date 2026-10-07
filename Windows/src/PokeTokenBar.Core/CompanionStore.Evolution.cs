@@ -26,11 +26,13 @@ public sealed partial class CompanionStore
             lock (_stateLock)
             {
                 if (!ReferenceEquals(subject, _state.ActivePokemon) || line.BaseId != subject.BaseId) return false;
+                var tree = line.Tree.KeepingSpeciesThrough(subject.EvolutionCatalogMaximumSpeciesId);
+                if (tree is null) return false;
                 var reached = subject.PathIds.Take(subject.StageIndex + 1).ToArray();
-                var current = EvolutionPlanner.Follow(line.Tree, reached);
+                var current = EvolutionPlanner.Follow(tree, reached);
                 // Never erase an already reached form because a response is incomplete.
                 if (current is null) return false;
-                var plannedEnd = EvolutionPlanner.Follow(line.Tree, subject.PlannedPathIds);
+                var plannedEnd = EvolutionPlanner.Follow(tree, subject.PlannedPathIds);
                 var reusable = plannedEnd is { Children.Count: 0 }
                     && subject.PlannedPathIds.Take(reached.Length).SequenceEqual(reached);
                 var plan = reusable ? subject.PlannedPathIds

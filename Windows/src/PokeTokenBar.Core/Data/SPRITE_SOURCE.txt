@@ -1,0 +1,7 @@
+Pokémon species metadata: https://graphql.pokeapi.co/v1beta2
+Sprite source: https://github.com/PokeAPI/sprites/tree/8491ffde1b247e4de574d4bb8e24b7bd9fa876fa/sprites/pokemon
+Bundled scope: National Pokédex #1-1025, normal and shiny front sprites.
+Generation 6+ default sprites include community-maintained Gen 5-style artwork.
+Contributors: https://github.com/PokeAPI/sprites/blob/8491ffde1b247e4de574d4bb8e24b7bd9fa876fa/CONTRIBUTING_SPRITES.md
+Original repository license notice is included in PokeAPI-sprites-LICENSE.txt.
+Pokémon image contents are Copyright The Pokémon Company.

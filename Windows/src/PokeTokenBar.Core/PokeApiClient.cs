@@ -48,6 +48,7 @@ public sealed class PokeApiClient : IPokemonProvider
                 Path.Combine(_cacheDirectory, "base-index.json"),
                 cancellationToken).ConfigureAwait(false);
             if (snapshot is { Entries.Count: > 0 }
+                && snapshot.MaximumSpeciesId == PokemonAssets.MaximumSpeciesId
                 && DateTimeOffset.UtcNow - snapshot.FetchedAt < TimeSpan.FromDays(30))
             {
                 return _baseIndexMemory = snapshot.Entries;
@@ -58,7 +59,7 @@ public sealed class PokeApiClient : IPokemonProvider
                 var fetched = await FetchBaseIndexAsync(cancellationToken).ConfigureAwait(false);
                 await WriteJsonFileAsync(
                     Path.Combine(_cacheDirectory, "base-index.json"),
-                    new BaseIndexSnapshot(DateTimeOffset.UtcNow, fetched),
+                    new BaseIndexSnapshot(DateTimeOffset.UtcNow, fetched, PokemonAssets.MaximumSpeciesId),
                     cancellationToken).ConfigureAwait(false);
                 return _baseIndexMemory = fetched;
             }
@@ -84,7 +85,7 @@ public sealed class PokeApiClient : IPokemonProvider
 
         var species = await GetSpeciesAsync(speciesId, cancellationToken).ConfigureAwait(false);
         return species.EvolvesFromSpecies is null
-            ? new BasePokemonSpecies(speciesId, species.CaptureRate)
+            ? new BasePokemonSpecies(speciesId, species.CaptureRate, species.IsLegendary, species.IsMythical)
             : null;
     }
 
@@ -161,7 +162,7 @@ public sealed class PokeApiClient : IPokemonProvider
     private async Task<List<BasePokemonSpecies>> FetchBaseIndexAsync(
         CancellationToken cancellationToken)
     {
-        const string query = "{ pokemonspecies(where: {evolves_from_species_id: {_is_null: true}, id: {_lte: 649, _neq: 132}}, order_by: {id: asc}) { id capture_rate } }";
+        var query = $"{{ pokemonspecies(where: {{evolves_from_species_id: {{_is_null: true}}, id: {{_lte: {PokemonAssets.MaximumSpeciesId}, _neq: 132}}}}, order_by: {{id: asc}}) {{ id capture_rate is_legendary is_mythical }} }}";
         using var response = await _httpClient.PostAsJsonAsync(
             GraphQlEndpoint,
             new { query },
@@ -174,7 +175,7 @@ public sealed class PokeApiClient : IPokemonProvider
             ?? throw new InvalidDataException("PokéAPI GraphQL returned an empty response.");
         var entries = decoded.Data.PokemonSpecies
             .Where(row => PokemonAssets.HasSprite(row.Id) && row.Id != PokemonAssets.DittoSpeciesId)
-            .Select(row => new BasePokemonSpecies(row.Id, Math.Clamp(row.CaptureRate, 1, 255)))
+            .Select(row => new BasePokemonSpecies(row.Id, Math.Clamp(row.CaptureRate, 1, 255), row.IsLegendary, row.IsMythical))
             .ToList();
         if (entries.Count == 0)
         {
@@ -339,7 +340,7 @@ public sealed class PokeApiClient : IPokemonProvider
             ?? species.Name.Replace('-', ' ');
     }
 
-    private sealed record BaseIndexSnapshot(DateTimeOffset FetchedAt, List<BasePokemonSpecies> Entries);
+    private sealed record BaseIndexSnapshot(DateTimeOffset FetchedAt, List<BasePokemonSpecies> Entries, int MaximumSpeciesId = 0);
 
     private sealed class GraphQlResponse
     {
@@ -360,6 +361,12 @@ public sealed class PokeApiClient : IPokemonProvider
 
         [JsonPropertyName("capture_rate")]
         public int CaptureRate { get; set; }
+
+        [JsonPropertyName("is_legendary")]
+        public bool IsLegendary { get; set; }
+
+        [JsonPropertyName("is_mythical")]
+        public bool IsMythical { get; set; }
     }
 
     private sealed class SpeciesDto

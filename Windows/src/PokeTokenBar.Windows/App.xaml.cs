@@ -73,6 +73,8 @@ public partial class App : System.Windows.Application
             "Programs",
             "PokeTokenBar",
             "PokeTokenBar.Windows.exe");
+        if (Environment.ProcessPath is { } currentExecutable && WindowsUpdateInstaller.IsInstalledExecutable(currentExecutable))
+            installedExecutable = currentExecutable;
         _startupRegistration = new WindowsStartupRegistration(installedExecutable);
         if (_settings.LaunchAtLogin)
         {
@@ -117,12 +119,10 @@ public partial class App : System.Windows.Application
                 new AntigravityRateLimitsProvider(_httpClient),
             ]);
         _rateLimitStore.Changed += RateLimitStore_OnChanged;
-        var pokemonProvider = new PokeApiClient(
-            _httpClient,
-            Path.Combine(paths.CacheDirectory, "PokeAPI"));
+        var pokemonProvider = BundledPokemonCatalog.Default;
         _spriteStore = new PokemonSpriteStore(
             _httpClient,
-            Path.Combine(paths.CacheDirectory, "Sprites"));
+            Path.Combine(paths.CacheDirectory, "Sprites"), pokemonProvider);
         try
         {
             _companionStore = new CompanionStore(
@@ -158,6 +158,7 @@ public partial class App : System.Windows.Application
             WindowsSshHostDiscovery.Discover());
         _popover.RefreshRequested += Popover_OnRefreshRequested;
         _popover.SettingsChanged += Popover_OnSettingsChanged;
+        InitializeUpdates(paths);
         MainWindow = _popover;
 
         _floatingPet = new FloatingPetWindow();
@@ -242,6 +243,7 @@ public partial class App : System.Windows.Application
         _usageStore?.Dispose();
         _rateLimitStore?.Dispose();
         _httpClient?.Dispose();
+        _updateHttp?.Dispose();
         _appIcon?.Dispose();
         _singleInstance?.Dispose();
         _refreshCancellation.Dispose();

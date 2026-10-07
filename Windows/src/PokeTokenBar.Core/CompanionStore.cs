@@ -902,6 +902,7 @@ public sealed partial class CompanionStore
                 var natureCount = Enum.GetValues<PokemonNature>().Length;
                 _state.ActivePokemon = new PokemonMonState
                 {
+                    EvolutionCatalogMaximumSpeciesId = PokemonAssets.MaximumSpeciesId,
                     HasGrowthBoost = _state.Dex.Any(entry => !entry.IsReleased && entry.BaseId == line.BaseId),
                     BaseId = line.BaseId,
                     PathIds = [line.BaseId],
@@ -1039,8 +1040,8 @@ public sealed partial class CompanionStore
                 .Where(species => CompanionItemRules.MeetsGuarantee(
                     PokemonBalance.RarityFrom(
                         species.CaptureRate,
-                        isLegendary: false,
-                        isMythical: false),
+                        species.IsLegendary,
+                        species.IsMythical),
                     guarantee))
                 .ToArray();
             if (candidates.Length > 0)
@@ -1493,6 +1494,9 @@ public sealed partial class CompanionStore
 
     private static void SanitizeActivePokemon(CompanionState state, PokemonMonState active)
     {
+        active.EvolutionCatalogMaximumSpeciesId = Math.Clamp(
+            active.BaseId > 649 ? PokemonAssets.MaximumSpeciesId : active.EvolutionCatalogMaximumSpeciesId,
+            649, PokemonAssets.MaximumSpeciesId);
         if (active.DittoDisguise is { } disguise
             && (!PokemonAssets.HasSprite(disguise) || disguise == PokemonAssets.DittoSpeciesId
                 || (!active.DittoRevealed && active.BaseId != disguise)))

@@ -51,6 +51,10 @@ jobs:
       - name: Test
         run: dotnet test Windows/PokeTokenBar.Windows.sln --configuration Release --no-build --verbosity normal
 
+      - name: Test detached update helper
+        shell: pwsh
+        run: .\Windows\test-update-helper.ps1
+
       - name: Install verified Inno Setup 7
         shell: pwsh
         env:

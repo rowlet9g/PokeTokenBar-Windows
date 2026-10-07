@@ -6,4 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Data/pokemon-catalog.json" LogicalName="PokemonCatalog.json" />
+    <EmbeddedResource Include="Data/pokemon-sprites.zip" LogicalName="PokemonSprites.zip" />
+    <None Update="Data/SPRITE_LICENSE.txt" Link="ThirdParty/PokeAPI-sprites-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="Data/SPRITE_SOURCE.txt" Link="ThirdParty/PokeAPI-sprites-SOURCE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -33,7 +33,7 @@ available through Git history and the upstream project, not in the active tree.
 | Evolution branch selection and plan recovery | Implemented | Branches leading to uncompleted final forms are preferred. Complete saved routes are retained without rerolling; truncated routes are extended from the reached form. |
 | Collection-aware hatch weights and repeat growth | Included in 0.6.5 | Completed base species use half the integer capture-rate weight (minimum 1); new repeat hatches save a 2x growth bonus. Old active saves retain their original stage costs. |
 | Ditto disguise/reveal | Implemented | Common evolving hatches roll 1/128; first evolution reveals Ditto, preserving nature, shiny status and overflow. Disguised shiny appearance is hidden. |
-| PokéAPI, sprites, evolution trees | Complete | Windows disk cache and URL validation are in place. |
+| PokéAPI, sprites, evolution trees | Included in 1.0.0 | Offline Gen 1-9 catalog (#1-1025), localized names, species ancestry, and 2,050 pinned/hash-verified normal/shiny sprites. Older active evolution plans retain the Gen 5 cap. Alternate forms are not enumerated. |
 | Pokédex and catch log | Included in 0.6.5 | Only encountered forms are revealed. Shared name/number search and rarity/shiny filters, independent sort orders, and a 4x4 species grid with 16 species per page. |
 | Representative Pokemon | Included in 0.6.5 | Optional owned-species pin for the tray icon and floating pet; default follows the active companion/egg. HOME, growth and milestones retain the active subject. Selection is saved and transferred. |
 | Tray popup and single instance | Complete | WPF, WinForms `NotifyIcon`, and a named mutex are used. |
@@ -46,7 +46,7 @@ available through Git history and the upstream project, not in the active tree.
 | Save transfer | Complete | Versioned import/export, validation, rebasing, and recovery backups are implemented. |
 | Usage providers | Implemented; new adapters need live validation | Twelve local providers: existing five plus Claude Code, OpenCode, Hermes Agent, Grok CLI, Kiro CLI (estimated), Pi Agent, and omp. See the local-provider reference for accounting limitations. |
 | Distribution | Partial | ZIP, checksums, installer, and tag-triggered release workflow are implemented; this does not imply a published release. Authenticode signing remains. |
-| Update checker | Not ported | Choose a signed release channel before enabling updates. |
+| Update checker | Included in 1.0.0 | Settings discovers this repository's latest stable installer, verifies metadata/size/SHA-256, saves and exits, backs up final user data, silently installs in place and restarts. Installed builds only; Authenticode remains pending. |
 | Localization | Not ported | The Windows UI is Korean-first with some English labels. |
 | macOS-only integration | Excluded | AppKit, Keychain, Homebrew, and macOS login-item behavior are outside scope. |
 | Swift/macOS source retirement | Complete | Swift code, tests, build scripts, `.icns`, and obsolete docs were removed after fixture migration. |
@@ -62,6 +62,23 @@ available through Git history and the upstream project, not in the active tree.
   or SmartScreen prompt has been checked.
 
 ## Implementation notes and remaining work
+
+### Gen 1-9 and in-app updates (2026-10-07; included in 1.0.0)
+
+- The offline catalog covers all 1,025 species and both front sprite colors.
+  All 2,050 PNGs were decoded with WPF, and Gen 9 HOME/evolution previews,
+  Collection, and update status/progress/retry controls were visually checked.
+- Existing active Gen 1-5 subjects keep their saved evolution scope; a new
+  descendant cannot unexpectedly increase plan length or change earned growth.
+  New hatches use the expanded catalog. Capture-rate tiers, legendary/mythical
+  priority, difficulty, repeat bonuses, and candy accounting are retained.
+- Release build has zero warnings/errors; 322 tests passed. The detached helper
+  process test passed with live-process waiting, final-exit backups, Unicode and
+  quoted install paths, installer flags, data preservation and relaunch. The test
+  uses controlled executables; it is not the entire interactive Inno checklist.
+- Public release metadata and real installer download/hash/version checks passed
+  through the new updater client against the existing 0.7.0 release. Hosted CI
+  runs both unit tests and the helper integration test before publishing assets.
 
 ### Difficulty settings (2026-10-06; included in 0.7.0)
 
@@ -182,7 +199,7 @@ invalid connection rejection and credential redaction. This change is prepared f
    Remaining: exhaustion forecasts, configurable thresholds, and independent notification/bubble settings.
 3. Continue HOME provider selection and settings parity, then address localization and system theme support.
 4. Validate the seven new local adapters against real tool sessions.
-5. Add Authenticode signing and an update channel when the certificate and distribution policy are ready.
+5. Add Authenticode signing when a certificate is available; the public stable update channel is implemented in 1.0.0.
 
 ## Release 0.6.0 validation (2026-09-18)
 
