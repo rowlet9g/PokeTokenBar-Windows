@@ -1,10 +1,75 @@
 using System.Text.Json;
+using System.Diagnostics;
+using System.Text;
 using PokeTokenBar.Platform.Windows;
 
 namespace PokeTokenBar.Core.Tests;
 
 public sealed class RemoteCodexUsageProviderTests
 {
+    [Fact]
+    public async Task Manifest_larger_than_Windows_command_limit_roundtrips_over_a_real_input_pipe()
+    {
+        var manifest = Enumerable.Range(0, 2048).ToDictionary(
+            i => $".codex/sessions/2026/10/13/rollout-원격-{i:D5}-a25c2fff-d990-474a-afee-4e1e31b7d4f6.jsonl",
+            i => new RemoteCodexLogSynchronizer.CacheState(5_000_000_000L + i, $"private-cache-{i}.jsonl"));
+        var start = RemoteCodexLogSynchronizer.CreateStartInfo("test-box", DateTimeOffset.Now);
+        Assert.True(start.ArgumentList.Sum(arg => arg.Length + 1) < 8_000);
+        Assert.True(start.RedirectStandardInput);
+        Assert.Contains("-T", start.ArgumentList);
+
+        // Use a local echo child instead of an SSH account; exercise Windows process creation and pipes.
+        start.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),
+            @"WindowsPowerShell\v1.0\powershell.exe");
+        start.ArgumentList.Clear();
+        const string echo = "[Console]::InputEncoding=[Text.UTF8Encoding]::new($false); [Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); [Console]::Out.Write([Console]::In.ReadToEnd())";
+        foreach (var argument in new[] { "-NoProfile", "-NonInteractive", "-EncodedCommand",
+                     Convert.ToBase64String(Encoding.Unicode.GetBytes(echo)) }) start.ArgumentList.Add(argument);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        using var process = Process.Start(start)!;
+        try
+        {
+            var output = process.StandardOutput.ReadToEndAsync(timeout.Token);
+            var error = process.StandardError.ReadToEndAsync(timeout.Token);
+            await RemoteCodexLogSynchronizer.WriteManifestInputAsync(process.StandardInput, manifest, timeout.Token);
+            process.StandardInput.Close();
+            await process.WaitForExitAsync(timeout.Token);
+            Assert.Equal(0, process.ExitCode);
+            Assert.Empty(await error);
+            var json = await output;
+            Assert.True(json.Length > 32_767);
+            using var document = JsonDocument.Parse(json);
+            Assert.Equal(2048, document.RootElement.EnumerateObject().Count());
+            foreach (var (path, state) in manifest)
+            {
+                var received = document.RootElement.GetProperty(path);
+                Assert.Equal(state.Offset, received.GetProperty("offset").GetInt64());
+                Assert.Single(received.EnumerateObject());
+            }
+            Assert.DoesNotContain("private-cache", json);
+        }
+        finally
+        {
+            if (!process.HasExited) { process.Kill(entireProcessTree: true); await process.WaitForExitAsync(); }
+        }
+    }
+
+    [Fact]
+    public async Task Cancelled_manifest_transfer_keeps_existing_offsets_unchanged()
+    {
+        var manifest = new Dictionary<string, RemoteCodexLogSynchronizer.CacheState>
+        {
+            [".codex/sessions/existing.jsonl"] = new(123456789, "cached.jsonl"),
+        };
+        using var input = new StringWriter();
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            RemoteCodexLogSynchronizer.WriteManifestInputAsync(input, manifest, cancellation.Token));
+        Assert.Equal(123456789, manifest[".codex/sessions/existing.jsonl"].Offset);
+        Assert.Empty(input.ToString());
+    }
+
     [Fact]
     public async Task Remote_provider_excludes_usage_already_present_in_local_sessions()
     {

@@ -91,8 +91,8 @@ internal sealed class RemoteCodexLogSynchronizer : IRemoteCodexLogSynchronizer
 import base64,json,sys
 from pathlib import Path
 
-manifest=json.loads(base64.b64decode(sys.argv[1]).decode('utf-8'))
-cutoff=int(sys.argv[2])
+manifest=json.load(sys.stdin)
+cutoff=int(sys.argv[1])
 home=Path.home()
 paths={}
 for root in (home/'.codex/sessions',home/'.codex/archived_sessions'):
@@ -154,35 +154,10 @@ for relative,path in sorted(paths.items()):
         Directory.CreateDirectory(cacheDirectory);
         var manifestPath = Path.Combine(cacheDirectory, ManifestName);
         var manifest = LoadManifest(manifestPath, cacheDirectory);
-        var wireManifest = manifest.ToDictionary(
-            pair => pair.Key,
-            pair => new WireState(pair.Value.Offset),
-            StringComparer.Ordinal);
-        var manifestArgument = Convert.ToBase64String(
-            Encoding.UTF8.GetBytes(JsonSerializer.Serialize(wireManifest, JsonOptions)));
-        var script = Convert.ToBase64String(Encoding.UTF8.GetBytes(CollectorScript));
-        var loader = $"'import base64;exec(base64.b64decode(\"{script}\"))'";
-
         using var process = new Process
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "ssh",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-            },
+            StartInfo = CreateStartInfo(host, since),
         };
-        foreach (var argument in new[]
-                 {
-                     "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", "-o", "ServerAliveInterval=5",
-                     "-o", "ServerAliveCountMax=1", host, "python3", "-c", loader, manifestArgument,
-                     since.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
-                 })
-        {
-            process.StartInfo.ArgumentList.Add(argument);
-        }
 
         if (!process.Start())
         {
@@ -195,6 +170,20 @@ for relative,path in sorted(paths.items()):
         {
             var standardOutput = process.StandardOutput.ReadToEndAsync(timeout.Token);
             var standardError = process.StandardError.ReadToEndAsync(timeout.Token);
+            // A growing file/offset manifest must never become a Windows process argument.
+            // Drain both output pipes while sending input so large transfers cannot deadlock.
+            IOException? inputError = null;
+            try
+            {
+                await WriteManifestInputAsync(process.StandardInput, manifest, timeout.Token).ConfigureAwait(false);
+                process.StandardInput.Close();
+            }
+            catch (IOException transferError)
+            {
+                // SSH may reject authentication/connection before accepting stdin.
+                // Read its exit code and diagnostic instead of hiding it behind a broken-pipe error.
+                inputError = transferError;
+            }
             await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
             var output = await standardOutput.ConfigureAwait(false);
             var error = await standardError.ConfigureAwait(false);
@@ -202,6 +191,7 @@ for relative,path in sorted(paths.items()):
             {
                 throw new IOException($"{host}: 원격 Codex 동기화 실패 ({SanitizeError(error)})");
             }
+            if (inputError is not null) throw new IOException($"{host}: 원격 동기화 정보를 전송하지 못했습니다.", inputError);
 
             ApplyOutput(cacheDirectory, manifestPath, manifest, output);
         }
@@ -217,6 +207,41 @@ for relative,path in sorted(paths.items()):
                 TryKill(process);
             }
         }
+    }
+
+    internal static ProcessStartInfo CreateStartInfo(string host, DateTimeOffset since)
+    {
+        var script = Convert.ToBase64String(Encoding.UTF8.GetBytes(CollectorScript));
+        var loader = $"'import base64;exec(base64.b64decode(\"{script}\"))'";
+        var start = new ProcessStartInfo
+        {
+            FileName = "ssh",
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            StandardInputEncoding = new UTF8Encoding(false),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        foreach (var argument in new[]
+                 {
+                     "-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", "-o", "ServerAliveInterval=5",
+                     "-o", "ServerAliveCountMax=1", host, "python3", "-c", loader,
+                     since.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                 })
+            start.ArgumentList.Add(argument);
+        return start;
+    }
+
+    internal static async Task WriteManifestInputAsync(TextWriter input, Dictionary<string, CacheState> manifest,
+        CancellationToken token)
+    {
+        var wireManifest = manifest.ToDictionary(pair => pair.Key, pair => new WireState(pair.Value.Offset),
+            StringComparer.Ordinal);
+        // Compact JSON over a pipe has no command-line length ceiling and contains no conversation text.
+        var json = JsonSerializer.Serialize(wireManifest, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        await input.WriteAsync(json.AsMemory(), token).ConfigureAwait(false);
+        await input.FlushAsync(token).ConfigureAwait(false);
     }
 
     internal static void ApplyOutput(

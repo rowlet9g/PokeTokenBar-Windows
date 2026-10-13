@@ -96,6 +96,11 @@ must support non-interactive OpenSSH authentication and provide `python3`. Only
 session identity, model, and token-count metadata is synchronized; prompt and
 response text remains on the remote host. After the first scan, the cache advances
 by byte offset, and remote entries already present locally are deduplicated.
+The file/offset manifest is streamed as compact JSON over SSH's standard input,
+with no pseudo-terminal. It is never included in process arguments: otherwise
+growing session lists eventually exceed Windows' 32,767-character command limit.
+Input and output pipes run concurrently under the existing timeout. SSH failures
+retain their connection/authentication diagnostic and do not advance cache offsets.
 Remote collection currently supports Codex sessions only because each AI tool uses
 different storage paths and record formats.
 

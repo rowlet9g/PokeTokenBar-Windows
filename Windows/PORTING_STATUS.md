@@ -63,6 +63,20 @@ available through Git history and the upstream project, not in the active tree.
 
 ## Implementation notes and remaining work
 
+### Remote Codex command-length fix (2026-10-13; included in 1.0.1)
+
+- Reproduced Windows error 206 with a real 162-session manifest: putting its
+  base64 content and the collector script into SSH arguments exceeded the
+  Windows process command-line limit and prevented SSH from starting.
+- The collector now reads the manifest from standard input. Process arguments
+  remain bounded as session history grows; `-T` prevents terminal input processing.
+  Existing compact caches, offsets, local/remote deduplication and saved growth
+  are retained. Input/output pipes are drained concurrently with timeout/cancellation.
+- Validation: 324 tests passed, including a real Windows pipe roundtrip for
+  2,048 Unicode session paths and offsets above 32 bits, and cancelled-transfer
+  offset preservation. Real synchronization and a second incremental scan passed
+  against both selected SSH hosts using isolated copies of the user's cache.
+
 ### Gen 1-9 and in-app updates (2026-10-07; included in 1.0.0)
 
 - The offline catalog covers all 1,025 species and both front sprite colors.
