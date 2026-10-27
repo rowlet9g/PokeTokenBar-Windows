@@ -38,7 +38,7 @@ available through Git history and the upstream project, not in the active tree.
 | Representative Pokemon | Included in 0.6.5 | Optional owned-species pin for the tray icon and floating pet; default follows the active companion/egg. HOME, growth and milestones retain the active subject. Selection is saved and transferred. |
 | Tray popup and single instance | Complete | WPF, WinForms `NotifyIcon`, and a named mutex are used. |
 | Milestone notifications and animations | Complete | Hatch, evolution, graduation, and queued overlays are implemented. |
-| Floating pet | Complete | Click toggle, drag persistence, sizing, and disable menu are implemented. |
+| Floating pet | Complete | Click toggle, drag persistence, sizing, and disable menu are implemented. Version 1.0.2 lets transparent sprite margins pass clicks through to underlying windows. |
 | Persistence diagnostics | Complete | Diagnostics remain in logs rather than the user-facing popup. |
 | Settings and startup | Complete | Refresh, topmost, notifications, floating pet, and login startup persist. |
 | Growth and shop difficulty | Included in 0.7.0 | Independent 10%-200% logarithmic sliders, explicit Save, progress fraction preservation, fixed candy XP and consistent scaled prices. |
@@ -62,6 +62,16 @@ available through Git history and the upstream project, not in the active tree.
   or SmartScreen prompt has been checked.
 
 ## Implementation notes and remaining work
+
+### Floating pet transparent margins (2026-10-27; included in 1.0.2)
+
+- Removed the alpha-1 background that made the floating pet's entire padded
+  rectangle intercept mouse input. Fully transparent pixels now use Windows
+  layered-window click-through behavior; visible pixels retain interaction.
+- Display size, position, idle animation and saved settings are unchanged.
+- Reproduced the original blocked margin and checked 40 combinations of four
+  sizes, five visual states and two idle offsets against a separate process's
+  window: transparent interior points reached that window, opaque points the pet.
 
 ### Remote Codex command-length fix (2026-10-13; included in 1.0.1)
 
