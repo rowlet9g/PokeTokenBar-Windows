@@ -47,6 +47,11 @@ keep following the active companion. Clear the pin to follow the current Pokemon
 or egg again. The optional `representativeSpeciesId` is part of the companion
 save, survives transfer, and falls back safely if the species is no longer owned.
 
+The floating pet keeps its window background and padding fully transparent.
+Windows layered-window hit testing then passes clicks through sprite margins
+and other transparent pixels to the underlying application, while visible pixels
+still support opening, dragging, and the context menu at every pet size.
+
 Indexed hatch selection halves the capture-rate weight of each base species with
 a completed companion (integer division, minimum 1), while keeping duplicates
 possible. Released-only companions do not count. Repeat hatches save a 2x growth

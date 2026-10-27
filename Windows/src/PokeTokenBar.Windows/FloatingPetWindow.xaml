@@ -9,9 +9,11 @@
         Topmost="True"
         ResizeMode="NoResize"
         SizeToContent="Manual">
+    <!-- Layered-window hit testing uses rendered alpha. Keep the padding and sprite
+         margins fully transparent so clicks there reach the window underneath. -->
     <Border x:Name="PetHitSurface"
             Padding="8"
-            Background="#01000000"
+            Background="{x:Null}"
             CornerRadius="12"
             Cursor="Hand"
             MouseLeftButtonDown="PetHitSurface_OnMouseLeftButtonDown"
